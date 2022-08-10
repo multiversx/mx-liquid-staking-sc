@@ -1,0 +1,17 @@
+[package]
+name = "liquid-staking-abi"
+
+version = "0.0.0"
+authors = [ "Sorin Petreasca <sorin.petreasca@elrond.com>",]
+edition = "2018"
+publish = false
+
+[dependencies.liquid-staking]
+path = ".."
+
+[dependencies.elrond-wasm]
+version = "0.34.1"
+
+[dependencies.elrond-wasm-debug]
+version = "0.34.1"
+

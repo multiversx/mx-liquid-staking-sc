@@ -1,7 +1,5 @@
 [workspace]
-resolver = "2"
-
 members = [
-  "adder",
-  "adder/meta"
+  "liquid-staking",
+  "liquid-staking/meta"
 ]
