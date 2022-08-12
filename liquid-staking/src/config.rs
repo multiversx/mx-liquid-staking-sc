@@ -1,7 +1,7 @@
 elrond_wasm::imports!();
 elrond_wasm::derive_imports!();
 
-use crate::{liquidity_pool::State};
+use crate::liquidity_pool::State;
 
 pub const MAX_PERCENTAGE: u64 = 100_000;
 pub const UNBOND_PERIOD: u64 = 10;
@@ -90,6 +90,10 @@ pub trait ConfigModule {
     #[view(getRewardsReserve)]
     #[storage_mapper("rewards_reserve")]
     fn rewards_reserve(&self) -> SingleValueMapper<BigUint>;
+
+    #[view(getWithdrawedEGLD)]
+    #[storage_mapper("withdrawed_egld")]
+    fn withdrawed_egld(&self) -> SingleValueMapper<BigUint>;
 
     #[view(getUnstakeTokenId)]
     #[storage_mapper("unstake_token_id")]

@@ -10,8 +10,12 @@ elrond_wasm_node::wasm_endpoints! {
         callBack
         addLiquidity
         changeDelegationContractParams
-        getDelegationScAddress
-        getDelegationScAddressesList
+        claimRewards
+        delegateRewards
+        getDelegationAddress
+        getDelegationAddressesLastIndex
+        getDelegationAddressesList
+        getDelegationLastClaimEpoch
         getLsSupply
         getLsTokenId
         getRewardsReserve
@@ -19,6 +23,7 @@ elrond_wasm_node::wasm_endpoints! {
         getUnstakeTokenId
         getUnstakeTokenSupply
         getVirtualEGLDReserve
+        getWithdrawedEGLD
         get_value_for_position
         registerLsToken
         registerUnstakeToken

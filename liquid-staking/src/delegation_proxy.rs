@@ -7,8 +7,11 @@ pub trait DelegationProxy {
     fn delegate(&self);
 
     #[endpoint(unDelegate)]
-    fn unDelegate(&self, egld_amount: BigUint);
+    fn undelegate(&self, egld_amount: BigUint);
 
     #[endpoint(withdraw)]
     fn withdraw(&self);
+
+    #[endpoint(claimRewards)]
+    fn claim_rewards(&self);
 }

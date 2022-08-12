@@ -1,8 +1,10 @@
 #![no_std]
-#![allow(clippy::vec_init_then_push)]
 
 elrond_wasm::imports!();
 elrond_wasm::derive_imports!();
+
+use elrond_wasm::types::OperationCompletionStatus;
+pub const DEFAULT_GAS_TO_CLAIM_REWARDS: u64 = 6_000_000;
 
 pub mod config;
 mod contexts;
@@ -11,8 +13,13 @@ pub mod delegation_proxy;
 pub mod errors;
 mod events;
 mod liquidity_pool;
+mod ongoing_operation; // To import from wasm-modules after new release
 
-use crate::errors::*;
+use crate::{
+    delegation::{ClaimStatus, ClaimStatusType},
+    errors::*,
+    ongoing_operation::{CONTINUE_OP, DEFAULT_MIN_GAS_TO_SAVE_PROGRESS, STOP_OP},
+};
 
 use config::{UnstakeTokenAttributes, UNBOND_PERIOD};
 use contexts::base::*;
@@ -35,6 +42,7 @@ pub trait Pair<ContractReader>:
     + config::ConfigModule
     + events::EventsModule
     + delegation::DelegationModule
+    + ongoing_operation::OngoingOperationModule
 {
     #[init]
     fn init(&self) {
@@ -58,7 +66,7 @@ pub trait Pair<ContractReader>:
         let delegation_contract = self.get_next_delegation_contract();
         require!(!delegation_contract.is_zero(), ERROR_BAD_DELEGATION_ADDRESS);
 
-        self.delegation_sc_proxy_obj()
+        self.delegation_proxy_obj()
             .contract(delegation_contract.clone())
             .delegate()
             .with_egld_transfer(payment.clone())
@@ -97,9 +105,9 @@ pub trait Pair<ContractReader>:
         let delegation_contract = self.get_next_delegation_contract();
         require!(!delegation_contract.is_zero(), ERROR_BAD_DELEGATION_ADDRESS);
 
-        self.delegation_sc_proxy_obj()
+        self.delegation_proxy_obj()
             .contract(delegation_contract.clone())
-            .unDelegate(egld_to_unstake.clone())
+            .undelegate(egld_to_unstake.clone())
             .async_call()
             .with_callback(self.callbacks().remove_liquidity_callback(
                 &caller,
@@ -137,7 +145,7 @@ pub trait Pair<ContractReader>:
         );
 
         let delegation_contract = unstake_token_attributes.delegation_contract;
-        self.delegation_sc_proxy_obj()
+        self.delegation_proxy_obj()
             .contract(delegation_contract.clone())
             .withdraw()
             .async_call()
@@ -148,6 +156,95 @@ pub trait Pair<ContractReader>:
                 payment.amount,
             ))
             .call_and_exit();
+    }
+
+    #[endpoint(claimRewards)]
+    fn claim_rewards(&self) {
+        let storage_cache = StorageCache::new(self);
+        let delegation_addresses_mapper = self.delegation_addresses_list();
+        let delegation_addresses_no = delegation_addresses_mapper.len();
+
+        require!(
+            self.is_state_active(storage_cache.contract_state),
+            ERROR_NOT_ACTIVE
+        );
+
+        let current_epoch = self.blockchain().get_block_epoch();
+        let mut claim_status = self.load_operation::<ClaimStatus<Self::Api>>();
+
+        self.can_proceed_claim_operation(&mut claim_status, current_epoch);
+
+        let run_result = self.run_while_it_has_gas(DEFAULT_MIN_GAS_TO_SAVE_PROGRESS, || {
+            if claim_status.current_iteration > delegation_addresses_no {
+                return STOP_OP;
+            }
+
+            let delegation_address =
+                delegation_addresses_mapper.get(claim_status.current_iteration);
+
+            self.delegation_proxy_obj()
+                .contract(delegation_address)
+                .claim_rewards()
+                .with_gas_limit(DEFAULT_GAS_TO_CLAIM_REWARDS)
+                .transfer_execute();
+
+            claim_status.current_iteration += 1;
+
+            CONTINUE_OP
+        });
+
+        match run_result {
+            OperationCompletionStatus::InterruptedBeforeOutOfGas => {
+                self.save_progress(&claim_status);
+            }
+            OperationCompletionStatus::Completed => {
+                claim_status.status = ClaimStatusType::Finished;
+                self.delegation_claim_status().set(claim_status);
+            }
+        };
+    }
+
+    fn recompute_token_reserve(&self, claim_status: ClaimStatus<Self::Api>) {
+        let withdrawed_egld_mapper = self.withdrawed_egld();
+        let current_egld_balance = self.virtual_egld_reserve().get();
+        let withdrawed_egld = withdrawed_egld_mapper.get();
+        if current_egld_balance > &withdrawed_egld + &claim_status.starting_token_reserve
+        {
+            let rewards = current_egld_balance - withdrawed_egld - claim_status.starting_token_reserve;
+            self.rewards_reserve().update(|new_rewards| *new_rewards += rewards);
+            
+        }
+        withdrawed_egld_mapper.clear();
+    }
+
+    #[endpoint(delegateRewards)]
+    fn delegate_rewards(&self) {
+        let storage_cache = StorageCache::new(self);
+        let claim_status = self.delegation_claim_status().get();
+        require!(
+            self.is_state_active(storage_cache.contract_state),
+            ERROR_NOT_ACTIVE
+        );
+        require!(
+            claim_status.status == ClaimStatusType::Finished,
+            ERROR_CLAIM_REDELEGATE
+        );
+
+        let delegation_contract = self.get_next_delegation_contract();
+        require!(!delegation_contract.is_zero(), ERROR_BAD_DELEGATION_ADDRESS);
+        let rewards_reserve = self.rewards_reserve().get();
+
+        self.delegation_proxy_obj()
+            .contract(delegation_contract.clone())
+            .delegate()
+            .with_egld_transfer(rewards_reserve.clone())
+            .async_call()
+            .with_callback(self.callbacks().add_rewards_liquidity_callback(
+                &delegation_contract,
+                &rewards_reserve,
+            ))
+            .call_and_exit()
+
     }
 
     // views
@@ -161,7 +258,7 @@ pub trait Pair<ContractReader>:
     // proxy
 
     #[proxy]
-    fn delegation_sc_proxy_obj(&self) -> delegation_proxy::Proxy<Self::Api>;
+    fn delegation_proxy_obj(&self) -> delegation_proxy::Proxy<Self::Api>;
 
     // callbacks
 
@@ -176,7 +273,7 @@ pub trait Pair<ContractReader>:
         match result {
             ManagedAsyncCallResult::Ok(()) => {
                 let mut storage_cache = StorageCache::new(self);
-                self.delegation_sc_address(delegation_contract)
+                self.delegation_address(delegation_contract)
                     .update(|contract_data| {
                         contract_data.total_staked_from_ls_contract += staked_tokens;
                     });
@@ -190,10 +287,36 @@ pub trait Pair<ContractReader>:
                     &user_payment.amount,
                 );
 
-                self.emit_add_liquidity_event(&storage_cache, user_payment.amount);
+                self.emit_add_liquidity_event(&storage_cache, caller, user_payment.amount);
             }
             ManagedAsyncCallResult::Err(_) => {
                 self.send().direct_egld(caller, &staked_tokens);
+            }
+        }
+    }
+
+    #[callback]
+    fn add_rewards_liquidity_callback(
+        &self,
+        delegation_contract: &ManagedAddress,
+        staked_tokens: &BigUint,
+        #[call_result] result: ManagedAsyncCallResult<()>,
+    ) {
+        match result {
+            ManagedAsyncCallResult::Ok(()) => {
+                let mut storage_cache = StorageCache::new(self);
+                self.delegation_address(delegation_contract)
+                    .update(|contract_data| {
+                        contract_data.total_staked_from_ls_contract += staked_tokens;
+                    });
+
+                self.rewards_reserve().clear();
+                self.pool_add_liquidity(&staked_tokens, &mut storage_cache);
+                let sc_address = self.blockchain().get_sc_address();
+                self.emit_add_liquidity_event(&storage_cache, &sc_address,  BigUint::zero());
+            }
+            ManagedAsyncCallResult::Err(_) => {
+                // TBD
             }
         }
     }
@@ -219,7 +342,7 @@ pub trait Pair<ContractReader>:
                     unbond_epoch: unbond_epoch,
                 };
 
-                self.delegation_sc_address(delegation_contract)
+                self.delegation_address(delegation_contract)
                     .update(|contract_data| {
                         contract_data.total_staked_from_ls_contract -= egld_to_unstake.clone();
                         contract_data.total_undelegated_from_ls_contract += egld_to_unstake.clone();
@@ -265,11 +388,14 @@ pub trait Pair<ContractReader>:
     ) {
         match result {
             ManagedAsyncCallResult::Ok(()) => {
-                self.delegation_sc_address(delegation_contract)
+                self.delegation_address(delegation_contract)
                     .update(|contract_data| {
                         contract_data.total_undelegated_from_ls_contract -=
                             unbond_token_amount.clone();
                     });
+                    self.withdrawed_egld()
+                .update(|withdrawed_egld| *withdrawed_egld += &unbond_token_amount.clone());
+                    
                 self.burn_unstake_tokens(unbond_token_nonce, &unbond_token_amount);
                 self.send().direct_egld(caller, &unbond_token_amount)
             }

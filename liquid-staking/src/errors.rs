@@ -5,6 +5,10 @@ pub static ERROR_LS_TOKEN_NOT_ISSUED: &[u8] = b"LS token not issued";
 pub static ERROR_BAD_DELEGATION_ADDRESS: &[u8] = b"Delegation address wrong value";
 pub static ERROR_UNSTAKE_PERIOD_NOT_PASSED: &[u8] = b"The unstake period has not passed";
 
+pub static ERROR_CLAIM_START: &[u8] = b"Claim operation must be new or pending";
+pub static ERROR_CLAIM_REDELEGATE: &[u8] = b"Old claimed rewards must be delegated first";
+pub static ERROR_CLAIM_EPOCH: &[u8] = b"The rewards were already claimed for this epoch";
+
 pub static ERROR_BAD_PAYMENT_TOKENS: &[u8] = b"Bad payment tokens";
 pub static ERROR_BAD_PAYMENT_AMOUNT: &[u8] = b"Bad payment amount";
 

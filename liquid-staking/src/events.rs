@@ -3,7 +3,6 @@ use crate::contexts::base::StorageCache;
 elrond_wasm::imports!();
 elrond_wasm::derive_imports!();
 
-
 #[derive(TypeAbi, TopEncode)]
 pub struct AddLiquidityEvent<M: ManagedTypeApi> {
     caller: ManagedAddress<M>,
@@ -33,19 +32,17 @@ pub struct RemoveLiquidityEvent<M: ManagedTypeApi> {
 }
 
 #[elrond_wasm::module]
-pub trait EventsModule:
-    crate::config::ConfigModule
-{
-   fn emit_add_liquidity_event(
+pub trait EventsModule: crate::config::ConfigModule {
+    fn emit_add_liquidity_event(
         &self,
         storage_cache: &StorageCache<Self>,
+        caller: &ManagedAddress,
         ls_token_amount: BigUint,
     ) {
         let epoch = self.blockchain().get_block_epoch();
-        let caller = self.blockchain().get_caller();
         self.add_liquidity_event(
             &storage_cache.ls_token_id,
-            &caller,
+            caller,
             epoch,
             &AddLiquidityEvent {
                 caller: caller.clone(),
