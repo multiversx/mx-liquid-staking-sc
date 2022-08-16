@@ -77,7 +77,7 @@ pub trait LiquidityPoolModule: config::ConfigModule {
         amount: BigUint,
         attributes: &T,
     ) -> EsdtTokenPayment<Self::Api> {
-        self.unstake_token_supply().update(|x| *x += amount.clone());
+        self.unstake_token_supply().update(|x| *x += &amount);
         self.unstake_token().nft_create(amount, attributes)
     }
 

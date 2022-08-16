@@ -25,19 +25,8 @@ use config::{UnstakeTokenAttributes, UNBOND_PERIOD};
 use contexts::base::*;
 use liquidity_pool::State;
 
-pub type AddLiquidityResultType<BigUint> =
-    MultiValue3<EsdtTokenPayment<BigUint>, EsdtTokenPayment<BigUint>, EsdtTokenPayment<BigUint>>;
-
-pub type RemoveLiquidityResultType<BigUint> =
-    MultiValue2<EsdtTokenPayment<BigUint>, EsdtTokenPayment<BigUint>>;
-
-pub type SwapTokensFixedInputResultType<BigUint> = EsdtTokenPayment<BigUint>;
-
-pub type SwapTokensFixedOutputResultType<BigUint> =
-    MultiValue2<EsdtTokenPayment<BigUint>, EsdtTokenPayment<BigUint>>;
-
 #[elrond_wasm::contract]
-pub trait Pair<ContractReader>:
+pub trait LiquidStaking<ContractReader>:
     liquidity_pool::LiquidityPoolModule
     + config::ConfigModule
     + events::EventsModule
@@ -72,16 +61,75 @@ pub trait Pair<ContractReader>:
             .with_egld_transfer(payment.clone())
             .async_call()
             .with_callback(self.callbacks().add_liquidity_callback(
-                &caller,
-                &delegation_contract,
-                &payment,
+                caller,
+                delegation_contract,
+                payment,
             ))
             .call_and_exit()
     }
 
+    #[callback]
+    fn add_liquidity_callback(
+        &self,
+        caller: ManagedAddress,
+        delegation_contract: ManagedAddress,
+        staked_tokens: BigUint,
+        #[call_result] result: ManagedAsyncCallResult<()>,
+    ) {
+        match result {
+            ManagedAsyncCallResult::Ok(()) => {
+                let mut storage_cache = StorageCache::new(self);
+                self.delegation_contract_data(&delegation_contract)
+                    .update(|contract_data| {
+                        contract_data.total_staked_from_ls_contract += &staked_tokens;
+                    });
+
+                let ls_token_amount = self.pool_add_liquidity(&staked_tokens, &mut storage_cache);
+                let user_payment = self.mint_ls_token(ls_token_amount);
+                self.send().direct_esdt(
+                    &caller,
+                    &user_payment.token_identifier,
+                    user_payment.token_nonce,
+                    &user_payment.amount,
+                );
+
+                self.emit_add_liquidity_event(&storage_cache, &caller, user_payment.amount);
+            }
+            ManagedAsyncCallResult::Err(_) => {
+                self.send().direct_egld(&caller, &staked_tokens);
+            }
+        }
+    }
+
+    #[callback]
+    fn add_rewards_liquidity_callback(
+        &self,
+        delegation_contract: ManagedAddress,
+        staked_tokens: BigUint,
+        #[call_result] result: ManagedAsyncCallResult<()>,
+    ) {
+        match result {
+            ManagedAsyncCallResult::Ok(()) => {
+                let mut storage_cache = StorageCache::new(self);
+                self.delegation_contract_data(&delegation_contract)
+                    .update(|contract_data| {
+                        contract_data.total_staked_from_ls_contract += &staked_tokens;
+                    });
+
+                self.rewards_reserve().clear();
+                self.pool_add_liquidity(&staked_tokens, &mut storage_cache);
+                let sc_address = self.blockchain().get_sc_address();
+                self.emit_add_liquidity_event(&storage_cache, &sc_address,  BigUint::zero());
+            }
+            ManagedAsyncCallResult::Err(_) => {
+                // TBD
+            }
+        }
+    }
+
     #[payable("*")]
     #[endpoint(removeLiquidity)]
-    fn remove_liquidity(&self) -> RemoveLiquidityResultType<Self::Api> {
+    fn remove_liquidity(&self) {
         let mut storage_cache = StorageCache::new(self);
         let caller = self.blockchain().get_caller();
         let payment = self.call_value().single_esdt();
@@ -110,12 +158,68 @@ pub trait Pair<ContractReader>:
             .undelegate(egld_to_unstake.clone())
             .async_call()
             .with_callback(self.callbacks().remove_liquidity_callback(
-                &caller,
-                &delegation_contract,
+                caller,
+                delegation_contract,
                 egld_to_unstake,
                 payment.amount,
             ))
             .call_and_exit()
+    }
+
+    #[callback]
+    fn remove_liquidity_callback(
+        &self,
+        caller: ManagedAddress,
+        delegation_contract: ManagedAddress,
+        egld_to_unstake: BigUint,
+        ls_tokens_to_be_burned: BigUint,
+        #[call_result] result: ManagedAsyncCallResult<()>,
+    ) {
+        let mut storage_cache = StorageCache::new(self);
+        match result {
+            ManagedAsyncCallResult::Ok(()) => {
+                let current_epoch = self.blockchain().get_block_epoch();
+                let unbond_epoch = current_epoch + UNBOND_PERIOD;
+
+                let virtual_position = UnstakeTokenAttributes {
+                    delegation_contract: delegation_contract.clone(),
+                    unstake_epoch: current_epoch,
+                    unbond_epoch: unbond_epoch,
+                };
+
+                self.delegation_contract_data(&delegation_contract)
+                    .update(|contract_data| {
+                        contract_data.total_staked_from_ls_contract -= &egld_to_unstake;
+                        contract_data.total_undelegated_from_ls_contract += &egld_to_unstake;
+                    });
+
+                let user_payment = self.mint_unstake_tokens(egld_to_unstake, &virtual_position);
+                self.send().direct_esdt(
+                    &caller,
+                    &user_payment.token_identifier,
+                    user_payment.token_nonce,
+                    &user_payment.amount,
+                );
+
+                self.emit_remove_liquidity_event(
+                    &storage_cache,
+                    ls_tokens_to_be_burned,
+                    user_payment.amount,
+                );
+            }
+            ManagedAsyncCallResult::Err(_) => {
+                let ls_token_amount = self.pool_add_liquidity(&egld_to_unstake, &mut storage_cache);
+
+                let user_payment = self.mint_ls_token(ls_token_amount);
+
+                self.send().direct_esdt(
+                    &caller,
+                    &user_payment.token_identifier,
+                    user_payment.token_nonce,
+                    &user_payment.amount,
+                );
+            }
+        }
     }
 
     #[payable("*")]
@@ -150,12 +254,46 @@ pub trait Pair<ContractReader>:
             .withdraw()
             .async_call()
             .with_callback(self.callbacks().withdraw_tokens_callback(
-                &caller,
-                &delegation_contract,
+                caller,
+                delegation_contract,
                 payment.token_nonce,
                 payment.amount,
             ))
             .call_and_exit();
+    }
+
+    #[callback]
+    fn withdraw_tokens_callback(
+        &self,
+        caller: ManagedAddress,
+        delegation_contract: ManagedAddress,
+        unbond_token_nonce: u64,
+        unbond_token_amount: BigUint,
+        #[call_result] result: ManagedAsyncCallResult<()>,
+    ) {
+        match result {
+            ManagedAsyncCallResult::Ok(()) => {
+                self.delegation_contract_data(&delegation_contract)
+                    .update(|contract_data| {
+                        contract_data.total_undelegated_from_ls_contract -=
+                            unbond_token_amount.clone();
+                    });
+                    self.withdrawn_egld()
+                .update(|withdrawn_egld| *withdrawn_egld += &unbond_token_amount.clone());
+                    
+                self.burn_unstake_tokens(unbond_token_nonce, &unbond_token_amount);
+                self.send().direct_egld(&caller, &unbond_token_amount)
+            }
+            ManagedAsyncCallResult::Err(_) => {
+                let unstake_token_id = self.unstake_token().get_token_id();
+                self.send().direct_esdt(
+                    &caller,
+                    &unstake_token_id,
+                    unbond_token_nonce,
+                    &unbond_token_amount,
+                )
+            }
+        }
     }
 
     #[endpoint(claimRewards)]
@@ -205,16 +343,16 @@ pub trait Pair<ContractReader>:
     }
 
     fn recompute_token_reserve(&self, claim_status: ClaimStatus<Self::Api>) {
-        let withdrawed_egld_mapper = self.withdrawed_egld();
+        let withdrawn_egld_mapper = self.withdrawn_egld();
         let current_egld_balance = self.virtual_egld_reserve().get();
-        let withdrawed_egld = withdrawed_egld_mapper.get();
-        if current_egld_balance > &withdrawed_egld + &claim_status.starting_token_reserve
+        let withdrawn_egld = withdrawn_egld_mapper.get();
+        if current_egld_balance > &withdrawn_egld + &claim_status.starting_token_reserve
         {
-            let rewards = current_egld_balance - withdrawed_egld - claim_status.starting_token_reserve;
+            let rewards = current_egld_balance - withdrawn_egld - claim_status.starting_token_reserve;
             self.rewards_reserve().update(|new_rewards| *new_rewards += rewards);
             
         }
-        withdrawed_egld_mapper.clear();
+        withdrawn_egld_mapper.clear();
     }
 
     #[endpoint(delegateRewards)]
@@ -240,8 +378,8 @@ pub trait Pair<ContractReader>:
             .with_egld_transfer(rewards_reserve.clone())
             .async_call()
             .with_callback(self.callbacks().add_rewards_liquidity_callback(
-                &delegation_contract,
-                &rewards_reserve,
+                delegation_contract,
+                rewards_reserve,
             ))
             .call_and_exit()
 
@@ -260,154 +398,4 @@ pub trait Pair<ContractReader>:
     #[proxy]
     fn delegation_proxy_obj(&self) -> delegation_proxy::Proxy<Self::Api>;
 
-    // callbacks
-
-    #[callback]
-    fn add_liquidity_callback(
-        &self,
-        caller: &ManagedAddress,
-        delegation_contract: &ManagedAddress,
-        staked_tokens: &BigUint,
-        #[call_result] result: ManagedAsyncCallResult<()>,
-    ) {
-        match result {
-            ManagedAsyncCallResult::Ok(()) => {
-                let mut storage_cache = StorageCache::new(self);
-                self.delegation_address(delegation_contract)
-                    .update(|contract_data| {
-                        contract_data.total_staked_from_ls_contract += staked_tokens;
-                    });
-
-                let ls_token_amount = self.pool_add_liquidity(&staked_tokens, &mut storage_cache);
-                let user_payment = self.mint_ls_token(ls_token_amount);
-                self.send().direct_esdt(
-                    &caller,
-                    &user_payment.token_identifier,
-                    user_payment.token_nonce,
-                    &user_payment.amount,
-                );
-
-                self.emit_add_liquidity_event(&storage_cache, caller, user_payment.amount);
-            }
-            ManagedAsyncCallResult::Err(_) => {
-                self.send().direct_egld(caller, &staked_tokens);
-            }
-        }
-    }
-
-    #[callback]
-    fn add_rewards_liquidity_callback(
-        &self,
-        delegation_contract: &ManagedAddress,
-        staked_tokens: &BigUint,
-        #[call_result] result: ManagedAsyncCallResult<()>,
-    ) {
-        match result {
-            ManagedAsyncCallResult::Ok(()) => {
-                let mut storage_cache = StorageCache::new(self);
-                self.delegation_address(delegation_contract)
-                    .update(|contract_data| {
-                        contract_data.total_staked_from_ls_contract += staked_tokens;
-                    });
-
-                self.rewards_reserve().clear();
-                self.pool_add_liquidity(&staked_tokens, &mut storage_cache);
-                let sc_address = self.blockchain().get_sc_address();
-                self.emit_add_liquidity_event(&storage_cache, &sc_address,  BigUint::zero());
-            }
-            ManagedAsyncCallResult::Err(_) => {
-                // TBD
-            }
-        }
-    }
-
-    #[callback]
-    fn remove_liquidity_callback(
-        &self,
-        caller: &ManagedAddress,
-        delegation_contract: &ManagedAddress,
-        egld_to_unstake: BigUint,
-        ls_tokens_to_be_burned: BigUint,
-        #[call_result] result: ManagedAsyncCallResult<()>,
-    ) {
-        let mut storage_cache = StorageCache::new(self);
-        match result {
-            ManagedAsyncCallResult::Ok(()) => {
-                let current_epoch = self.blockchain().get_block_epoch();
-                let unbond_epoch = current_epoch + UNBOND_PERIOD;
-
-                let virtual_position = UnstakeTokenAttributes {
-                    delegation_contract: delegation_contract.clone(),
-                    unstake_epoch: current_epoch,
-                    unbond_epoch: unbond_epoch,
-                };
-
-                self.delegation_address(delegation_contract)
-                    .update(|contract_data| {
-                        contract_data.total_staked_from_ls_contract -= egld_to_unstake.clone();
-                        contract_data.total_undelegated_from_ls_contract += egld_to_unstake.clone();
-                    });
-
-                let user_payment = self.mint_unstake_tokens(egld_to_unstake, &virtual_position);
-                self.send().direct_esdt(
-                    &caller,
-                    &user_payment.token_identifier,
-                    user_payment.token_nonce,
-                    &user_payment.amount,
-                );
-
-                self.emit_remove_liquidity_event(
-                    &storage_cache,
-                    ls_tokens_to_be_burned,
-                    user_payment.amount,
-                );
-            }
-            ManagedAsyncCallResult::Err(_) => {
-                let ls_token_amount = self.pool_add_liquidity(&egld_to_unstake, &mut storage_cache);
-
-                let user_payment = self.mint_ls_token(ls_token_amount);
-
-                self.send().direct_esdt(
-                    &caller,
-                    &user_payment.token_identifier,
-                    user_payment.token_nonce,
-                    &user_payment.amount,
-                );
-            }
-        }
-    }
-
-    #[callback]
-    fn withdraw_tokens_callback(
-        &self,
-        caller: &ManagedAddress,
-        delegation_contract: &ManagedAddress,
-        unbond_token_nonce: u64,
-        unbond_token_amount: BigUint,
-        #[call_result] result: ManagedAsyncCallResult<()>,
-    ) {
-        match result {
-            ManagedAsyncCallResult::Ok(()) => {
-                self.delegation_address(delegation_contract)
-                    .update(|contract_data| {
-                        contract_data.total_undelegated_from_ls_contract -=
-                            unbond_token_amount.clone();
-                    });
-                    self.withdrawed_egld()
-                .update(|withdrawed_egld| *withdrawed_egld += &unbond_token_amount.clone());
-                    
-                self.burn_unstake_tokens(unbond_token_nonce, &unbond_token_amount);
-                self.send().direct_egld(caller, &unbond_token_amount)
-            }
-            ManagedAsyncCallResult::Err(_) => {
-                let unstake_token_id = self.unstake_token().get_token_id();
-                self.send().direct_esdt(
-                    caller,
-                    &unstake_token_id,
-                    unbond_token_nonce,
-                    &unbond_token_amount,
-                )
-            }
-        }
-    }
 }

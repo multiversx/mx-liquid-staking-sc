@@ -56,7 +56,7 @@ pub trait ConfigModule {
 
     #[only_owner]
     #[endpoint(setStateActive)]
-    fn set_state_activ(&self) {
+    fn set_state_active(&self) {
         self.state().set(State::Active);
     }
 
@@ -91,9 +91,9 @@ pub trait ConfigModule {
     #[storage_mapper("rewards_reserve")]
     fn rewards_reserve(&self) -> SingleValueMapper<BigUint>;
 
-    #[view(getWithdrawedEGLD)]
-    #[storage_mapper("withdrawed_egld")]
-    fn withdrawed_egld(&self) -> SingleValueMapper<BigUint>;
+    #[view(getWithdrawnEGLD)]
+    #[storage_mapper("withdrawn_egld")]
+    fn withdrawn_egld(&self) -> SingleValueMapper<BigUint>;
 
     #[view(getUnstakeTokenId)]
     #[storage_mapper("unstake_token_id")]

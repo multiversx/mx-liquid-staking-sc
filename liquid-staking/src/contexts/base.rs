@@ -39,5 +39,7 @@ where
     fn drop(&mut self) {
         // commit changes to storage for the mutable fields
         self.sc_ref.ls_token_supply().set(&self.ls_token_supply);
+        self.sc_ref.virtual_egld_reserve().set(&self.virtual_egld_reserve);
+        self.sc_ref.rewards_reserve().set(&self.rewards_reserve);
     }
 }

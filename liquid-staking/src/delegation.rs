@@ -22,7 +22,7 @@ pub struct ClaimStatus<M: ManagedTypeApi> {
     pub starting_token_reserve: BigUint<M>,
 }
 
-impl<M: ManagedTypeApi + CryptoApi> Default for ClaimStatus<M> {
+impl<M: ManagedTypeApi> Default for ClaimStatus<M> {
     fn default() -> Self {
         Self {
             status: ClaimStatusType::None,
@@ -56,7 +56,7 @@ pub trait DelegationModule: crate::config::ConfigModule {
         apy: u64,
     ) {
         require!(
-            self.delegation_address(&contract_address).is_empty(),
+            self.delegation_contract_data(&contract_address).is_empty(),
             ERROR_ALREADY_WHITELISTED
         );
 
@@ -69,7 +69,7 @@ pub trait DelegationModule: crate::config::ConfigModule {
             total_undelegated_from_ls_contract: BigUint::zero(),
         };
 
-        self.delegation_address(&contract_address)
+        self.delegation_contract_data(&contract_address)
             .set(contract_data);
         self.delegation_addresses_list().push(&contract_address);
     }
@@ -84,12 +84,12 @@ pub trait DelegationModule: crate::config::ConfigModule {
         nr_nodes: u64,
         apy: u64,
     ) {
+        let delegation_address_mapper = self.delegation_contract_data(&contract_address);
         require!(
-            !self.delegation_address(&contract_address).is_empty(),
+            !delegation_address_mapper.is_empty(),
             ERROR_NOT_WHITELISTED
         );
 
-        let delegation_address_mapper = self.delegation_address(&contract_address);
         let old_contract_data = delegation_address_mapper.get();
         let new_contract_data = DelegationContractData {
             total_staked,
@@ -117,7 +117,7 @@ pub trait DelegationModule: crate::config::ConfigModule {
         };
 
         delegation_index_mapper.set(new_index);
-        self.delegation_addresses_list().get(new_index)
+        delegation_addresses_mapper.get(new_index)
     }
 
     fn can_proceed_claim_operation(
@@ -125,12 +125,12 @@ pub trait DelegationModule: crate::config::ConfigModule {
         new_claim_status: &mut ClaimStatus<Self::Api>,
         current_epoch: u64,
     ) {
-        let old_claim_status = self.delegation_claim_status().get();
         require!(
             new_claim_status.status == ClaimStatusType::None
                 || new_claim_status.status == ClaimStatusType::Pending,
             ERROR_CLAIM_START
         );
+        let old_claim_status = self.delegation_claim_status().get();
         require!(
             old_claim_status.status == ClaimStatusType::Redelegated,
             ERROR_CLAIM_REDELEGATE
@@ -159,9 +159,9 @@ pub trait DelegationModule: crate::config::ConfigModule {
     #[storage_mapper("delegation_addresses_last_index")]
     fn delegation_addresses_last_index(&self) -> SingleValueMapper<usize>;
 
-    #[view(getDelegationAddress)]
-    #[storage_mapper("delegation_address")]
-    fn delegation_address(
+    #[view(getDelegationContractData)]
+    #[storage_mapper("delegation_contract_data")]
+    fn delegation_contract_data(
         &self,
         contract_address: &ManagedAddress,
     ) -> SingleValueMapper<DelegationContractData<Self::Api>>;
