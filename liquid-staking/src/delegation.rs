@@ -91,18 +91,16 @@ pub trait DelegationModule: crate::config::ConfigModule {
         );
 
         let old_contract_data = delegation_address_mapper.get();
-        let new_contract_data = DelegationContractData {
-            total_staked,
-            delegation_contract_cap,
-            nr_nodes,
-            apy,
-            total_staked_from_ls_contract: old_contract_data.total_staked_from_ls_contract,
-            total_undelegated_from_ls_contract: old_contract_data
-                .total_undelegated_from_ls_contract,
-        };
 
-        delegation_address_mapper.set(new_contract_data);
-    }
+        delegation_address_mapper.update(|contract_data| {
+            contract_data.total_staked = total_staked;
+            contract_data.delegation_contract_cap = delegation_contract_cap;
+            contract_data.nr_nodes = nr_nodes;
+            contract_data.apy = apy;
+            contract_data.total_staked_from_ls_contract = old_contract_data.total_staked_from_ls_contract;
+            contract_data.total_undelegated_from_ls_contract = old_contract_data.total_undelegated_from_ls_contract;
+            });
+        }
 
     // TODO - add check for available delegation space
     // Round Robin
@@ -148,19 +146,19 @@ pub trait DelegationModule: crate::config::ConfigModule {
     }
 
     #[view(getDelegationAddressesList)]
-    #[storage_mapper("delegation_addresses_list")]
+    #[storage_mapper("delegationAddressesList")]
     fn delegation_addresses_list(&self) -> VecMapper<ManagedAddress>;
 
     #[view(getDelegationLastClaimEpoch)]
-    #[storage_mapper("delegation_last_claim_epoch")]
+    #[storage_mapper("delegationLastClaimEpoch")]
     fn delegation_claim_status(&self) -> SingleValueMapper<ClaimStatus<Self::Api>>;
 
     #[view(getDelegationAddressesLastIndex)]
-    #[storage_mapper("delegation_addresses_last_index")]
+    #[storage_mapper("delegationAddressesLastIndex")]
     fn delegation_addresses_last_index(&self) -> SingleValueMapper<usize>;
 
     #[view(getDelegationContractData)]
-    #[storage_mapper("delegation_contract_data")]
+    #[storage_mapper("delegationContractData")]
     fn delegation_contract_data(
         &self,
         contract_address: &ManagedAddress,

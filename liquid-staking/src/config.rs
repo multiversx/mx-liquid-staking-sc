@@ -76,30 +76,30 @@ pub trait ConfigModule {
     fn state(&self) -> SingleValueMapper<State>;
 
     #[view(getLsTokenId)]
-    #[storage_mapper("ls_token_id")]
+    #[storage_mapper("lsTokenId")]
     fn ls_token(&self) -> FungibleTokenMapper<Self::Api>;
 
     #[view(getLsSupply)]
-    #[storage_mapper("ls_token_supply")]
+    #[storage_mapper("lsTokenSupply")]
     fn ls_token_supply(&self) -> SingleValueMapper<BigUint>;
 
     #[view(getVirtualEGLDReserve)]
-    #[storage_mapper("virtual_egld_reserve")]
+    #[storage_mapper("virtualEgldReserve")]
     fn virtual_egld_reserve(&self) -> SingleValueMapper<BigUint>;
 
     #[view(getRewardsReserve)]
-    #[storage_mapper("rewards_reserve")]
+    #[storage_mapper("rewardsReserve")]
     fn rewards_reserve(&self) -> SingleValueMapper<BigUint>;
 
     #[view(getWithdrawnEGLD)]
-    #[storage_mapper("withdrawn_egld")]
+    #[storage_mapper("withdrawnEgld")]
     fn withdrawn_egld(&self) -> SingleValueMapper<BigUint>;
 
     #[view(getUnstakeTokenId)]
-    #[storage_mapper("unstake_token_id")]
+    #[storage_mapper("unstakeTokenId")]
     fn unstake_token(&self) -> NonFungibleTokenMapper<Self::Api>;
 
     #[view(getUnstakeTokenSupply)]
-    #[storage_mapper("unstake_token_supply")]
+    #[storage_mapper("unstakeTokenSupply")]
     fn unstake_token_supply(&self) -> SingleValueMapper<BigUint>;
 }
