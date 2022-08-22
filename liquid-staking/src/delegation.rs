@@ -1,6 +1,6 @@
 use crate::errors::{
     ERROR_ALREADY_WHITELISTED, ERROR_CLAIM_EPOCH, ERROR_CLAIM_REDELEGATE, ERROR_CLAIM_START,
-    ERROR_NOT_WHITELISTED,
+    ERROR_NOT_WHITELISTED, ERROR_NO_DELEGATION_CONTRACTS,
 };
 
 elrond_wasm::imports!();
@@ -85,10 +85,7 @@ pub trait DelegationModule: crate::config::ConfigModule {
         apy: u64,
     ) {
         let delegation_address_mapper = self.delegation_contract_data(&contract_address);
-        require!(
-            !delegation_address_mapper.is_empty(),
-            ERROR_NOT_WHITELISTED
-        );
+        require!(!delegation_address_mapper.is_empty(), ERROR_NOT_WHITELISTED);
 
         let old_contract_data = delegation_address_mapper.get();
 
@@ -97,14 +94,20 @@ pub trait DelegationModule: crate::config::ConfigModule {
             contract_data.delegation_contract_cap = delegation_contract_cap;
             contract_data.nr_nodes = nr_nodes;
             contract_data.apy = apy;
-            contract_data.total_staked_from_ls_contract = old_contract_data.total_staked_from_ls_contract;
-            contract_data.total_undelegated_from_ls_contract = old_contract_data.total_undelegated_from_ls_contract;
-            });
-        }
+            contract_data.total_staked_from_ls_contract =
+                old_contract_data.total_staked_from_ls_contract;
+            contract_data.total_undelegated_from_ls_contract =
+                old_contract_data.total_undelegated_from_ls_contract;
+        });
+    }
 
     // TODO - add check for available delegation space
     // Round Robin
     fn get_next_delegation_contract(&self) -> ManagedAddress<Self::Api> {
+        require!(
+            !self.delegation_addresses_list().is_empty(),
+            ERROR_NO_DELEGATION_CONTRACTS
+        );
         let delegation_addresses_mapper = self.delegation_addresses_list();
         let delegation_index_mapper = self.delegation_addresses_last_index();
         let last_index = delegation_index_mapper.get();

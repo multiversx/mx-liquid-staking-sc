@@ -1,5 +1,7 @@
 [workspace]
 members = [
   "liquid-staking",
-  "liquid-staking/meta"
+  "liquid-staking/meta",
+  "delegation-mock",
+  "delegation-mock/meta"
 ]

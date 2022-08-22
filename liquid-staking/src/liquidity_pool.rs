@@ -22,8 +22,13 @@ pub trait LiquidityPoolModule: config::ConfigModule {
         token_amount: &BigUint,
         storage_cache: &mut StorageCache<Self>,
     ) -> BigUint {
-        let ls_amount = token_amount.clone() * &storage_cache.ls_token_supply
-            / (&storage_cache.virtual_egld_reserve + &storage_cache.rewards_reserve);
+        let ls_amount;
+        if &storage_cache.virtual_egld_reserve > &0 {
+            ls_amount = token_amount.clone() * &storage_cache.ls_token_supply
+                / (&storage_cache.virtual_egld_reserve + &storage_cache.rewards_reserve);
+        } else {
+            ls_amount = token_amount.clone();
+        }
 
         require!(ls_amount > 0, ERROR_INSUFFICIENT_LIQUIDITY);
 
@@ -40,7 +45,6 @@ pub trait LiquidityPoolModule: config::ConfigModule {
     ) -> BigUint {
         let egld_amount = self.get_egld_amount(token_amount.clone(), storage_cache);
         storage_cache.ls_token_supply -= token_amount;
-        storage_cache.virtual_egld_reserve -= &egld_amount;
 
         egld_amount
     }
@@ -85,5 +89,4 @@ pub trait LiquidityPoolModule: config::ConfigModule {
         self.unstake_token().nft_burn(token_nonce, amount);
         self.unstake_token_supply().update(|x| *x -= amount);
     }
-    
 }

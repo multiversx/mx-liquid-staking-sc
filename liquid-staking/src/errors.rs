@@ -21,5 +21,6 @@ pub static ERROR_NOT_ENOUGH_LP: &[u8] = b"Not enough LP token supply";
 pub static ERROR_INITIAL_LIQUIDITY_NOT_ADDED: &[u8] = b"Initial liquidity was not added";
 pub static ERROR_INITIAL_LIQUIDITY_ALREADY_ADDED: &[u8] = b"Initial liquidity was already added";
 
+pub static ERROR_NO_DELEGATION_CONTRACTS: &[u8] = b"There are no delegation contracts whitelisted";
 pub static ERROR_ALREADY_WHITELISTED: &[u8] = b"Delegation contract already whitelisted";
 pub static ERROR_NOT_WHITELISTED: &[u8] = b"Delegation contract is not whitelisted";
