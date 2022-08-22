@@ -9,7 +9,7 @@ use super::config;
 
 const MINIMUM_LIQUIDITY: u64 = 1_000;
 
-#[derive(TypeAbi, TopEncode, TopDecode, PartialEq, Copy, Clone, Debug)]
+#[derive(TypeAbi, TopEncode, TopDecode, PartialEq, Eq, Copy, Clone, Debug)]
 pub enum State {
     Inactive,
     Active,
@@ -22,13 +22,12 @@ pub trait LiquidityPoolModule: config::ConfigModule {
         token_amount: &BigUint,
         storage_cache: &mut StorageCache<Self>,
     ) -> BigUint {
-        let ls_amount;
-        if &storage_cache.virtual_egld_reserve > &0 {
-            ls_amount = token_amount.clone() * &storage_cache.ls_token_supply
-                / (&storage_cache.virtual_egld_reserve + &storage_cache.rewards_reserve);
+        let ls_amount = if storage_cache.virtual_egld_reserve > 0 {
+            token_amount.clone() * &storage_cache.ls_token_supply
+                / (&storage_cache.virtual_egld_reserve + &storage_cache.rewards_reserve)
         } else {
-            ls_amount = token_amount.clone();
-        }
+            token_amount.clone()
+        };
 
         require!(ls_amount > 0, ERROR_INSUFFICIENT_LIQUIDITY);
 
@@ -59,7 +58,7 @@ pub trait LiquidityPoolModule: config::ConfigModule {
             ERROR_NOT_ENOUGH_LP
         );
 
-        let egld_amount = (ls_token_amount.clone()
+        let egld_amount = (ls_token_amount
             * (&storage_cache.virtual_egld_reserve + &storage_cache.rewards_reserve))
             / &storage_cache.ls_token_supply;
         require!(egld_amount > 0u64, ERROR_INSUFFICIENT_LIQ_BURNED);
@@ -72,7 +71,7 @@ pub trait LiquidityPoolModule: config::ConfigModule {
     }
 
     fn burn_ls_token(&self, amount: &BigUint) {
-        self.ls_token().burn(&amount);
+        self.ls_token().burn(amount);
     }
 
     // TODO - Do we mint multiple MetaESDTs or 1 NFT? What happens if we call unbond 2 times, each time with half of the tokens?

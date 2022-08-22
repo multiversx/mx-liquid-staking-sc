@@ -33,7 +33,9 @@ impl<M: ManagedTypeApi> Default for ClaimStatus<M> {
     }
 }
 
-#[derive(TopEncode, TopDecode, NestedEncode, NestedDecode, TypeAbi, Clone, PartialEq, Debug)]
+#[derive(
+    TopEncode, TopDecode, NestedEncode, NestedDecode, TypeAbi, Clone, PartialEq, Eq, Debug,
+)]
 pub struct DelegationContractData<M: ManagedTypeApi> {
     pub total_staked: BigUint<M>,
     pub delegation_contract_cap: u64,

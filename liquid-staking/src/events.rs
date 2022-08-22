@@ -47,7 +47,7 @@ pub trait EventsModule: crate::config::ConfigModule {
             &AddLiquidityEvent {
                 caller: caller.clone(),
                 ls_token_id: storage_cache.ls_token_id.clone(),
-                ls_token_amount: ls_token_amount,
+                ls_token_amount,
                 ls_token_supply: storage_cache.ls_token_supply.clone(),
                 virtual_egld_reserve: storage_cache.virtual_egld_reserve.clone(),
                 rewards_reserve: storage_cache.rewards_reserve.clone(),
@@ -73,9 +73,9 @@ pub trait EventsModule: crate::config::ConfigModule {
             &RemoveLiquidityEvent {
                 caller: caller.clone(),
                 ls_token_id: storage_cache.ls_token_id.clone(),
-                ls_token_amount: ls_token_amount,
+                ls_token_amount,
                 unstake_token_id: self.unstake_token().get_token_id(),
-                unstake_token_amount: unstake_token_amount,
+                unstake_token_amount,
                 ls_token_supply: storage_cache.ls_token_supply.clone(),
                 virtual_egld_reserve: storage_cache.virtual_egld_reserve.clone(),
                 rewards_reserve: storage_cache.rewards_reserve.clone(),
