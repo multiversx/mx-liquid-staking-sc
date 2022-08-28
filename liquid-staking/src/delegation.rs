@@ -120,32 +120,29 @@ pub trait DelegationModule:
 
         let delegation_addresses_mapper = self.delegation_addresses_list();
         let delegation_index_mapper = self.delegation_addresses_last_index();
+        let max_index = delegation_addresses_mapper.len();
         let last_index = delegation_index_mapper.get();
-        let mut new_index = if last_index >= delegation_addresses_mapper.len() {
-            1
-        } else {
-            last_index + 1
-        };
+        let start_index = self.get_next_delegation_index(last_index, max_index);
+        let mut new_index = start_index;
         let mut delegation_contract = ManagedAddress::zero();
         if amount_to_undelegate > &0 {
-            while new_index != last_index {
-                delegation_contract = self.delegation_addresses_list().get(new_index);
-                let delegation_contract_data =
-                    self.delegation_contract_data(&delegation_contract).get();
-
-                if &delegation_contract_data.total_staked_from_ls_contract >= amount_to_undelegate {
-                    delegation_contract = self.delegation_addresses_list().get(new_index);
-                    break;
-                } else {
-                    new_index = if new_index >= delegation_addresses_mapper.len() {
-                        1
+            let delegation_availability =
+                self.check_delegation_availability(new_index, amount_to_undelegate);
+            if delegation_availability {
+                delegation_contract = delegation_addresses_mapper.get(new_index);
+            } else if delegation_addresses_mapper.len() > 1 {
+                new_index = self.get_next_delegation_index(new_index, max_index);
+                while new_index != start_index {
+                    if self.check_delegation_availability(new_index, amount_to_undelegate) {
+                        delegation_contract = delegation_addresses_mapper.get(new_index);
+                        break;
                     } else {
-                        new_index + 1
-                    };
+                        new_index = self.get_next_delegation_index(new_index, max_index);
+                    }
                 }
             }
         } else {
-            delegation_contract = self.delegation_addresses_list().get(new_index);
+            delegation_contract = delegation_addresses_mapper.get(new_index);
         }
 
         require!(
@@ -155,6 +152,25 @@ pub trait DelegationModule:
 
         delegation_index_mapper.set(new_index);
         delegation_contract
+    }
+
+    fn check_delegation_availability(
+        &self,
+        new_index: usize,
+        amount_to_undelegate: &BigUint,
+    ) -> bool {
+        let delegation_contract = self.delegation_addresses_list().get(new_index);
+        let delegation_contract_data = self.delegation_contract_data(&delegation_contract).get();
+
+        return &delegation_contract_data.total_staked_from_ls_contract >= amount_to_undelegate;
+    }
+
+    fn get_next_delegation_index(&self, current_index: usize, max_index: usize) -> usize {
+        if current_index >= max_index {
+            1
+        } else {
+            current_index + 1
+        }
     }
 
     fn can_proceed_claim_operation(

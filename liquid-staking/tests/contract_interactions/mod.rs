@@ -161,7 +161,6 @@ where
         virtual_egld_reserve: u64,
         rewards_reserve: u64,
         withdrawn_egld: u64,
-        unstake_token_supply: u64,
     ) {
         self.b_mock
             .execute_query(&self.sc_wrapper, |sc| {
@@ -181,10 +180,6 @@ where
                     sc.withdrawn_egld().get(),
                     Self::to_managed_biguint(Self::exp18(withdrawn_egld))
                 );
-                assert_eq!(
-                    sc.unstake_token_supply().get(),
-                    Self::to_managed_biguint(Self::exp18(unstake_token_supply))
-                );
             })
             .assert_ok();
     }
@@ -199,22 +194,22 @@ where
     //         .check_esdt_balance(&address, token_id, &token_balance);
     // }
 
-    pub fn check_user_nft_balance(
-        &self,
-        address: &Address,
-        token_id: &[u8],
-        token_nonce: u64,
-        token_balance: u64,
-    ) {
-        self.b_mock
-            .check_nft_balance::<UnstakeTokenAttributes<DebugApi>>(
-                &address,
-                token_id,
-                token_nonce,
-                &&Self::exp18(token_balance),
-                None,
-            );
-    }
+    // pub fn check_user_nft_balance(
+    //     &self,
+    //     address: &Address,
+    //     token_id: &[u8],
+    //     token_nonce: u64,
+    //     token_balance: u64,
+    // ) {
+    //     self.b_mock
+    //         .check_nft_balance::<UnstakeTokenAttributes<DebugApi>>(
+    //             &address,
+    //             token_id,
+    //             token_nonce,
+    //             &&Self::exp18(token_balance),
+    //             None,
+    //         );
+    // }
 
     pub fn check_user_nft_balance_denominated(
         &self,

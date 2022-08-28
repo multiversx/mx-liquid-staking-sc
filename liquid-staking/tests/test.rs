@@ -20,7 +20,7 @@ fn liquid_staking_add_liquidity_test() {
 
     let first_user = sc_setup.setup_new_user(100u64);
     sc_setup.add_liquidity(&first_user, 100u64);
-    sc_setup.check_contract_storage(100, 100, 0, 0, 0);
+    sc_setup.check_contract_storage(100, 100, 0, 0);
     sc_setup.check_user_balance(&first_user, LS_TOKEN_ID, 100u64);
 }
 
@@ -34,9 +34,9 @@ fn liquid_staking_remove_liquidity_test() {
     let first_user = sc_setup.setup_new_user(100u64);
     sc_setup.add_liquidity(&first_user, 100u64);
     sc_setup.remove_liquidity(&first_user, LS_TOKEN_ID, 90u64);
-    sc_setup.check_contract_storage(10, 100, 0, 0, 90);
+    sc_setup.check_contract_storage(10, 100, 0, 0);
     sc_setup.check_user_balance(&first_user, LS_TOKEN_ID, 10u64);
-    sc_setup.check_user_nft_balance(&first_user, UNSTAKE_TOKEN_ID, 1, 90u64);
+    sc_setup.check_user_nft_balance_denominated(&first_user, UNSTAKE_TOKEN_ID, 1, 1);
     sc_setup.check_user_egld_balance(&first_user, 0u64);
 }
 
