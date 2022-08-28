@@ -32,7 +32,10 @@ pub struct RemoveLiquidityEvent<M: ManagedTypeApi> {
 }
 
 #[elrond_wasm::module]
-pub trait EventsModule: crate::config::ConfigModule {
+pub trait EventsModule:
+    crate::config::ConfigModule
+    + elrond_wasm_modules::default_issue_callbacks::DefaultIssueCallbacksModule
+{
     fn emit_add_liquidity_event(
         &self,
         storage_cache: &StorageCache<Self>,

@@ -1,6 +1,7 @@
 use crate::errors::{
-    ERROR_ALREADY_WHITELISTED, ERROR_CLAIM_EPOCH, ERROR_CLAIM_REDELEGATE, ERROR_CLAIM_START,
-    ERROR_NOT_WHITELISTED, ERROR_NO_DELEGATION_CONTRACTS,
+    ERROR_ALREADY_WHITELISTED, ERROR_CLAIM_EPOCH, ERROR_CLAIM_START,
+    ERROR_INSUFFICIENT_DELEGATION_AMOUNT, ERROR_NOT_WHITELISTED, ERROR_NO_DELEGATION_CONTRACTS,
+    ERROR_OLD_CLAIM_START,
 };
 
 elrond_wasm::imports!();
@@ -10,7 +11,8 @@ elrond_wasm::derive_imports!();
 pub enum ClaimStatusType {
     None,
     Pending,
-    Finished,
+    Delegable,
+    Insufficient,
     Redelegated,
 }
 
@@ -46,7 +48,10 @@ pub struct DelegationContractData<M: ManagedTypeApi> {
 }
 
 #[elrond_wasm::module]
-pub trait DelegationModule: crate::config::ConfigModule {
+pub trait DelegationModule:
+    crate::config::ConfigModule
+    + elrond_wasm_modules::default_issue_callbacks::DefaultIssueCallbacksModule
+{
     #[only_owner]
     #[endpoint(whitelistDelegationContract)]
     fn whitelist_delegation_contract(
@@ -103,24 +108,53 @@ pub trait DelegationModule: crate::config::ConfigModule {
         });
     }
 
-    // TODO - add check for available delegation space
     // Round Robin
-    fn get_next_delegation_contract(&self) -> ManagedAddress<Self::Api> {
+    fn get_next_delegation_contract(
+        &self,
+        amount_to_undelegate: &BigUint,
+    ) -> ManagedAddress<Self::Api> {
         require!(
             !self.delegation_addresses_list().is_empty(),
             ERROR_NO_DELEGATION_CONTRACTS
         );
+
         let delegation_addresses_mapper = self.delegation_addresses_list();
         let delegation_index_mapper = self.delegation_addresses_last_index();
         let last_index = delegation_index_mapper.get();
-        let new_index = if last_index >= delegation_addresses_mapper.len() {
+        let mut new_index = if last_index >= delegation_addresses_mapper.len() {
             1
         } else {
             last_index + 1
         };
+        let mut delegation_contract = ManagedAddress::zero();
+        if amount_to_undelegate > &0 {
+            while new_index != last_index {
+                delegation_contract = self.delegation_addresses_list().get(new_index);
+                let delegation_contract_data =
+                    self.delegation_contract_data(&delegation_contract).get();
+
+                if &delegation_contract_data.total_staked_from_ls_contract >= amount_to_undelegate {
+                    delegation_contract = self.delegation_addresses_list().get(new_index);
+                    break;
+                } else {
+                    new_index = if new_index >= delegation_addresses_mapper.len() {
+                        1
+                    } else {
+                        new_index + 1
+                    };
+                }
+            }
+        } else {
+            delegation_contract = self.delegation_addresses_list().get(new_index);
+        }
+
+        require!(
+            !ManagedAddress::is_zero(&delegation_contract),
+            ERROR_INSUFFICIENT_DELEGATION_AMOUNT
+        );
 
         delegation_index_mapper.set(new_index);
-        delegation_addresses_mapper.get(new_index)
+        delegation_contract
     }
 
     fn can_proceed_claim_operation(
@@ -135,8 +169,9 @@ pub trait DelegationModule: crate::config::ConfigModule {
         );
         let old_claim_status = self.delegation_claim_status().get();
         require!(
-            old_claim_status.status == ClaimStatusType::Redelegated,
-            ERROR_CLAIM_REDELEGATE
+            old_claim_status.status == ClaimStatusType::Redelegated
+                || old_claim_status.status == ClaimStatusType::Insufficient,
+            ERROR_OLD_CLAIM_START
         );
         require!(
             current_epoch > old_claim_status.last_claim_epoch,

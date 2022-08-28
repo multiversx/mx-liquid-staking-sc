@@ -42,6 +42,8 @@ pub trait DelegationMock {
             egld_to_undelegate > 0 && egld_to_undelegate <= total_deposit,
             "Invalid undelegate amount"
         );
+        self.address_deposit(&caller)
+            .update(|value| *value -= &egld_to_undelegate);
         self.address_undelegate_amount(&caller)
             .update(|value| *value += &egld_to_undelegate);
         self.address_undelegate_epoch(&caller)
@@ -55,14 +57,12 @@ pub trait DelegationMock {
         let withdraw_epoch = self.address_undelegate_epoch(&caller).get();
         let withdraw_amount = self.address_undelegate_amount(&caller).get();
 
+        require!(withdraw_amount > 0, "No amount to withdraw");
         require!(
             withdraw_epoch > 0 && current_epoch >= withdraw_epoch,
             "Cannot withdraw yet"
         );
-        require!(withdraw_amount > 0, "No amount to withdraw");
 
-        self.address_deposit(&caller)
-            .update(|value| *value -= &withdraw_amount);
         self.egld_token_supply()
             .update(|value| *value -= &withdraw_amount);
         self.address_undelegate_epoch(&caller).clear();

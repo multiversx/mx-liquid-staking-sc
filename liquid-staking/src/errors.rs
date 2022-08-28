@@ -3,14 +3,19 @@ pub static ERROR_NOT_ACTIVE: &[u8] = b"Not active";
 pub static ERROR_LS_TOKEN_NOT_ISSUED: &[u8] = b"LS token not issued";
 
 pub static ERROR_BAD_DELEGATION_ADDRESS: &[u8] = b"Delegation address wrong value";
+pub static ERROR_BAD_DELEGATION_AMOUNT: &[u8] = b"Delegation amount must be greater than 0";
+pub static ERROR_INSUFFICIENT_DELEGATION_AMOUNT: &[u8] =
+    b"There are no delegation contracts with sufficient available amount";
 pub static ERROR_UNSTAKE_PERIOD_NOT_PASSED: &[u8] = b"The unstake period has not passed";
 
 pub static ERROR_CLAIM_START: &[u8] = b"Claim operation must be new or pending";
-pub static ERROR_CLAIM_REDELEGATE: &[u8] = b"Old claimed rewards must be delegated first";
+pub static ERROR_OLD_CLAIM_START: &[u8] =
+    b"Previous claimed rewards must be redelegated or lesser than 1 EGLD";
+pub static ERROR_CLAIM_REDELEGATE: &[u8] = b"Old claimed rewards must be greater than 1 EGLD";
 pub static ERROR_CLAIM_EPOCH: &[u8] = b"The rewards were already claimed for this epoch";
 
 pub static ERROR_BAD_PAYMENT_TOKENS: &[u8] = b"Bad payment tokens";
-pub static ERROR_BAD_PAYMENT_AMOUNT: &[u8] = b"Bad payment amount";
+pub static ERROR_BAD_PAYMENT_AMOUNT: &[u8] = b"Insufficient delegated amount";
 
 pub static ERROR_INSUFFICIENT_LIQUIDITY: &[u8] = b"Insufficient liquidity minted";
 pub static ERROR_INSUFFICIENT_LIQ_BURNED: &[u8] = b"Insufficient liquidity burned";

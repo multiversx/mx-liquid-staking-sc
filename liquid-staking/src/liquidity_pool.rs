@@ -16,7 +16,9 @@ pub enum State {
 }
 
 #[elrond_wasm::module]
-pub trait LiquidityPoolModule: config::ConfigModule {
+pub trait LiquidityPoolModule:
+    config::ConfigModule + elrond_wasm_modules::default_issue_callbacks::DefaultIssueCallbacksModule
+{
     fn pool_add_liquidity(
         &self,
         token_amount: &BigUint,
@@ -74,18 +76,13 @@ pub trait LiquidityPoolModule: config::ConfigModule {
         self.ls_token().burn(amount);
     }
 
-    // TODO - Do we mint multiple MetaESDTs or 1 NFT? What happens if we call unbond 2 times, each time with half of the tokens?
-    fn mint_unstake_tokens<T: TopEncode>(
-        &self,
-        amount: BigUint,
-        attributes: &T,
-    ) -> EsdtTokenPayment<Self::Api> {
-        self.unstake_token_supply().update(|x| *x += &amount);
-        self.unstake_token().nft_create(amount, attributes)
+    fn mint_unstake_tokens<T: TopEncode>(&self, attributes: &T) -> EsdtTokenPayment<Self::Api> {
+        self.unstake_token()
+            .nft_create(BigUint::from(1u64), attributes)
     }
 
-    fn burn_unstake_tokens(&self, token_nonce: u64, amount: &BigUint) {
-        self.unstake_token().nft_burn(token_nonce, amount);
-        self.unstake_token_supply().update(|x| *x -= amount);
+    fn burn_unstake_tokens(&self, token_nonce: u64) {
+        self.unstake_token()
+            .nft_burn(token_nonce, &BigUint::from(1u64));
     }
 }

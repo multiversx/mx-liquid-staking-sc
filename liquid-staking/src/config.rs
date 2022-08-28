@@ -12,11 +12,14 @@ pub const UNBOND_PERIOD: u64 = 10;
 pub struct UnstakeTokenAttributes<M: ManagedTypeApi> {
     pub delegation_contract: ManagedAddress<M>,
     pub unstake_epoch: u64,
+    pub unstake_amount: BigUint<M>,
     pub unbond_epoch: u64,
 }
 
 #[elrond_wasm::module]
-pub trait ConfigModule {
+pub trait ConfigModule:
+    elrond_wasm_modules::default_issue_callbacks::DefaultIssueCallbacksModule
+{
     #[only_owner]
     #[payable("EGLD")]
     #[endpoint(registerLsToken)]
