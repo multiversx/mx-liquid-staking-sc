@@ -49,23 +49,17 @@ fn liquid_staking_claim_rewards_and_withdraw_test() {
 
     let first_user = sc_setup.setup_new_user(100u64);
     sc_setup.add_liquidity(&first_user, 100u64);
-    sc_setup.b_mock.set_block_epoch(5u64);
+    sc_setup.b_mock.set_block_epoch(50u64);
     sc_setup.claim_rewards(&first_user);
     sc_setup.delegate_rewards(&first_user);
 
     sc_setup.remove_liquidity(&first_user, LS_TOKEN_ID, 90u64);
 
-    sc_setup.b_mock.set_block_epoch(15u64);
-    sc_setup.unbond_tokens(&first_user, UNSTAKE_TOKEN_ID, 1, 90u64);
+    sc_setup.b_mock.set_block_epoch(60u64);
+    sc_setup.unbond_tokens(&first_user, UNSTAKE_TOKEN_ID, 1);
 
     sc_setup.check_user_balance(&first_user, LS_TOKEN_ID, 10u64);
-    sc_setup.check_user_egld_balance(&first_user, 90u64);
-    sc_setup.check_user_nft_balance_denominated(
-        &first_user,
-        UNSTAKE_TOKEN_ID,
-        1,
-        123287671232876711,
-    );
+    sc_setup.check_user_egld_balance_denominated(&first_user, &num_bigint::BigUint::from(91232876712328767122u128));
 }
 
 pub fn exp15(value: u64) -> num_bigint::BigUint {

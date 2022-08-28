@@ -64,7 +64,6 @@ pub trait LiquidStaking<ContractReader>:
         require!(payment > MIN_EGLD_TO_DELEGATE, ERROR_BAD_PAYMENT_AMOUNT);
 
         let delegation_contract = self.get_next_delegation_contract(&BigUint::zero());
-        require!(!delegation_contract.is_zero(), ERROR_BAD_DELEGATION_ADDRESS);
 
         self.delegation_proxy_obj()
             .contract(delegation_contract.clone())
@@ -137,7 +136,6 @@ pub trait LiquidStaking<ContractReader>:
         self.burn_ls_token(&payment.amount);
 
         let delegation_contract = self.get_next_delegation_contract(&egld_to_unstake);
-        require!(!delegation_contract.is_zero(), ERROR_BAD_DELEGATION_ADDRESS);
 
         self.delegation_proxy_obj()
             .contract(delegation_contract.clone())
@@ -247,7 +245,7 @@ pub trait LiquidStaking<ContractReader>:
                 caller,
                 delegation_contract,
                 payment.token_nonce,
-                payment.amount,
+                unstake_token_attributes.unstake_amount,
             ))
             .call_and_exit();
     }
@@ -376,7 +374,6 @@ pub trait LiquidStaking<ContractReader>:
         );
 
         let delegation_contract = self.get_next_delegation_contract(&BigUint::zero());
-        require!(!delegation_contract.is_zero(), ERROR_BAD_DELEGATION_ADDRESS);
 
         self.delegation_proxy_obj()
             .contract(delegation_contract.clone())

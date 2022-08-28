@@ -120,7 +120,6 @@ where
         caller: &Address,
         payment_token: &[u8],
         token_nonce: u64,
-        payment_amount: u64,
     ) {
         self.b_mock
             .execute_esdt_transfer(
@@ -128,7 +127,7 @@ where
                 &self.sc_wrapper,
                 payment_token,
                 token_nonce,
-                &&Self::exp18(payment_amount),
+                &num_bigint::BigUint::from(1u64), // NFT
                 |sc| {
                     sc.unbond_tokens();
                 },
@@ -155,6 +154,10 @@ where
             .check_egld_balance(&address, &&Self::exp18(token_balance));
     }
 
+    pub fn check_user_egld_balance_denominated (&self, address: &Address, token_balance: &num_bigint::BigUint) {
+        self.b_mock
+            .check_egld_balance(&address, token_balance);
+    }
     pub fn check_contract_storage(
         &mut self,
         ls_token_supply: u64,

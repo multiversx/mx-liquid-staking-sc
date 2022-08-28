@@ -1,7 +1,6 @@
 use crate::errors::{
-    ERROR_ALREADY_WHITELISTED, ERROR_CLAIM_EPOCH, ERROR_CLAIM_START,
-    ERROR_INSUFFICIENT_DELEGATION_AMOUNT, ERROR_NOT_WHITELISTED, ERROR_NO_DELEGATION_CONTRACTS,
-    ERROR_OLD_CLAIM_START,
+    ERROR_ALREADY_WHITELISTED, ERROR_BAD_DELEGATION_ADDRESS, ERROR_CLAIM_EPOCH, ERROR_CLAIM_START,
+    ERROR_NOT_WHITELISTED, ERROR_NO_DELEGATION_CONTRACTS, ERROR_OLD_CLAIM_START,
 };
 
 elrond_wasm::imports!();
@@ -147,7 +146,7 @@ pub trait DelegationModule:
 
         require!(
             !ManagedAddress::is_zero(&delegation_contract),
-            ERROR_INSUFFICIENT_DELEGATION_AMOUNT
+            ERROR_BAD_DELEGATION_ADDRESS
         );
 
         delegation_index_mapper.set(new_index);

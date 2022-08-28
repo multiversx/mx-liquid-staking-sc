@@ -2,10 +2,8 @@ pub static ERROR_ACTIVE: &[u8] = b"Active state";
 pub static ERROR_NOT_ACTIVE: &[u8] = b"Not active";
 pub static ERROR_LS_TOKEN_NOT_ISSUED: &[u8] = b"LS token not issued";
 
-pub static ERROR_BAD_DELEGATION_ADDRESS: &[u8] = b"Delegation address wrong value";
+pub static ERROR_BAD_DELEGATION_ADDRESS: &[u8] = b"No delegation address available";
 pub static ERROR_BAD_DELEGATION_AMOUNT: &[u8] = b"Delegation amount must be greater than 0";
-pub static ERROR_INSUFFICIENT_DELEGATION_AMOUNT: &[u8] =
-    b"There are no delegation contracts with sufficient available amount";
 pub static ERROR_UNSTAKE_PERIOD_NOT_PASSED: &[u8] = b"The unstake period has not passed";
 
 pub static ERROR_CLAIM_START: &[u8] = b"Claim operation must be new or pending";
