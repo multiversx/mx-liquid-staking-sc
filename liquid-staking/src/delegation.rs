@@ -161,7 +161,7 @@ pub trait DelegationModule:
         let delegation_contract = self.delegation_addresses_list().get(new_index);
         let delegation_contract_data = self.delegation_contract_data(&delegation_contract).get();
 
-        return &delegation_contract_data.total_staked_from_ls_contract >= amount_to_undelegate;
+        &delegation_contract_data.total_staked_from_ls_contract >= amount_to_undelegate
     }
 
     fn get_next_delegation_index(&self, current_index: usize, max_index: usize) -> usize {

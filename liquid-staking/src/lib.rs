@@ -174,7 +174,7 @@ pub trait LiquidStaking<ContractReader>:
                     .update(|x| *x += &egld_to_unstake);
 
                 let virtual_position = UnstakeTokenAttributes {
-                    delegation_contract: delegation_contract.clone(),
+                    delegation_contract,
                     unstake_epoch: current_epoch,
                     unstake_amount: egld_to_unstake,
                     unbond_epoch,
