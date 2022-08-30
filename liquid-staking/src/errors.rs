@@ -2,7 +2,7 @@ pub static ERROR_ACTIVE: &[u8] = b"Active state";
 pub static ERROR_NOT_ACTIVE: &[u8] = b"Not active";
 pub static ERROR_LS_TOKEN_NOT_ISSUED: &[u8] = b"LS token not issued";
 
-pub static ERROR_BAD_DELEGATION_ADDRESS: &[u8] = b"No delegation address available";
+pub static ERROR_BAD_DELEGATION_ADDRESS: &[u8] = b"No delegation contract available";
 pub static ERROR_BAD_DELEGATION_AMOUNT: &[u8] = b"Delegation amount must be greater than 0";
 pub static ERROR_UNSTAKE_PERIOD_NOT_PASSED: &[u8] = b"The unstake period has not passed";
 
@@ -25,5 +25,8 @@ pub static ERROR_INITIAL_LIQUIDITY_NOT_ADDED: &[u8] = b"Initial liquidity was no
 pub static ERROR_INITIAL_LIQUIDITY_ALREADY_ADDED: &[u8] = b"Initial liquidity was already added";
 
 pub static ERROR_NO_DELEGATION_CONTRACTS: &[u8] = b"There are no delegation contracts whitelisted";
+pub static ERROR_FIRST_DELEGATION_NODE: &[u8] = b"The first delegation node is incorrect";
 pub static ERROR_ALREADY_WHITELISTED: &[u8] = b"Delegation contract already whitelisted";
 pub static ERROR_NOT_WHITELISTED: &[u8] = b"Delegation contract is not whitelisted";
+pub static ERROR_DELEGATION_CAP: &[u8] = b"Delegation cap must be higher than the total staked amount";
+pub static ERROR_ONLY_DELEGATION_ADMIN: &[u8] = b"Only the admin of the delegation contract can change the status";

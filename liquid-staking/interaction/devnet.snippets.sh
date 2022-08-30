@@ -148,7 +148,7 @@ claimRewards() {
 delegateRewards() {
     erdpy --verbose contract call ${CONTRACT_ADDRESS} --recall-nonce \
         --pem=${WALLET_PEM} \
-        --gas-limit=6000000 \
+        --gas-limit=60000000 \
         --proxy=${PROXY} --chain=${CHAIN_ID} \
         --function="delegateRewards" \
         --send || return

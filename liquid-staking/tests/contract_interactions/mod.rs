@@ -1,5 +1,5 @@
 use crate::contract_setup::LiquidStakingContractSetup;
-use elrond_wasm::types::{Address, BigUint};
+use elrond_wasm::types::{Address};
 use elrond_wasm_debug::{managed_address, num_bigint, rust_biguint, DebugApi};
 use liquid_staking::config::{ConfigModule, UnstakeTokenAttributes};
 use liquid_staking::LiquidStaking;
@@ -21,8 +21,9 @@ where
         apy: u64,
     ) {
         let rust_zero = rust_biguint!(0u64);
-        let egld_balance_biguint = &&Self::exp18(egld_balance);
-        let total_staked_biguint = BigUint::from(total_staked);
+        let egld_balance_biguint = &Self::exp18(egld_balance);
+        let total_staked_biguint = Self::exp18(total_staked);
+        let delegation_contract_cap_biguint = Self::exp18(delegation_contract_cap);
 
         self.b_mock
             .set_egld_balance(owner_address, egld_balance_biguint);
@@ -55,8 +56,9 @@ where
             .execute_tx(owner_address, &self.sc_wrapper, &rust_zero, |sc| {
                 sc.whitelist_delegation_contract(
                     managed_address!(delegation_wrapper.address_ref()),
-                    total_staked_biguint,
-                    delegation_contract_cap,
+                    managed_address!(owner_address),
+                    Self::to_managed_biguint(total_staked_biguint),
+                    Self::to_managed_biguint(delegation_contract_cap_biguint),
                     nr_nodes,
                     apy,
                 );

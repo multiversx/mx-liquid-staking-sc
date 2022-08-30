@@ -121,25 +121,41 @@ In the callback, if the result is succesful, the reserves are updated accordingl
     fn whitelist_delegation_contract(
         &self,
         contract_address: ManagedAddress,
+        admin_address: ManagedAddress,
         total_staked: BigUint,
-        delegation_contract_cap: u64,
+        delegation_contract_cap: BigUint,
         nr_nodes: u64,
         apy: u64,
     );
 ```
 
-Endpoint that allows the owner to whitelist a delegation contract with a set of parameters, sent as arguments (__DelegationContractData__). From the list below, the first 4 variables are user updatable, while __total_staked_from_ls_contract__ and __total_undelegated_from_ls_contract__ variables are automatically updated throughout the contract's workflow.
+Endpoint that allows the owner to whitelist a delegation contract with a set of parameters, sent as arguments (__DelegationContractData__). From the list below, the first 5 variables are user updatable, while __total_staked_from_ls_contract__ and __total_undelegated_from_ls_contract__ variables are automatically updated throughout the contract's workflow.
 
 ```rust
 pub struct DelegationContractData {
+    pub admin_address: ManagedAddress,
     pub total_staked: BigUint,
-    pub delegation_contract_cap: u64,
+    pub delegation_contract_cap: BigUint,
     pub nr_nodes: u64,
     pub apy: u64,
     pub total_staked_from_ls_contract: BigUint,
     pub total_undelegated_from_ls_contract: BigUint,
 }
 ```
+
+
+### changeDelegationContractAdmin
+```rust
+    #[only_owner]
+    #[endpoint(changeDelegationContractAdmin)]
+    fn change_delegation_contract_admin(
+        &self,
+        contract_address: ManagedAddress,
+        admin_address: ManagedAddress,
+    )
+```
+
+Endpoint that allows the owner to update the admin of a specific delegation contract. It takes as arguments the address of the delegation contract and the address of the new admin.
 
 
 ### changeDelegationContractParams
@@ -150,13 +166,13 @@ pub struct DelegationContractData {
         &self,
         contract_address: ManagedAddress,
         total_staked: BigUint,
-        delegation_contract_cap: u64,
+        delegation_contract_cap: BigUint,
         nr_nodes: u64,
         apy: u64,
     );
 ```
 
-Endpoint that allows the admin of a whitelisted delegation contract to update the given parameters, by sending them as arguments. The __total_staked_from_ls_contract__ and __total_undelegated_from_ls_contract__ variables remain unchanged.
+Endpoint that allows the admin of a whitelisted delegation contract to update the given parameters, by sending them as arguments. The caller of the endpoint must be the same as the admin_address that was previously saved for that said delegation contract.
 
 
 ### registerLsToken

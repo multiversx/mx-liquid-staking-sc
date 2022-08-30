@@ -9,10 +9,10 @@ elrond_wasm_node::wasm_endpoints! {
     (
         callBack
         addLiquidity
+        changeDelegationContractAdmin
         changeDelegationContractParams
         claimRewards
         delegateRewards
-        getDelegationAddressesLastIndex
         getDelegationAddressesList
         getDelegationContractData
         getDelegationLastClaimEpoch

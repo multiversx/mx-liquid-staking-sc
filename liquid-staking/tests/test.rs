@@ -16,7 +16,7 @@ fn liquid_staking_add_liquidity_test() {
     let _ = DebugApi::dummy();
     let mut sc_setup = LiquidStakingContractSetup::new(liquid_staking::contract_obj);
 
-    sc_setup.deploy_staking_contract(&sc_setup.owner_address.clone(), 1000, 1000, 0, 0, 0);
+    sc_setup.deploy_staking_contract(&sc_setup.owner_address.clone(), 1000, 1000, 1500, 0, 0);
 
     let first_user = sc_setup.setup_new_user(100u64);
     sc_setup.add_liquidity(&first_user, 100u64);
@@ -29,7 +29,7 @@ fn liquid_staking_remove_liquidity_test() {
     let _ = DebugApi::dummy();
     let mut sc_setup = LiquidStakingContractSetup::new(liquid_staking::contract_obj);
 
-    sc_setup.deploy_staking_contract(&sc_setup.owner_address.clone(), 1000, 1000, 0, 0, 0);
+    sc_setup.deploy_staking_contract(&sc_setup.owner_address.clone(), 1000, 1000, 1500, 0, 0);
 
     let first_user = sc_setup.setup_new_user(100u64);
     sc_setup.add_liquidity(&first_user, 100u64);
@@ -45,7 +45,7 @@ fn liquid_staking_claim_rewards_and_withdraw_test() {
     let _ = DebugApi::dummy();
     let mut sc_setup = LiquidStakingContractSetup::new(liquid_staking::contract_obj);
 
-    sc_setup.deploy_staking_contract(&sc_setup.owner_address.clone(), 1000, 1000, 0, 0, 0);
+    sc_setup.deploy_staking_contract(&sc_setup.owner_address.clone(), 1000, 1000, 1500, 0, 0);
 
     let first_user = sc_setup.setup_new_user(100u64);
     sc_setup.add_liquidity(&first_user, 100u64);

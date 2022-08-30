@@ -1,6 +1,7 @@
 use crate::errors::{
     ERROR_ALREADY_WHITELISTED, ERROR_BAD_DELEGATION_ADDRESS, ERROR_CLAIM_EPOCH, ERROR_CLAIM_START,
-    ERROR_NOT_WHITELISTED, ERROR_NO_DELEGATION_CONTRACTS, ERROR_OLD_CLAIM_START,
+    ERROR_DELEGATION_CAP, ERROR_NOT_WHITELISTED, ERROR_NO_DELEGATION_CONTRACTS,
+    ERROR_OLD_CLAIM_START, ERROR_ONLY_DELEGATION_ADMIN, ERROR_FIRST_DELEGATION_NODE,
 };
 
 elrond_wasm::imports!();
@@ -19,7 +20,8 @@ pub enum ClaimStatusType {
 pub struct ClaimStatus<M: ManagedTypeApi> {
     pub status: ClaimStatusType,
     pub last_claim_epoch: u64,
-    pub current_iteration: usize,
+    pub current_node: u32,
+    pub last_node: u32,
     pub starting_token_reserve: BigUint<M>,
 }
 
@@ -28,7 +30,8 @@ impl<M: ManagedTypeApi> Default for ClaimStatus<M> {
         Self {
             status: ClaimStatusType::None,
             last_claim_epoch: 0,
-            current_iteration: 1,
+            current_node: 0,
+            last_node: 0,
             starting_token_reserve: BigUint::zero(),
         }
     }
@@ -38,8 +41,9 @@ impl<M: ManagedTypeApi> Default for ClaimStatus<M> {
     TopEncode, TopDecode, NestedEncode, NestedDecode, TypeAbi, Clone, PartialEq, Eq, Debug,
 )]
 pub struct DelegationContractData<M: ManagedTypeApi> {
+    pub admin_address: ManagedAddress<M>,
     pub total_staked: BigUint<M>,
-    pub delegation_contract_cap: u64,
+    pub delegation_contract_cap: BigUint<M>,
     pub nr_nodes: u64,
     pub apy: u64,
     pub total_staked_from_ls_contract: BigUint<M>,
@@ -56,8 +60,9 @@ pub trait DelegationModule:
     fn whitelist_delegation_contract(
         &self,
         contract_address: ManagedAddress,
+        admin_address: ManagedAddress,
         total_staked: BigUint,
-        delegation_contract_cap: u64,
+        delegation_contract_cap: BigUint,
         nr_nodes: u64,
         apy: u64,
     ) {
@@ -66,7 +71,13 @@ pub trait DelegationModule:
             ERROR_ALREADY_WHITELISTED
         );
 
+        require!(
+            delegation_contract_cap >= total_staked,
+            ERROR_DELEGATION_CAP
+        );
+
         let contract_data = DelegationContractData {
+            admin_address,
             total_staked,
             delegation_contract_cap,
             nr_nodes,
@@ -77,38 +88,127 @@ pub trait DelegationModule:
 
         self.delegation_contract_data(&contract_address)
             .set(contract_data);
-        self.delegation_addresses_list().push(&contract_address);
+        self.add_and_order_delegation_address_in_list(contract_address, apy);
     }
 
     #[only_owner]
+    #[endpoint(changeDelegationContractAdmin)]
+    fn change_delegation_contract_admin(
+        &self,
+        contract_address: ManagedAddress,
+        admin_address: ManagedAddress,
+    ) {
+        let delegation_address_mapper = self.delegation_contract_data(&contract_address);
+        require!(!delegation_address_mapper.is_empty(), ERROR_NOT_WHITELISTED);
+
+        delegation_address_mapper.update(|contract_data| {
+            contract_data.admin_address = admin_address;
+        });
+    }
+
     #[endpoint(changeDelegationContractParams)]
     fn change_delegation_contract_params(
         &self,
         contract_address: ManagedAddress,
         total_staked: BigUint,
-        delegation_contract_cap: u64,
+        delegation_contract_cap: BigUint,
         nr_nodes: u64,
         apy: u64,
     ) {
+        let caller = self.blockchain().get_caller();
         let delegation_address_mapper = self.delegation_contract_data(&contract_address);
-        require!(!delegation_address_mapper.is_empty(), ERROR_NOT_WHITELISTED);
-
         let old_contract_data = delegation_address_mapper.get();
+        require!(!delegation_address_mapper.is_empty(), ERROR_NOT_WHITELISTED);
+        require!(
+            old_contract_data.admin_address == caller,
+            ERROR_ONLY_DELEGATION_ADMIN
+        );
+        require!(
+            delegation_contract_cap >= total_staked,
+            ERROR_DELEGATION_CAP
+        );
+
+        if old_contract_data.apy != apy {
+            self.remove_delegation_address_from_list(&contract_address);
+            self.add_and_order_delegation_address_in_list(contract_address, apy)
+        }
 
         delegation_address_mapper.update(|contract_data| {
             contract_data.total_staked = total_staked;
             contract_data.delegation_contract_cap = delegation_contract_cap;
             contract_data.nr_nodes = nr_nodes;
             contract_data.apy = apy;
-            contract_data.total_staked_from_ls_contract =
-                old_contract_data.total_staked_from_ls_contract;
-            contract_data.total_undelegated_from_ls_contract =
-                old_contract_data.total_undelegated_from_ls_contract;
         });
     }
 
-    // Round Robin
-    fn get_next_delegation_contract(
+    fn add_and_order_delegation_address_in_list(&self, contract_address: ManagedAddress, apy: u64) {
+        let mut delegation_addresses_mapper = self.delegation_addresses_list();
+        if self.delegation_addresses_list().is_empty() {
+            self.delegation_addresses_list()
+                .push_front(contract_address);
+        } else {
+            let mut check_if_added = false;
+            for delegation_address_element in delegation_addresses_mapper.iter() {
+                let node_id = delegation_address_element.get_node_id();
+                let delegation_address = delegation_address_element.into_value();
+                let delegation_contract_data =
+                    self.delegation_contract_data(&delegation_address).get();
+                if apy >= delegation_contract_data.apy {
+                    self.delegation_addresses_list()
+                        .push_before_node_id(node_id, contract_address.clone());
+                    check_if_added = true;
+                    break;
+                }
+            }
+            if !check_if_added {
+                delegation_addresses_mapper.push_back(contract_address);
+            }
+        }
+    }
+
+    fn remove_delegation_address_from_list(&self, contract_address: &ManagedAddress) {
+        for delegation_address_element in self.delegation_addresses_list().iter() {
+            let node_id = delegation_address_element.get_node_id();
+            let delegation_address = delegation_address_element.into_value();
+            if contract_address == &delegation_address {
+                self.delegation_addresses_list().remove_node_by_id(node_id);
+                break;
+            }
+        }
+    }
+
+    fn get_delegation_contract_for_delegate(
+        &self,
+        amount_to_delegate: &BigUint,
+    ) -> ManagedAddress<Self::Api> {
+        require!(
+            !self.delegation_addresses_list().is_empty(),
+            ERROR_NO_DELEGATION_CONTRACTS
+        );
+
+        let delegation_addresses_mapper = self.delegation_addresses_list();
+
+        let mut delegation_contract = ManagedAddress::zero();
+        for delegation_address_element in delegation_addresses_mapper.iter() {
+            let delegation_address = delegation_address_element.into_value();
+            let delegation_contract_data = self.delegation_contract_data(&delegation_address).get();
+
+            if &delegation_contract_data.delegation_contract_cap
+                - &delegation_contract_data.total_staked
+                >= *amount_to_delegate
+            {
+                delegation_contract = delegation_address;
+                break;
+            }
+        }
+        require!(
+            !ManagedAddress::is_zero(&delegation_contract),
+            ERROR_BAD_DELEGATION_ADDRESS
+        );
+        delegation_contract
+    }
+
+    fn get_delegation_contract_for_undelegate(
         &self,
         amount_to_undelegate: &BigUint,
     ) -> ManagedAddress<Self::Api> {
@@ -118,58 +218,22 @@ pub trait DelegationModule:
         );
 
         let delegation_addresses_mapper = self.delegation_addresses_list();
-        let delegation_index_mapper = self.delegation_addresses_last_index();
-        let max_index = delegation_addresses_mapper.len();
-        let last_index = delegation_index_mapper.get();
-        let start_index = self.get_next_delegation_index(last_index, max_index);
-        let mut new_index = start_index;
-        let mut delegation_contract = ManagedAddress::zero();
-        if amount_to_undelegate > &0 {
-            let delegation_availability =
-                self.check_delegation_availability(new_index, amount_to_undelegate);
-            if delegation_availability {
-                delegation_contract = delegation_addresses_mapper.get(new_index);
-            } else if delegation_addresses_mapper.len() > 1 {
-                new_index = self.get_next_delegation_index(new_index, max_index);
-                while new_index != start_index {
-                    if self.check_delegation_availability(new_index, amount_to_undelegate) {
-                        delegation_contract = delegation_addresses_mapper.get(new_index);
-                        break;
-                    } else {
-                        new_index = self.get_next_delegation_index(new_index, max_index);
-                    }
-                }
-            }
-        } else {
-            delegation_contract = delegation_addresses_mapper.get(new_index);
-        }
 
+        let mut delegation_contract = ManagedAddress::zero();
+        for delegation_address_element in delegation_addresses_mapper.iter() {
+            let delegation_address = delegation_address_element.into_value();
+            let delegation_contract_data = self.delegation_contract_data(&delegation_address).get();
+
+            if &delegation_contract_data.total_staked_from_ls_contract >= amount_to_undelegate {
+                delegation_contract = delegation_address;
+                break;
+            }
+        }
         require!(
             !ManagedAddress::is_zero(&delegation_contract),
             ERROR_BAD_DELEGATION_ADDRESS
         );
-
-        delegation_index_mapper.set(new_index);
         delegation_contract
-    }
-
-    fn check_delegation_availability(
-        &self,
-        new_index: usize,
-        amount_to_undelegate: &BigUint,
-    ) -> bool {
-        let delegation_contract = self.delegation_addresses_list().get(new_index);
-        let delegation_contract_data = self.delegation_contract_data(&delegation_contract).get();
-
-        &delegation_contract_data.total_staked_from_ls_contract >= amount_to_undelegate
-    }
-
-    fn get_next_delegation_index(&self, current_index: usize, max_index: usize) -> usize {
-        if current_index >= max_index {
-            1
-        } else {
-            current_index + 1
-        }
     }
 
     fn can_proceed_claim_operation(
@@ -194,23 +258,27 @@ pub trait DelegationModule:
         );
 
         if new_claim_status.status == ClaimStatusType::None {
+            let delegation_addresses_mapper = self.delegation_addresses_list();
+            require!(
+                delegation_addresses_mapper.front().unwrap().get_node_id() != 0,
+                ERROR_FIRST_DELEGATION_NODE
+            );
             new_claim_status.status = ClaimStatusType::Pending;
             new_claim_status.last_claim_epoch = current_epoch;
+            new_claim_status.current_node =
+                delegation_addresses_mapper.front().unwrap().get_node_id();
+            new_claim_status.last_node = delegation_addresses_mapper.back().unwrap().get_node_id();
             new_claim_status.starting_token_reserve = self.virtual_egld_reserve().get();
         }
     }
 
     #[view(getDelegationAddressesList)]
     #[storage_mapper("delegationAddressesList")]
-    fn delegation_addresses_list(&self) -> VecMapper<ManagedAddress>;
+    fn delegation_addresses_list(&self) -> LinkedListMapper<ManagedAddress>;
 
     #[view(getDelegationLastClaimEpoch)]
     #[storage_mapper("delegationLastClaimEpoch")]
     fn delegation_claim_status(&self) -> SingleValueMapper<ClaimStatus<Self::Api>>;
-
-    #[view(getDelegationAddressesLastIndex)]
-    #[storage_mapper("delegationAddressesLastIndex")]
-    fn delegation_addresses_last_index(&self) -> SingleValueMapper<usize>;
 
     #[view(getDelegationContractData)]
     #[storage_mapper("delegationContractData")]
