@@ -90,11 +90,11 @@ where
         }
     }
 
-    pub fn exp18(value: u64) -> num_bigint::BigUint {
-        value.mul(rust_biguint!(10).pow(18))
-    }
-
     pub fn to_managed_biguint(value: num_bigint::BigUint) -> BigUint<DebugApi> {
         BigUint::from_bytes_be(&value.to_bytes_be())
+    }
+
+    pub fn exp18(value: u64) -> num_bigint::BigUint {
+        value.mul(rust_biguint!(10).pow(18))
     }
 }

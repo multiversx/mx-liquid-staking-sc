@@ -1,7 +1,7 @@
 use crate::errors::{
     ERROR_ALREADY_WHITELISTED, ERROR_BAD_DELEGATION_ADDRESS, ERROR_CLAIM_EPOCH, ERROR_CLAIM_START,
-    ERROR_DELEGATION_CAP, ERROR_NOT_WHITELISTED, ERROR_NO_DELEGATION_CONTRACTS,
-    ERROR_OLD_CLAIM_START, ERROR_ONLY_DELEGATION_ADMIN, ERROR_FIRST_DELEGATION_NODE,
+    ERROR_DELEGATION_CAP, ERROR_FIRST_DELEGATION_NODE, ERROR_NOT_WHITELISTED,
+    ERROR_NO_DELEGATION_CONTRACTS, ERROR_OLD_CLAIM_START, ERROR_ONLY_DELEGATION_ADMIN,
 };
 
 elrond_wasm::imports!();
@@ -177,6 +177,12 @@ pub trait DelegationModule:
         }
     }
 
+    fn move_delegation_contract_to_back(&self, delegation_contract: ManagedAddress) {
+        let mut delegation_addresses_mapper = self.delegation_addresses_list();
+        delegation_addresses_mapper.pop_front();
+        delegation_addresses_mapper.push_back(delegation_contract);
+    }
+
     fn get_delegation_contract_for_delegate(
         &self,
         amount_to_delegate: &BigUint,
@@ -268,7 +274,9 @@ pub trait DelegationModule:
             new_claim_status.current_node =
                 delegation_addresses_mapper.front().unwrap().get_node_id();
             new_claim_status.last_node = delegation_addresses_mapper.back().unwrap().get_node_id();
-            new_claim_status.starting_token_reserve = self.virtual_egld_reserve().get();
+            new_claim_status.starting_token_reserve = self
+                .blockchain()
+                .get_sc_balance(&EgldOrEsdtTokenIdentifier::egld(), 0);
         }
     }
 

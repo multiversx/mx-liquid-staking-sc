@@ -24,7 +24,7 @@ elrond_wasm_node::wasm_endpoints! {
         getUnstakeTokenSupply
         getVirtualEGLDReserve
         getWithdrawnEGLD
-        get_value_for_position
+        get_ls_value_for_position
         registerLsToken
         registerUnstakeToken
         removeLiquidity

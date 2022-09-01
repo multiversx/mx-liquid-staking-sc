@@ -1,5 +1,5 @@
 use crate::contract_setup::LiquidStakingContractSetup;
-use elrond_wasm::types::{Address};
+use elrond_wasm::types::Address;
 use elrond_wasm_debug::{managed_address, num_bigint, rust_biguint, DebugApi};
 use liquid_staking::config::{ConfigModule, UnstakeTokenAttributes};
 use liquid_staking::LiquidStaking;
@@ -19,7 +19,7 @@ where
         delegation_contract_cap: u64,
         nr_nodes: u64,
         apy: u64,
-    ) {
+    ) -> Address {
         let rust_zero = rust_biguint!(0u64);
         let egld_balance_biguint = &Self::exp18(egld_balance);
         let total_staked_biguint = Self::exp18(total_staked);
@@ -57,6 +57,34 @@ where
                 sc.whitelist_delegation_contract(
                     managed_address!(delegation_wrapper.address_ref()),
                     managed_address!(owner_address),
+                    Self::to_managed_biguint(total_staked_biguint),
+                    Self::to_managed_biguint(delegation_contract_cap_biguint),
+                    nr_nodes,
+                    apy,
+                );
+            })
+            .assert_ok();
+
+        delegation_wrapper.address_ref().clone()
+    }
+
+    pub fn update_staking_contract_params(
+        &mut self,
+        owner_address: &Address,
+        contract_address: &Address,
+        total_staked: u64,
+        delegation_contract_cap: u64,
+        nr_nodes: u64,
+        apy: u64,
+    ) {
+        let rust_zero = rust_biguint!(0u64);
+        let total_staked_biguint = Self::exp18(total_staked);
+        let delegation_contract_cap_biguint = Self::exp18(delegation_contract_cap);
+
+        self.b_mock
+            .execute_tx(owner_address, &self.sc_wrapper, &rust_zero, |sc| {
+                sc.change_delegation_contract_params(
+                    managed_address!(contract_address),
                     Self::to_managed_biguint(total_staked_biguint),
                     Self::to_managed_biguint(delegation_contract_cap_biguint),
                     nr_nodes,
@@ -117,12 +145,16 @@ where
             .assert_ok();
     }
 
-    pub fn unbond_tokens(
-        &mut self,
-        caller: &Address,
-        payment_token: &[u8],
-        token_nonce: u64,
-    ) {
+    pub fn delegate_rewards_check_insufficient(&mut self, caller: &Address) {
+        let rust_zero = rust_biguint!(0u64);
+        self.b_mock
+            .execute_tx(caller, &self.sc_wrapper, &rust_zero, |sc| {
+                sc.delegate_rewards();
+            })
+            .assert_error(4, "Old claimed rewards must be greater than 1 EGLD");
+    }
+
+    pub fn unbond_tokens(&mut self, caller: &Address, payment_token: &[u8], token_nonce: u64) {
         self.b_mock
             .execute_esdt_transfer(
                 caller,
@@ -151,15 +183,29 @@ where
             .check_esdt_balance(&address, token_id, &&Self::exp18(token_balance));
     }
 
+    pub fn check_user_balance_denominated(
+        &self,
+        address: &Address,
+        token_id: &[u8],
+        token_balance: u128,
+    ) {
+        self.b_mock.check_esdt_balance(
+            &address,
+            token_id,
+            &num_bigint::BigUint::from(token_balance),
+        );
+    }
+
     pub fn check_user_egld_balance(&self, address: &Address, token_balance: u64) {
         self.b_mock
             .check_egld_balance(&address, &&Self::exp18(token_balance));
     }
 
-    pub fn check_user_egld_balance_denominated (&self, address: &Address, token_balance: &num_bigint::BigUint) {
+    pub fn check_user_egld_balance_denominated(&self, address: &Address, token_balance: u128) {
         self.b_mock
-            .check_egld_balance(&address, token_balance);
+            .check_egld_balance(&address, &num_bigint::BigUint::from(token_balance));
     }
+
     pub fn check_contract_storage(
         &mut self,
         ls_token_supply: u64,
@@ -189,32 +235,63 @@ where
             .assert_ok();
     }
 
-    // pub fn check_user_balance_denominated(
-    //     &self,
-    //     address: &Address,
-    //     token_id: &[u8],
-    //     token_balance: num_bigint::BigUint,
-    // ) {
-    //     self.b_mock
-    //         .check_esdt_balance(&address, token_id, &token_balance);
-    // }
+    pub fn check_contract_rewards_storage_denominated(&mut self, rewards_reserve: u128) {
+        self.b_mock
+            .execute_query(&self.sc_wrapper, |sc| {
+                assert_eq!(
+                    sc.rewards_reserve().get(),
+                    Self::to_managed_biguint(num_bigint::BigUint::from(rewards_reserve))
+                );
+            })
+            .assert_ok();
+    }
 
-    // pub fn check_user_nft_balance(
-    //     &self,
-    //     address: &Address,
-    //     token_id: &[u8],
-    //     token_nonce: u64,
-    //     token_balance: u64,
-    // ) {
-    //     self.b_mock
-    //         .check_nft_balance::<UnstakeTokenAttributes<DebugApi>>(
-    //             &address,
-    //             token_id,
-    //             token_nonce,
-    //             &&Self::exp18(token_balance),
-    //             None,
-    //         );
-    // }
+    pub fn check_delegation_contract_values(
+        &mut self,
+        delegation_contract: &Address,
+        total_staked: u64,
+    ) {
+        self.b_mock
+            .execute_query(&self.sc_wrapper, |sc| {
+                assert_eq!(
+                    sc.delegation_contract_data(&managed_address!(delegation_contract))
+                        .get()
+                        .total_staked_from_ls_contract,
+                    Self::to_managed_biguint(Self::exp18(total_staked))
+                );
+            })
+            .assert_ok();
+    }
+
+    pub fn get_ls_value_for_position(&mut self, token_amount: u64) -> u128 {
+        let mut ls_value = 0u64;
+        self.b_mock
+            .execute_query(&self.sc_wrapper, |sc| {
+                let ls_value_biguint = sc
+                    .get_ls_value_for_position(Self::to_managed_biguint(Self::exp18(token_amount)));
+                ls_value = ls_value_biguint.to_u64().unwrap();
+            })
+            .assert_ok();
+
+        u128::from(ls_value)
+    }
+
+    pub fn check_delegation_contract_values_denominated(
+        &mut self,
+        delegation_contract: &Address,
+        total_staked: u128,
+    ) {
+        self.b_mock
+            .execute_query(&self.sc_wrapper, |sc| {
+                assert_eq!(
+                    sc.delegation_contract_data(&managed_address!(delegation_contract))
+                        .get()
+                        .total_staked_from_ls_contract,
+                    Self::to_managed_biguint(num_bigint::BigUint::from(total_staked))
+                );
+            })
+            .assert_ok();
+    }
 
     pub fn check_user_nft_balance_denominated(
         &self,

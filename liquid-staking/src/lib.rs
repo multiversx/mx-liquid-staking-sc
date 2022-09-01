@@ -108,6 +108,7 @@ pub trait LiquidStaking<ContractReader>:
             }
             ManagedAsyncCallResult::Err(_) => {
                 self.send().direct_egld(&caller, &staked_tokens);
+                self.move_delegation_contract_to_back(delegation_contract);
             }
         }
     }
@@ -197,15 +198,14 @@ pub trait LiquidStaking<ContractReader>:
             }
             ManagedAsyncCallResult::Err(_) => {
                 let ls_token_amount = self.pool_add_liquidity(&egld_to_unstake, &mut storage_cache);
-
                 let user_payment = self.mint_ls_token(ls_token_amount);
-
                 self.send().direct_esdt(
                     &caller,
                     &user_payment.token_identifier,
                     user_payment.token_nonce,
                     &user_payment.amount,
                 );
+                self.move_delegation_contract_to_back(delegation_contract);
             }
         }
     }
@@ -344,10 +344,9 @@ pub trait LiquidStaking<ContractReader>:
         storage_cache: &mut StorageCache<Self>,
         claim_status: &mut ClaimStatus<Self::Api>,
     ) {
-        let mut current_egld_balance = self
+        let current_egld_balance = self
             .blockchain()
             .get_sc_balance(&EgldOrEsdtTokenIdentifier::egld(), 0);
-        current_egld_balance += &storage_cache.virtual_egld_reserve;
         if current_egld_balance
             > &storage_cache.withdrawn_egld + &claim_status.starting_token_reserve
         {
@@ -419,7 +418,7 @@ pub trait LiquidStaking<ContractReader>:
                 self.emit_add_liquidity_event(&storage_cache, &sc_address, BigUint::zero());
             }
             ManagedAsyncCallResult::Err(_) => {
-                // TBD
+                self.move_delegation_contract_to_back(delegation_contract);
             }
         }
     }
@@ -427,7 +426,7 @@ pub trait LiquidStaking<ContractReader>:
     // views
 
     #[view]
-    fn get_value_for_position(&self, ls_token_amount: BigUint) -> BigUint {
+    fn get_ls_value_for_position(&self, ls_token_amount: BigUint) -> BigUint {
         let storage_cache = StorageCache::new(self);
         self.get_egld_amount(ls_token_amount, &storage_cache)
     }
