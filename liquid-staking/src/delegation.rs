@@ -178,9 +178,9 @@ pub trait DelegationModule:
     }
 
     fn move_delegation_contract_to_back(&self, delegation_contract: ManagedAddress) {
-        let mut delegation_addresses_mapper = self.delegation_addresses_list();
-        delegation_addresses_mapper.pop_front();
-        delegation_addresses_mapper.push_back(delegation_contract);
+        self.remove_delegation_address_from_list(&delegation_contract);
+        self.delegation_addresses_list()
+            .push_back(delegation_contract);
     }
 
     fn get_delegation_contract_for_delegate(
