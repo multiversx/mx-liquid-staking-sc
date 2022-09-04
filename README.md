@@ -83,7 +83,7 @@ In the callback, in case of a succesful result, the reserves storage is updated,
 ```
 
 The ```claimRewards``` endpoint is callable by any user, and allows each epoch to claim all pending rewards and store them in a __rewards_reserve__ storage, until those rewards are redelegated and are taken into account in the general __virtual_egld_reserve__ storage.
-The ```claimRewards``` function implements an ongoing operation mechanism, that claims rewards from delegation contracts until the list is completely covered or until the transactions runs out of gas. In this case, it saves the current iteration of the delegation contract list, being able to later continue from where it left off in a secondary call of the same endpoint. After all delegation contracts have been covered, the token reserves are then updated, including the __withdrawn_egld__ variable, that takes into account any __EGLD__ that was withdrawn during the claiming operation.
+The ```claimRewards``` function implements an ongoing operation mechanism, that claims rewards from delegation contracts until the list is completely covered or until the transaction runs out of gas. In this case, it saves the current iteration of the delegation contract list, being able to later continue from where it left off in a secondary call of the same endpoint. After all delegation contracts have been covered, the claim operation status is set to __Finished__.
 
 The available claim status types are:
 
@@ -91,6 +91,7 @@ The available claim status types are:
 pub enum ClaimStatusType {
     None,
     Pending,
+    Finished,
     Delegable,
     Insufficient,
     Redelegated,
@@ -98,7 +99,19 @@ pub enum ClaimStatusType {
 ```
 
 The workflow is as follows:
-- In order to start a new ```claimRewards``` operation, the previous claim status must be __Insufficient__ or __Redelegated__. Once the operation has started, the new claim operation is updated to the __Pending__ status. After the claim operation has finished, in case the total available rewards are greater than the minimum delegation amount required (__1 EGLD__), the status is then updated to __Delegable__, otherwise it is updated to __Insufficient__. The ```delegateRewards``` endpoint is then callable (only if the claim status is __Delegable__), which then updates the status to __Redelegated__, allowing the cycle to start once again.
+- In order to start a new ```claimRewards``` operation, the previous claim status must be __Insufficient__ or __Redelegated__. Once the operation has started, the new claim operation is updated to the __Pending__ status. After the claim operation has finished, it is marked with the __Finished__ status. The ```recomputeTokenReserve``` endpoint then updates the rewards storage values, and in case the total available rewards are greater than the minimum delegation amount required (__1 EGLD__), the status is then updated to __Delegable__, otherwise it is updated to __Insufficient__. The ```delegateRewards``` endpoint is then callable (only if the claim status is __Delegable__), which then updates the status to __Redelegated__, allowing the cycle to start once again. In case the status of the claim operation is __Insufficient__ at the end of the rewards reserve recomputation, a new claim operation can be started the next epoch, without any further steps.
+
+
+### recomputeTokenReserve
+
+```rust
+    #[endpoint(recomputeTokenReserve)]
+    fn recompute_token_reserve(&self);
+```
+
+The ```recomputeTokenReserve``` is an endpoint that allows for the rewards reserve recomputation. It is a mandatory step after the ```claimRewards``` endpoint and it looks at the initial __EGLD__ balance of the contract (the one that was saved at the beginning of the claim operation), compares it with the current balance of the contract (the one after the claim operation has finised claiming the rewards from all the delegation contracts) and saves the difference in the __rewards_reserve__ storage. It also takes into account the __withdrawn_egld__ that users may have unbonded. In case the newly obtained rewards reserve is bigger that the minimum delegation amount, then the claim status is updated to __Delegable__. Otherwise, it is updated to __Insufficient__, in which case a new claim operation can be started the next epoch, without any further steps regarding the rewards. 
+
+The endpoint is callable by any user and can be called only when the claim operation is in the __Finished__ status. 
 
 
 ### delegateRewards
@@ -110,7 +123,7 @@ The workflow is as follows:
 
 As stated before, the ```delegateRewards``` endpoint allows for the delegation of all the cumulated rewards from the ```claimRewards``` endpoint, but only if the rewards amount is greater than the minimum amount required (marked by the __Delegable__ claim status). If all check conditions are met, then a new delegation contract is chosen from the whitelist and a new delegation operation is called through an async call hooked with the ```delegate_rewards_callback```.
 
-In the callback, if the result is succesful, the reserves are updated accordingly, including the __virtual_egld_reserve__ and the __rewards_reserve__ (which is set to 0).
+In the callback, if the result is succesful, the storage is updated accordingly, adding the __rewards_reserve__ value to the __virtual_egld_reserve__, which in turn increases the value of the __lsEGLD__, compared to the __EGLD__ token.
 
 
 ### whitelistDelegationContract

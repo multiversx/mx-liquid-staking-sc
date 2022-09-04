@@ -11,6 +11,7 @@ elrond_wasm::derive_imports!();
 pub enum ClaimStatusType {
     None,
     Pending,
+    Finished,
     Delegable,
     Insufficient,
     Redelegated,
@@ -21,7 +22,6 @@ pub struct ClaimStatus<M: ManagedTypeApi> {
     pub status: ClaimStatusType,
     pub last_claim_epoch: u64,
     pub current_node: u32,
-    pub last_node: u32,
     pub starting_token_reserve: BigUint<M>,
 }
 
@@ -31,7 +31,6 @@ impl<M: ManagedTypeApi> Default for ClaimStatus<M> {
             status: ClaimStatusType::None,
             last_claim_epoch: 0,
             current_node: 0,
-            last_node: 0,
             starting_token_reserve: BigUint::zero(),
         }
     }
@@ -244,15 +243,15 @@ pub trait DelegationModule:
 
     fn can_proceed_claim_operation(
         &self,
-        new_claim_status: &mut ClaimStatus<Self::Api>,
+        current_claim_status: &mut ClaimStatus<Self::Api>,
+        old_claim_status: ClaimStatus<Self::Api>,
         current_epoch: u64,
     ) {
         require!(
-            new_claim_status.status == ClaimStatusType::None
-                || new_claim_status.status == ClaimStatusType::Pending,
+            current_claim_status.status == ClaimStatusType::None
+                || current_claim_status.status == ClaimStatusType::Pending,
             ERROR_CLAIM_START
         );
-        let old_claim_status = self.delegation_claim_status().get();
         require!(
             old_claim_status.status == ClaimStatusType::Redelegated
                 || old_claim_status.status == ClaimStatusType::Insufficient,
@@ -263,29 +262,34 @@ pub trait DelegationModule:
             ERROR_CLAIM_EPOCH
         );
 
-        if new_claim_status.status == ClaimStatusType::None {
+        if current_claim_status.status == ClaimStatusType::None {
             let delegation_addresses_mapper = self.delegation_addresses_list();
             require!(
                 delegation_addresses_mapper.front().unwrap().get_node_id() != 0,
                 ERROR_FIRST_DELEGATION_NODE
             );
-            new_claim_status.status = ClaimStatusType::Pending;
-            new_claim_status.last_claim_epoch = current_epoch;
-            new_claim_status.current_node =
+            current_claim_status.status = ClaimStatusType::Pending;
+            current_claim_status.last_claim_epoch = current_epoch;
+            current_claim_status.current_node =
                 delegation_addresses_mapper.front().unwrap().get_node_id();
-            new_claim_status.last_node = delegation_addresses_mapper.back().unwrap().get_node_id();
-            new_claim_status.starting_token_reserve = self
+            current_claim_status.starting_token_reserve = self
                 .blockchain()
                 .get_sc_balance(&EgldOrEsdtTokenIdentifier::egld(), 0);
         }
+    }
+
+    #[view(getDelegationStatus)]
+    fn get_delegation_status(&self) -> ClaimStatusType {
+        let claim_status = self.delegation_claim_status().get();
+        claim_status.status
     }
 
     #[view(getDelegationAddressesList)]
     #[storage_mapper("delegationAddressesList")]
     fn delegation_addresses_list(&self) -> LinkedListMapper<ManagedAddress>;
 
-    #[view(getDelegationLastClaimEpoch)]
-    #[storage_mapper("delegationLastClaimEpoch")]
+    #[view(getDelegationClaimStatus)]
+    #[storage_mapper("delegationClaimStatus")]
     fn delegation_claim_status(&self) -> SingleValueMapper<ClaimStatus<Self::Api>>;
 
     #[view(getDelegationContractData)]

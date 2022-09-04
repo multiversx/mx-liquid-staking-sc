@@ -7,6 +7,7 @@ pub static ERROR_CLAIM_START: &[u8] = b"Claim operation must be new or pending";
 pub static ERROR_OLD_CLAIM_START: &[u8] =
     b"Previous claimed rewards must be redelegated or lesser than 1 EGLD";
 pub static ERROR_CLAIM_REDELEGATE: &[u8] = b"Old claimed rewards must be greater than 1 EGLD";
+pub static ERROR_RECOMPUTE_RESERVES: &[u8] = b"Claim operation must be in the finished status";
 pub static ERROR_CLAIM_EPOCH: &[u8] = b"The rewards were already claimed for this epoch";
 pub static ERROR_UNSTAKE_PERIOD_NOT_PASSED: &[u8] = b"The unstake period has not passed";
 

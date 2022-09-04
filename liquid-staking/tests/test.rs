@@ -51,6 +51,7 @@ fn liquid_staking_claim_rewards_and_withdraw_test() {
     sc_setup.add_liquidity(&first_user, 100u64);
     sc_setup.b_mock.set_block_epoch(50u64);
     sc_setup.claim_rewards(&first_user);
+    sc_setup.recompute_token_reserve(&first_user);
     sc_setup.delegate_rewards(&first_user);
 
     sc_setup.remove_liquidity(&first_user, LS_TOKEN_ID, 90u64);
@@ -97,6 +98,7 @@ fn liquid_staking_multiple_operations() {
 
     sc_setup.b_mock.set_block_epoch(10u64);
     sc_setup.claim_rewards(&first_user);
+    sc_setup.recompute_token_reserve(&first_user);
     sc_setup.check_user_egld_balance_denominated(sc_setup.sc_wrapper.address_ref(), 301369863013698629u128);
     sc_setup.check_contract_rewards_storage_denominated(301369863013698629u128);
     sc_setup.delegate_rewards_check_insufficient(&first_user);
@@ -105,6 +107,7 @@ fn liquid_staking_multiple_operations() {
 
     sc_setup.b_mock.set_block_epoch(50u64);
     sc_setup.claim_rewards(&first_user);
+    sc_setup.recompute_token_reserve(&first_user);
     sc_setup.check_user_egld_balance_denominated(sc_setup.sc_wrapper.address_ref(), 1643835616438356161u128);
     sc_setup.check_contract_rewards_storage_denominated(1643835616438356161u128);
     sc_setup.delegate_rewards(&first_user);

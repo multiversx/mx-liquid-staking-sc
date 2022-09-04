@@ -14,17 +14,19 @@ elrond_wasm_node::wasm_endpoints! {
         claimRewards
         delegateRewards
         getDelegationAddressesList
+        getDelegationClaimStatus
         getDelegationContractData
-        getDelegationLastClaimEpoch
+        getDelegationStatus
         getLsSupply
         getLsTokenId
         getRewardsReserve
         getState
         getUnstakeTokenId
         getUnstakeTokenSupply
-        getVirtualEGLDReserve
+        getVirtualEgldReserve
         getWithdrawnEGLD
         get_ls_value_for_position
+        recomputeTokenReserve
         registerLsToken
         registerUnstakeToken
         removeLiquidity

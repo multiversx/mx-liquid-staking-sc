@@ -136,6 +136,15 @@ where
             .assert_ok();
     }
 
+    pub fn recompute_token_reserve(&mut self, caller: &Address) {
+        let rust_zero = rust_biguint!(0u64);
+        self.b_mock
+            .execute_tx(caller, &self.sc_wrapper, &rust_zero, |sc| {
+                sc.recompute_token_reserve();
+            })
+            .assert_ok();
+    }
+
     pub fn delegate_rewards(&mut self, caller: &Address) {
         let rust_zero = rust_biguint!(0u64);
         self.b_mock

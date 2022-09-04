@@ -50,7 +50,7 @@ pub trait ConfigModule:
     ) {
         let payment_amount = self.call_value().egld_value();
         self.unstake_token().issue_and_set_all_roles(
-            EsdtTokenType::Meta,
+            EsdtTokenType::NonFungible,
             payment_amount,
             token_display_name,
             token_ticker,
@@ -88,7 +88,7 @@ pub trait ConfigModule:
     #[storage_mapper("lsTokenSupply")]
     fn ls_token_supply(&self) -> SingleValueMapper<BigUint>;
 
-    #[view(getVirtualEGLDReserve)]
+    #[view(getVirtualEgldReserve)]
     #[storage_mapper("virtualEgldReserve")]
     fn virtual_egld_reserve(&self) -> SingleValueMapper<BigUint>;
 
