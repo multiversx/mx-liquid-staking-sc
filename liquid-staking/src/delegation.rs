@@ -142,9 +142,8 @@ pub trait DelegationModule:
 
     fn add_and_order_delegation_address_in_list(&self, contract_address: ManagedAddress, apy: u64) {
         let mut delegation_addresses_mapper = self.delegation_addresses_list();
-        if self.delegation_addresses_list().is_empty() {
-            self.delegation_addresses_list()
-                .push_front(contract_address);
+        if delegation_addresses_mapper.is_empty() {
+            delegation_addresses_mapper.push_front(contract_address);
         } else {
             let mut check_if_added = false;
             for delegation_address_element in delegation_addresses_mapper.iter() {
