@@ -197,9 +197,9 @@ pub trait DelegationModule:
             let delegation_address = delegation_address_element.into_value();
             let delegation_contract_data = self.delegation_contract_data(&delegation_address).get();
 
-            if &delegation_contract_data.delegation_contract_cap
-                - &delegation_contract_data.total_staked
-                >= *amount_to_delegate
+            let delegation_space_left = &delegation_contract_data.delegation_contract_cap
+                - &delegation_contract_data.total_staked;
+            if amount_to_delegate <= &delegation_space_left
             {
                 delegation_contract = delegation_address;
                 break;
