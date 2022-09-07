@@ -286,8 +286,8 @@ pub trait LiquidStaking<ContractReader>:
             ManagedAsyncCallResult::Ok(()) => {
                 let mut storage_cache = StorageCache::new(self);
                 let current_egld_balance = self
-                .blockchain()
-                .get_sc_balance(&EgldOrEsdtTokenIdentifier::egld(), 0);
+                    .blockchain()
+                    .get_sc_balance(&EgldOrEsdtTokenIdentifier::egld(), 0);
                 if current_egld_balance > old_egld_balance {
                     storage_cache.withdrawn_egld += &current_egld_balance - &old_egld_balance;
                 }
@@ -297,7 +297,6 @@ pub trait LiquidStaking<ContractReader>:
                             unstake_token_amount.clone();
                     });
                 storage_cache.withdrawn_egld -= &unstake_token_amount;
-                storage_cache.virtual_egld_reserve -= &unstake_token_amount;
 
                 self.unstake_token_supply()
                     .update(|x| *x -= &unstake_token_amount);
@@ -485,7 +484,7 @@ pub trait LiquidStaking<ContractReader>:
     #[view]
     fn get_ls_value_for_position(&self, ls_token_amount: BigUint) -> BigUint {
         let storage_cache = StorageCache::new(self);
-        self.get_egld_amount(ls_token_amount, &storage_cache)
+        self.get_egld_amount(&ls_token_amount, &storage_cache)
     }
 
     // proxy

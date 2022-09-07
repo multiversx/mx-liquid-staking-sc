@@ -44,24 +44,25 @@ pub trait LiquidityPoolModule:
         token_amount: &BigUint,
         storage_cache: &mut StorageCache<Self>,
     ) -> BigUint {
-        let egld_amount = self.get_egld_amount(token_amount.clone(), storage_cache);
+        let egld_amount = self.get_egld_amount(token_amount, storage_cache);
         storage_cache.ls_token_supply -= token_amount;
+        storage_cache.virtual_egld_reserve -= &egld_amount;
 
         egld_amount
     }
 
     fn get_egld_amount(
         &self,
-        ls_token_amount: BigUint,
+        ls_token_amount: &BigUint,
         storage_cache: &StorageCache<Self>,
     ) -> BigUint {
         require!(
-            storage_cache.ls_token_supply >= &ls_token_amount + MINIMUM_LIQUIDITY,
+            storage_cache.ls_token_supply >= *&ls_token_amount + MINIMUM_LIQUIDITY,
             ERROR_NOT_ENOUGH_LP
         );
 
         let egld_amount = (ls_token_amount
-            * (&storage_cache.virtual_egld_reserve + &storage_cache.rewards_reserve))
+            * &(&storage_cache.virtual_egld_reserve + &storage_cache.rewards_reserve))
             / &storage_cache.ls_token_supply;
         require!(egld_amount > 0u64, ERROR_INSUFFICIENT_LIQ_BURNED);
 

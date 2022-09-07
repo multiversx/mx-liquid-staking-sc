@@ -34,7 +34,7 @@ fn liquid_staking_remove_liquidity_test() {
     let first_user = sc_setup.setup_new_user(100u64);
     sc_setup.add_liquidity(&first_user, 100u64);
     sc_setup.remove_liquidity(&first_user, LS_TOKEN_ID, 90u64);
-    sc_setup.check_contract_storage(10, 100, 0, 0);
+    sc_setup.check_contract_storage(10, 10, 0, 0);
     sc_setup.check_user_balance(&first_user, LS_TOKEN_ID, 10u64);
     sc_setup.check_user_nft_balance_denominated(&first_user, UNSTAKE_TOKEN_ID, 1, 1);
     sc_setup.check_user_egld_balance(&first_user, 0u64);
@@ -142,6 +142,38 @@ fn liquid_staking_multiple_operations() {
     let rounding_offset = 6u128;
     sc_setup.check_user_egld_balance_denominated(&first_user, initial_egld_balance + ls_token_balance_in_egld + rounding_offset);
 
+}
+
+#[test]
+fn liquid_staking_multiple_withdraw_test() {
+    let _ = DebugApi::dummy();
+    let mut sc_setup = LiquidStakingContractSetup::new(liquid_staking::contract_obj);
+
+    sc_setup.deploy_staking_contract(&sc_setup.owner_address.clone(), 1000, 1000, 1500, 0, 0);
+
+    let first_user = sc_setup.setup_new_user(100u64);
+    let second_user = sc_setup.setup_new_user(100u64);
+    let third_user = sc_setup.setup_new_user(100u64);
+    sc_setup.add_liquidity(&first_user, 50u64);
+    sc_setup.add_liquidity(&second_user, 40u64);
+    sc_setup.add_liquidity(&third_user, 40u64);
+    sc_setup.check_contract_storage(130, 130, 0, 0);
+
+    sc_setup.b_mock.set_block_epoch(50u64);
+    sc_setup.remove_liquidity(&first_user, LS_TOKEN_ID, 20u64);
+    sc_setup.remove_liquidity(&second_user, LS_TOKEN_ID, 20u64);
+    sc_setup.remove_liquidity(&third_user, LS_TOKEN_ID, 20u64);
+    sc_setup.check_contract_storage(70, 70, 0, 0);
+
+    sc_setup.b_mock.set_block_epoch(60u64);
+    sc_setup.unbond_tokens(&first_user, UNSTAKE_TOKEN_ID, 1);
+    sc_setup.check_user_balance(&first_user, LS_TOKEN_ID, 30u64);
+    sc_setup.check_user_egld_balance(&first_user, 70);
+    sc_setup.check_user_balance(&second_user, LS_TOKEN_ID, 20u64);
+    sc_setup.check_user_egld_balance(&second_user, 60);
+    sc_setup.check_user_balance(&third_user, LS_TOKEN_ID, 20u64);
+    sc_setup.check_user_egld_balance(&third_user, 60);
+    sc_setup.check_contract_storage(70, 70, 0, 40); // 20 + 20 (second_user + third_user) 
 }
 
 pub fn exp9(value: u64) -> num_bigint::BigUint {

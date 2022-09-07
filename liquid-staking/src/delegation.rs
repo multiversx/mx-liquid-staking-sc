@@ -192,24 +192,17 @@ pub trait DelegationModule:
 
         let delegation_addresses_mapper = self.delegation_addresses_list();
 
-        let mut delegation_contract = ManagedAddress::zero();
         for delegation_address_element in delegation_addresses_mapper.iter() {
             let delegation_address = delegation_address_element.into_value();
             let delegation_contract_data = self.delegation_contract_data(&delegation_address).get();
 
             let delegation_space_left = &delegation_contract_data.delegation_contract_cap
                 - &delegation_contract_data.total_staked;
-            if amount_to_delegate <= &delegation_space_left
-            {
-                delegation_contract = delegation_address;
-                break;
+            if amount_to_delegate <= &delegation_space_left {
+                return delegation_address;
             }
         }
-        require!(
-            !ManagedAddress::is_zero(&delegation_contract),
-            ERROR_BAD_DELEGATION_ADDRESS
-        );
-        delegation_contract
+        sc_panic!(ERROR_BAD_DELEGATION_ADDRESS);
     }
 
     fn get_delegation_contract_for_undelegate(
@@ -223,21 +216,15 @@ pub trait DelegationModule:
 
         let delegation_addresses_mapper = self.delegation_addresses_list();
 
-        let mut delegation_contract = ManagedAddress::zero();
         for delegation_address_element in delegation_addresses_mapper.iter() {
             let delegation_address = delegation_address_element.into_value();
             let delegation_contract_data = self.delegation_contract_data(&delegation_address).get();
 
             if &delegation_contract_data.total_staked_from_ls_contract >= amount_to_undelegate {
-                delegation_contract = delegation_address;
-                break;
+                return delegation_address;
             }
         }
-        require!(
-            !ManagedAddress::is_zero(&delegation_contract),
-            ERROR_BAD_DELEGATION_ADDRESS
-        );
-        delegation_contract
+        sc_panic!(ERROR_BAD_DELEGATION_ADDRESS);
     }
 
     fn can_proceed_claim_operation(
