@@ -57,7 +57,7 @@ pub trait LiquidityPoolModule:
         storage_cache: &StorageCache<Self>,
     ) -> BigUint {
         require!(
-            storage_cache.ls_token_supply >= *&ls_token_amount + MINIMUM_LIQUIDITY,
+            storage_cache.ls_token_supply >= ls_token_amount + MINIMUM_LIQUIDITY,
             ERROR_NOT_ENOUGH_LP
         );
 
