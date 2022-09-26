@@ -237,7 +237,7 @@ where
                     Self::to_managed_biguint(Self::exp18(rewards_reserve))
                 );
                 assert_eq!(
-                    sc.withdrawn_egld().get(),
+                    sc.total_withdrawn_egld().get(),
                     Self::to_managed_biguint(Self::exp18(withdrawn_egld))
                 );
             })

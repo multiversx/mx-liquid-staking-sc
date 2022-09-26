@@ -16,16 +16,19 @@ elrond_wasm_node::wasm_endpoints! {
         getDelegationAddressesList
         getDelegationClaimStatus
         getDelegationContractData
+        getDelegationContractStakedAmount
+        getDelegationContractUnbondedAmount
+        getDelegationContractUnstakedAmount
         getDelegationStatus
         getLsSupply
         getLsTokenId
+        getLsValueForPosition
         getRewardsReserve
         getState
+        getTotalWithdrawnEgld
         getUnstakeTokenId
         getUnstakeTokenSupply
         getVirtualEgldReserve
-        getWithdrawnEGLD
-        get_ls_value_for_position
         recomputeTokenReserve
         registerLsToken
         registerUnstakeToken
