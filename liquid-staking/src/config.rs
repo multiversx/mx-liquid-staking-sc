@@ -96,9 +96,9 @@ pub trait ConfigModule:
     #[storage_mapper("rewardsReserve")]
     fn rewards_reserve(&self) -> SingleValueMapper<BigUint>;
 
-    #[view(getWithdrawnEGLD)]
-    #[storage_mapper("withdrawnEgld")]
-    fn withdrawn_egld(&self) -> SingleValueMapper<BigUint>;
+    #[view(getTotalWithdrawnEgld)]
+    #[storage_mapper("totalWithdrawnEgld")]
+    fn total_withdrawn_egld(&self) -> SingleValueMapper<BigUint>;
 
     #[view(getUnstakeTokenId)]
     #[storage_mapper("unstakeTokenId")]

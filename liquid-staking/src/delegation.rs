@@ -46,7 +46,8 @@ pub struct DelegationContractData<M: ManagedTypeApi> {
     pub nr_nodes: u64,
     pub apy: u64,
     pub total_staked_from_ls_contract: BigUint<M>,
-    pub total_undelegated_from_ls_contract: BigUint<M>,
+    pub total_unstaked_from_ls_contract: BigUint<M>,
+    pub total_unbonded_from_ls_contract: BigUint<M>,
 }
 
 #[elrond_wasm::module]
@@ -82,7 +83,8 @@ pub trait DelegationModule:
             nr_nodes,
             apy,
             total_staked_from_ls_contract: BigUint::zero(),
-            total_undelegated_from_ls_contract: BigUint::zero(),
+            total_unstaked_from_ls_contract: BigUint::zero(),
+            total_unbonded_from_ls_contract: BigUint::zero(),
         };
 
         self.delegation_contract_data(&contract_address)
@@ -268,6 +270,24 @@ pub trait DelegationModule:
     fn get_delegation_status(&self) -> ClaimStatusType {
         let claim_status = self.delegation_claim_status().get();
         claim_status.status
+    }
+
+    #[view(getDelegationContractStakedAmount)]
+    fn get_delegation_contract_staked_amount(&self, delegation_address: ManagedAddress) -> BigUint {
+        let delegation_contract_data = self.delegation_contract_data(&delegation_address).get();
+        delegation_contract_data.total_staked_from_ls_contract
+    }
+
+    #[view(getDelegationContractUnstakedAmount)]
+    fn get_delegation_contract_unstaked_amount(&self, delegation_address: ManagedAddress) -> BigUint {
+        let delegation_contract_data = self.delegation_contract_data(&delegation_address).get();
+        delegation_contract_data.total_unstaked_from_ls_contract
+    }
+
+    #[view(getDelegationContractUnbondedAmount)]
+    fn get_delegation_contract_unbonded_amount(&self, delegation_address: ManagedAddress) -> BigUint {
+        let delegation_contract_data = self.delegation_contract_data(&delegation_address).get();
+        delegation_contract_data.total_unbonded_from_ls_contract
     }
 
     #[view(getDelegationAddressesList)]
