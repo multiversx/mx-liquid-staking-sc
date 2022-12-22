@@ -1,6 +1,5 @@
 elrond_wasm::imports!();
 elrond_wasm::derive_imports!();
-use crate::elrond_codec::TopEncode;
 
 use crate::contexts::base::StorageCache;
 use crate::errors::*;

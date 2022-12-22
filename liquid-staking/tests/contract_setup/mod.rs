@@ -63,14 +63,14 @@ where
 
         b_mock
             .execute_tx(&owner_address, &sc_wrapper, &rust_zero, |sc| {
-                sc.ls_token().set_token_id(&managed_token_id!(LS_TOKEN_ID));
+                sc.ls_token().set_token_id(managed_token_id!(LS_TOKEN_ID));
             })
             .assert_ok();
 
         b_mock
             .execute_tx(&owner_address, &sc_wrapper, &rust_zero, |sc| {
                 sc.unstake_token()
-                    .set_token_id(&managed_token_id!(UNSTAKE_TOKEN_ID));
+                    .set_token_id(managed_token_id!(UNSTAKE_TOKEN_ID));
             })
             .assert_ok();
 

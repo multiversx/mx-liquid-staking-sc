@@ -279,13 +279,19 @@ pub trait DelegationModule:
     }
 
     #[view(getDelegationContractUnstakedAmount)]
-    fn get_delegation_contract_unstaked_amount(&self, delegation_address: ManagedAddress) -> BigUint {
+    fn get_delegation_contract_unstaked_amount(
+        &self,
+        delegation_address: ManagedAddress,
+    ) -> BigUint {
         let delegation_contract_data = self.delegation_contract_data(&delegation_address).get();
         delegation_contract_data.total_unstaked_from_ls_contract
     }
 
     #[view(getDelegationContractUnbondedAmount)]
-    fn get_delegation_contract_unbonded_amount(&self, delegation_address: ManagedAddress) -> BigUint {
+    fn get_delegation_contract_unbonded_amount(
+        &self,
+        delegation_address: ManagedAddress,
+    ) -> BigUint {
         let delegation_contract_data = self.delegation_contract_data(&delegation_address).get();
         delegation_contract_data.total_unbonded_from_ls_contract
     }
