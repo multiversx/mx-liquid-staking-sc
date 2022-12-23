@@ -12,7 +12,7 @@ use elrond_wasm_debug::{
 use liquid_staking::config::ConfigModule;
 use liquid_staking::*;
 
-pub const LIQUID_STAKING_WASM_PATH: &'static str = "liquid-staking/output/liquid-staking.wasm";
+pub const LIQUID_STAKING_WASM_PATH: &str = "liquid-staking/output/liquid-staking.wasm";
 
 pub static LS_TOKEN_ID: &[u8] = b"LSTOKEN-123456";
 pub static UNSTAKE_TOKEN_ID: &[u8] = b"UNSTAKE-123456";
