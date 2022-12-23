@@ -4,6 +4,9 @@ elrond_wasm::imports!();
 elrond_wasm::derive_imports!();
 
 use elrond_wasm::types::OperationCompletionStatus;
+use elrond_wasm_modules::ongoing_operation::{
+    CONTINUE_OP, DEFAULT_MIN_GAS_TO_SAVE_PROGRESS, STOP_OP,
+};
 pub const DEFAULT_GAS_TO_CLAIM_REWARDS: u64 = 6_000_000;
 pub const MIN_GAS_FOR_ASYNC_CALL: u64 = 12_000_000;
 pub const MIN_GAS_FOR_CALLBACK: u64 = 12_000_000;
@@ -16,12 +19,10 @@ pub mod delegation_proxy;
 pub mod errors;
 mod events;
 mod liquidity_pool;
-mod ongoing_operation;
 
 use crate::{
     delegation::{ClaimStatus, ClaimStatusType},
     errors::*,
-    ongoing_operation::{CONTINUE_OP, DEFAULT_MIN_GAS_TO_SAVE_PROGRESS, STOP_OP},
 };
 
 use config::{UnstakeTokenAttributes, UNBOND_PERIOD};
@@ -34,7 +35,7 @@ pub trait LiquidStaking<ContractReader>:
     + config::ConfigModule
     + events::EventsModule
     + delegation::DelegationModule
-    + ongoing_operation::OngoingOperationModule
+    + elrond_wasm_modules::ongoing_operation::OngoingOperationModule
     + elrond_wasm_modules::default_issue_callbacks::DefaultIssueCallbacksModule
 {
     #[init]

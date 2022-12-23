@@ -12,7 +12,7 @@ use elrond_wasm_debug::{
 use liquid_staking::config::ConfigModule;
 use liquid_staking::*;
 
-pub const LIQUID_STAKING_WASM_PATH: &'static str = "liquid-staking/output/liquid-staking.wasm";
+pub const LIQUID_STAKING_WASM_PATH: &str = "liquid-staking/output/liquid-staking.wasm";
 
 pub static LS_TOKEN_ID: &[u8] = b"LSTOKEN-123456";
 pub static UNSTAKE_TOKEN_ID: &[u8] = b"UNSTAKE-123456";
@@ -63,14 +63,14 @@ where
 
         b_mock
             .execute_tx(&owner_address, &sc_wrapper, &rust_zero, |sc| {
-                sc.ls_token().set_token_id(&managed_token_id!(LS_TOKEN_ID));
+                sc.ls_token().set_token_id(managed_token_id!(LS_TOKEN_ID));
             })
             .assert_ok();
 
         b_mock
             .execute_tx(&owner_address, &sc_wrapper, &rust_zero, |sc| {
                 sc.unstake_token()
-                    .set_token_id(&managed_token_id!(UNSTAKE_TOKEN_ID));
+                    .set_token_id(managed_token_id!(UNSTAKE_TOKEN_ID));
             })
             .assert_ok();
 

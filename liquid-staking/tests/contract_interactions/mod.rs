@@ -30,13 +30,13 @@ where
 
         let delegation_wrapper = self.b_mock.create_sc_account(
             &rust_zero,
-            Some(&owner_address),
+            Some(owner_address),
             delegation_mock::contract_obj,
             "delegation-mock.wasm",
         );
 
         self.b_mock
-            .execute_tx(&owner_address, &delegation_wrapper, &rust_zero, |sc| {
+            .execute_tx(owner_address, &delegation_wrapper, &rust_zero, |sc| {
                 sc.init();
             })
             .assert_ok();
@@ -99,7 +99,7 @@ where
             .execute_tx(
                 caller,
                 &self.sc_wrapper,
-                &&Self::exp18(payment_amount),
+                &Self::exp18(payment_amount),
                 |sc| {
                     sc.add_liquidity();
                 },
@@ -119,7 +119,7 @@ where
                 &self.sc_wrapper,
                 payment_token,
                 0,
-                &&Self::exp18(payment_amount),
+                &Self::exp18(payment_amount),
                 |sc| {
                     sc.remove_liquidity();
                 },
@@ -183,13 +183,13 @@ where
 
         let new_user = self.b_mock.create_user_account(&rust_zero);
         self.b_mock
-            .set_egld_balance(&new_user, &&Self::exp18(egld_token_amount));
+            .set_egld_balance(&new_user, &Self::exp18(egld_token_amount));
         new_user
     }
 
     pub fn check_user_balance(&self, address: &Address, token_id: &[u8], token_balance: u64) {
         self.b_mock
-            .check_esdt_balance(&address, token_id, &&Self::exp18(token_balance));
+            .check_esdt_balance(address, token_id, &Self::exp18(token_balance));
     }
 
     pub fn check_user_balance_denominated(
@@ -199,7 +199,7 @@ where
         token_balance: u128,
     ) {
         self.b_mock.check_esdt_balance(
-            &address,
+            address,
             token_id,
             &num_bigint::BigUint::from(token_balance),
         );
@@ -207,12 +207,12 @@ where
 
     pub fn check_user_egld_balance(&self, address: &Address, token_balance: u64) {
         self.b_mock
-            .check_egld_balance(&address, &&Self::exp18(token_balance));
+            .check_egld_balance(address, &Self::exp18(token_balance));
     }
 
     pub fn check_user_egld_balance_denominated(&self, address: &Address, token_balance: u128) {
         self.b_mock
-            .check_egld_balance(&address, &num_bigint::BigUint::from(token_balance));
+            .check_egld_balance(address, &num_bigint::BigUint::from(token_balance));
     }
 
     pub fn check_contract_storage(
@@ -311,7 +311,7 @@ where
     ) {
         self.b_mock
             .check_nft_balance::<UnstakeTokenAttributes<DebugApi>>(
-                &address,
+                address,
                 token_id,
                 token_nonce,
                 &num_bigint::BigUint::from(token_balance),
