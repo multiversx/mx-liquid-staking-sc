@@ -262,9 +262,11 @@ pub trait DelegationModule:
             current_claim_status.last_claim_epoch = current_epoch;
             current_claim_status.current_node =
                 delegation_addresses_mapper.front().unwrap().get_node_id();
+            let current_total_withdrawn_egld = self.total_withdrawn_egld().get();
             current_claim_status.starting_token_reserve = self
                 .blockchain()
-                .get_sc_balance(&EgldOrEsdtTokenIdentifier::egld(), 0);
+                .get_sc_balance(&EgldOrEsdtTokenIdentifier::egld(), 0)
+                - current_total_withdrawn_egld;
         }
     }
 
