@@ -11,6 +11,7 @@ pub const DEFAULT_GAS_TO_CLAIM_REWARDS: u64 = 6_000_000;
 pub const MIN_GAS_FOR_ASYNC_CALL: u64 = 12_000_000;
 pub const MIN_GAS_FOR_CALLBACK: u64 = 12_000_000;
 pub const MIN_EGLD_TO_DELEGATE: u64 = 1_000_000_000_000_000_000;
+pub const RECOMPUTE_BLOCK_OFFSET: u64 = 10;
 
 pub mod config;
 mod contexts;
@@ -46,6 +47,7 @@ pub trait LiquidStaking<ContractReader>:
         let claim_status = ClaimStatus {
             status: ClaimStatusType::Insufficient,
             last_claim_epoch: current_epoch,
+            last_claim_block: 0u64,
             current_node: 0,
             starting_token_reserve: BigUint::zero(),
         };
@@ -139,6 +141,10 @@ pub trait LiquidStaking<ContractReader>:
         require!(payment.amount > 0, ERROR_BAD_PAYMENT_AMOUNT);
 
         let egld_to_unstake = self.pool_remove_liquidity(&payment.amount, &mut storage_cache);
+        require!(
+            egld_to_unstake >= MIN_EGLD_TO_DELEGATE,
+            ERROR_INSUFFICIENT_UNSTAKE_AMOUNT
+        );
         self.burn_ls_token(&payment.amount);
 
         let delegation_contract = self.get_delegation_contract_for_undelegate(&egld_to_unstake);
@@ -373,6 +379,7 @@ pub trait LiquidStaking<ContractReader>:
             OperationCompletionStatus::Completed => {
                 claim_status_mapper.update(|claim_status| {
                     claim_status.status = ClaimStatusType::Finished;
+                    claim_status.last_claim_block = self.blockchain().get_block_nonce();
                 });
             }
         };
@@ -391,6 +398,12 @@ pub trait LiquidStaking<ContractReader>:
         require!(
             claim_status.status == ClaimStatusType::Finished,
             ERROR_RECOMPUTE_RESERVES
+        );
+
+        let current_block = self.blockchain().get_block_nonce();
+        require!(
+            current_block >= claim_status.last_claim_block + RECOMPUTE_BLOCK_OFFSET,
+            ERROR_RECOMPUTE_TOO_SOON
         );
 
         let current_egld_balance = self

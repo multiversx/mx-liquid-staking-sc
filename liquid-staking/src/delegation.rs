@@ -21,6 +21,7 @@ pub enum ClaimStatusType {
 pub struct ClaimStatus<M: ManagedTypeApi> {
     pub status: ClaimStatusType,
     pub last_claim_epoch: u64,
+    pub last_claim_block: u64,
     pub current_node: u32,
     pub starting_token_reserve: BigUint<M>,
 }
@@ -30,6 +31,7 @@ impl<M: ManagedTypeApi> Default for ClaimStatus<M> {
         Self {
             status: ClaimStatusType::None,
             last_claim_epoch: 0,
+            last_claim_block: 0,
             current_node: 0,
             starting_token_reserve: BigUint::zero(),
         }
