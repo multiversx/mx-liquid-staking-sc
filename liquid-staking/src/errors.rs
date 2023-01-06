@@ -8,11 +8,13 @@ pub static ERROR_OLD_CLAIM_START: &[u8] =
     b"Previous claimed rewards must be redelegated or lesser than 1 EGLD";
 pub static ERROR_CLAIM_REDELEGATE: &[u8] = b"Old claimed rewards must be greater than 1 EGLD";
 pub static ERROR_RECOMPUTE_RESERVES: &[u8] = b"Claim operation must be in the finished status";
+pub static ERROR_RECOMPUTE_TOO_SOON: &[u8] = b"Recompute operation called to soon";
 pub static ERROR_CLAIM_EPOCH: &[u8] = b"The rewards were already claimed for this epoch";
 pub static ERROR_UNSTAKE_PERIOD_NOT_PASSED: &[u8] = b"The unstake period has not passed";
 
 pub static ERROR_BAD_PAYMENT_TOKEN: &[u8] = b"Bad payment token";
 pub static ERROR_BAD_PAYMENT_AMOUNT: &[u8] = b"Insufficient delegated amount";
+pub static ERROR_INSUFFICIENT_UNSTAKE_AMOUNT: &[u8] = b"Insufficient unstake amount";
 pub static ERROR_INSUFFICIENT_UNBONDED_AMOUNT: &[u8] = b"Insufficient incoming withdraw amount";
 pub static ERROR_INSUFFICIENT_LIQUIDITY: &[u8] = b"Insufficient liquidity minted";
 pub static ERROR_INSUFFICIENT_LIQ_BURNED: &[u8] = b"Insufficient liquidity burned";
