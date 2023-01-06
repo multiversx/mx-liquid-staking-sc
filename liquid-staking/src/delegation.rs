@@ -231,9 +231,9 @@ pub trait DelegationModule:
         sc_panic!(ERROR_BAD_DELEGATION_ADDRESS);
     }
 
-    fn can_proceed_claim_operation(
+    fn check_claim_operation(
         &self,
-        current_claim_status: &mut ClaimStatus<Self::Api>,
+        current_claim_status: &ClaimStatus<Self::Api>,
         old_claim_status: ClaimStatus<Self::Api>,
         current_epoch: u64,
     ) {
@@ -251,7 +251,13 @@ pub trait DelegationModule:
             current_epoch > old_claim_status.last_claim_epoch,
             ERROR_CLAIM_EPOCH
         );
+    }
 
+    fn prepare_claim_operation(
+        &self,
+        current_claim_status: &mut ClaimStatus<Self::Api>,
+        current_epoch: u64,
+    ) {
         if current_claim_status.status == ClaimStatusType::None {
             let delegation_addresses_mapper = self.delegation_addresses_list();
             require!(
@@ -262,9 +268,11 @@ pub trait DelegationModule:
             current_claim_status.last_claim_epoch = current_epoch;
             current_claim_status.current_node =
                 delegation_addresses_mapper.front().unwrap().get_node_id();
+            let current_total_withdrawn_egld = self.total_withdrawn_egld().get();
             current_claim_status.starting_token_reserve = self
                 .blockchain()
-                .get_sc_balance(&EgldOrEsdtTokenIdentifier::egld(), 0);
+                .get_sc_balance(&EgldOrEsdtTokenIdentifier::egld(), 0)
+                - current_total_withdrawn_egld;
         }
     }
 

@@ -343,11 +343,8 @@ pub trait LiquidStaking<ContractReader>:
         let current_epoch = self.blockchain().get_block_epoch();
         let mut current_claim_status = self.load_operation::<ClaimStatus<Self::Api>>();
 
-        self.can_proceed_claim_operation(
-            &mut current_claim_status,
-            old_claim_status,
-            current_epoch,
-        );
+        self.check_claim_operation(&current_claim_status, old_claim_status, current_epoch);
+        self.prepare_claim_operation(&mut current_claim_status, current_epoch);
 
         let run_result = self.run_while_it_has_gas(DEFAULT_MIN_GAS_TO_SAVE_PROGRESS, || {
             let delegation_address_node = delegation_addresses_mapper
