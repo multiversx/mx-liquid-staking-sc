@@ -1,8 +1,8 @@
 [package]
 name = "delegation-mock-wasm"
 version = "0.0.0"
-authors = [ "Sorin Petreasca <sorin.petreasca@elrond.com>",]
-edition = "2018"
+authors = [ "Sorin Petreasca <sorin.petreasca@multiversx.com>",]
+edition = "2021"
 publish = false
 
 [lib]
