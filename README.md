@@ -3,12 +3,12 @@
 
 ## Abstract
 
-Elrond Network is a proof-of-stake blockchain protocol that seeks to offer extremely fast transaction speeds by using adaptive state sharding. By being a proof-of-stake blockchain, it incentives holders to stake their assets (__EGLD__), in order to increase the network's security, by offering them staking rewards at a protocol level. As more and more products appear on the network, it raises the question for the holders, if they should just use their __EGLD__ in the ecosystem, instead of just staking it. This Liquid Staking SC tries to solve this problem by offering users the ability to stake their __EGLD__ in exchange for another token, that can be further implemented in various products within the Elrond ecosystem, while still receiving the staking rewards from the protocol.
+MultiversX is a proof-of-stake blockchain protocol that seeks to offer extremely fast transaction speeds by using adaptive state sharding. By being a proof-of-stake blockchain, it incentives holders to stake their assets (__EGLD__), in order to increase the network's security, by offering them staking rewards at a protocol level. As more and more products appear on the network, it raises the question for the holders, if they should just use their __EGLD__ in the ecosystem, instead of just staking it. This Liquid Staking SC tries to solve this problem by offering users the ability to stake their __EGLD__ in exchange for another token, that can be further implemented in various products within the MultiversX ecosystem, while still receiving the staking rewards from the protocol.
 
 
 ## Introduction
 
-The Liquid Staking Smart Contract allows users to stake their __EGLD__ in return of __lsEGLD__, a fungible ESDT that can be used in multiple ways in the Elrond ecosystem, all while retaining the standard staking rewards. It offers users the possibility to stake or unstake their __EGLD__, while rewards are cumulated and redelegated. This means that, in time, the value of __lsEGLD__ will only continue to outgrow that of the __EGLD__, as rewards are compounded every epoch. Also, it offers delegation contract owners means to maintain the status of their delegation contracts, through a whitelisted admin-only endpoint.
+The Liquid Staking Smart Contract allows users to stake their __EGLD__ in return of __lsEGLD__, a fungible ESDT that can be used in multiple ways in the MultiversX ecosystem, all while retaining the standard staking rewards. It offers users the possibility to stake or unstake their __EGLD__, while rewards are cumulated and redelegated. This means that, in time, the value of __lsEGLD__ will only continue to outgrow that of the __EGLD__, as rewards are compounded every epoch. Also, it offers delegation contract owners means to maintain the status of their delegation contracts, through a whitelisted admin-only endpoint.
 
 
 ## Endpoints
