@@ -10,6 +10,10 @@ MultiversX is a proof-of-stake blockchain protocol that seeks to offer extremely
 
 The Liquid Staking Smart Contract allows users to stake their __EGLD__ in return of __lsEGLD__, a fungible ESDT that can be used in multiple ways in the MultiversX ecosystem, all while retaining the standard staking rewards. It offers users the possibility to stake or unstake their __EGLD__, while rewards are cumulated and redelegated. This means that, in time, the value of __lsEGLD__ will only continue to outgrow that of the __EGLD__, as rewards are compounded every epoch. Also, it offers delegation contract owners means to maintain the status of their delegation contracts, through a whitelisted admin-only endpoint.
 
+## Important note
+
+The Liquid Staking SC is designed to work with both user addresses and other smart contracts. That being said, it is important to note that the contracts that interact with the Liquid Staking SC need to be payable or payable by SC, otherwise any interaction may result in __loss of funds__.
+
 
 ## Endpoints
 
