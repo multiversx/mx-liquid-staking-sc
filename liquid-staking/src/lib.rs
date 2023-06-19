@@ -12,6 +12,7 @@ pub const MIN_GAS_FOR_ASYNC_CALL: u64 = 12_000_000;
 pub const MIN_GAS_FOR_CALLBACK: u64 = 12_000_000;
 pub const MIN_EGLD_TO_DELEGATE: u64 = 1_000_000_000_000_000_000;
 pub const RECOMPUTE_BLOCK_OFFSET: u64 = 10;
+pub const MAX_DELEGATION_ADDRESSES: usize = 50;
 
 pub mod config;
 mod contexts;
@@ -42,6 +43,8 @@ pub trait LiquidStaking<ContractReader>:
     #[init]
     fn init(&self) {
         self.state().set(State::Inactive);
+        self.max_delegation_addresses()
+            .set(MAX_DELEGATION_ADDRESSES);
 
         let current_epoch = self.blockchain().get_block_epoch();
         let claim_status = ClaimStatus {
@@ -58,6 +61,7 @@ pub trait LiquidStaking<ContractReader>:
     #[payable("EGLD")]
     #[endpoint(addLiquidity)]
     fn add_liquidity(&self) {
+        self.blockchain().check_caller_is_user_account();
         let storage_cache = StorageCache::new(self);
         let caller = self.blockchain().get_caller();
 
@@ -93,6 +97,7 @@ pub trait LiquidStaking<ContractReader>:
         staked_tokens: BigUint,
         #[call_result] result: ManagedAsyncCallResult<()>,
     ) {
+        self.blockchain().check_caller_is_user_account();
         match result {
             ManagedAsyncCallResult::Ok(()) => {
                 let mut storage_cache = StorageCache::new(self);
@@ -122,6 +127,7 @@ pub trait LiquidStaking<ContractReader>:
     #[payable("*")]
     #[endpoint(removeLiquidity)]
     fn remove_liquidity(&self) {
+        self.blockchain().check_caller_is_user_account();
         let mut storage_cache = StorageCache::new(self);
         let caller = self.blockchain().get_caller();
         let payment = self.call_value().single_esdt();
@@ -173,6 +179,7 @@ pub trait LiquidStaking<ContractReader>:
         ls_tokens_to_be_burned: BigUint,
         #[call_result] result: ManagedAsyncCallResult<()>,
     ) {
+        self.blockchain().check_caller_is_user_account();
         let mut storage_cache = StorageCache::new(self);
         match result {
             ManagedAsyncCallResult::Ok(()) => {
@@ -225,6 +232,7 @@ pub trait LiquidStaking<ContractReader>:
     #[payable("*")]
     #[endpoint(unbondTokens)]
     fn unbond_tokens(&self) {
+        self.blockchain().check_caller_is_user_account();
         let mut storage_cache = StorageCache::new(self);
         let caller = self.blockchain().get_caller();
         let payment = self.call_value().single_esdt();
@@ -290,6 +298,7 @@ pub trait LiquidStaking<ContractReader>:
         unstake_token_amount: BigUint,
         #[call_result] result: ManagedAsyncCallResult<()>,
     ) {
+        self.blockchain().check_caller_is_user_account();
         match result {
             ManagedAsyncCallResult::Ok(()) => {
                 let withdraw_amount = self.call_value().egld_value();
@@ -426,7 +435,7 @@ pub trait LiquidStaking<ContractReader>:
 
     #[endpoint(delegateRewards)]
     fn delegate_rewards(&self) {
-        let storage_cache = StorageCache::new(self);
+        let mut storage_cache = StorageCache::new(self);
         let claim_status = self.delegation_claim_status().get();
         require!(
             self.is_state_active(storage_cache.contract_state),
@@ -438,6 +447,7 @@ pub trait LiquidStaking<ContractReader>:
         );
 
         let rewards_reserve = storage_cache.rewards_reserve.clone();
+        storage_cache.rewards_reserve = BigUint::zero();
         let delegation_contract = self.get_delegation_contract_for_delegate(&rewards_reserve);
         let gas_for_async_call = self.get_gas_for_async_call();
 
@@ -461,9 +471,9 @@ pub trait LiquidStaking<ContractReader>:
         staked_tokens: BigUint,
         #[call_result] result: ManagedAsyncCallResult<()>,
     ) {
+        let mut storage_cache = StorageCache::new(self);
         match result {
             ManagedAsyncCallResult::Ok(()) => {
-                let mut storage_cache = StorageCache::new(self);
                 self.delegation_contract_data(&delegation_contract)
                     .update(|contract_data| {
                         contract_data.total_staked_from_ls_contract += &staked_tokens;
@@ -472,12 +482,12 @@ pub trait LiquidStaking<ContractReader>:
                 self.delegation_claim_status()
                     .update(|claim_status| claim_status.status = ClaimStatusType::Redelegated);
 
-                storage_cache.rewards_reserve = BigUint::zero();
                 storage_cache.virtual_egld_reserve += &staked_tokens;
                 let sc_address = self.blockchain().get_sc_address();
                 self.emit_add_liquidity_event(&storage_cache, &sc_address, BigUint::zero());
             }
             ManagedAsyncCallResult::Err(_) => {
+                storage_cache.rewards_reserve = staked_tokens;
                 self.move_delegation_contract_to_back(delegation_contract);
             }
         }

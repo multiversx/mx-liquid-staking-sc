@@ -58,6 +58,12 @@ pub trait DelegationModule:
     + elrond_wasm_modules::default_issue_callbacks::DefaultIssueCallbacksModule
 {
     #[only_owner]
+    #[endpoint(updateMaxDelegationAddressesNumber)]
+    fn update_max_delegation_addresses_number(&self, number: usize) {
+        self.max_delegation_addresses().set(number);
+    }
+
+    #[only_owner]
     #[endpoint(whitelistDelegationContract)]
     fn whitelist_delegation_contract(
         &self,
@@ -68,6 +74,11 @@ pub trait DelegationModule:
         nr_nodes: u64,
         apy: u64,
     ) {
+        require!(
+            self.delegation_addresses_list().len() <= self.max_delegation_addresses().get(),
+            "Maximum number of delegation addresses reached"
+        );
+
         require!(
             self.delegation_contract_data(&contract_address).is_empty(),
             ERROR_ALREADY_WHITELISTED
@@ -313,6 +324,10 @@ pub trait DelegationModule:
     #[view(getDelegationClaimStatus)]
     #[storage_mapper("delegationClaimStatus")]
     fn delegation_claim_status(&self) -> SingleValueMapper<ClaimStatus<Self::Api>>;
+
+    #[view(maxDelegationAddresses)]
+    #[storage_mapper("maxDelegationAddresses")]
+    fn max_delegation_addresses(&self) -> SingleValueMapper<usize>;
 
     #[view(getDelegationContractData)]
     #[storage_mapper("delegationContractData")]
