@@ -4,7 +4,7 @@ use std::ops::Mul;
 
 use contract_setup::*;
 
-use elrond_wasm_debug::{num_bigint, rust_biguint, DebugApi};
+use multiversx_sc_scenario::{num_bigint, rust_biguint, DebugApi};
 
 #[test]
 fn init_test() {

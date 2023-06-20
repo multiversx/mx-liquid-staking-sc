@@ -1,7 +1,7 @@
 use crate::contexts::base::StorageCache;
 
-elrond_wasm::imports!();
-elrond_wasm::derive_imports!();
+multiversx_sc::imports!();
+multiversx_sc::derive_imports!();
 
 #[derive(TypeAbi, TopEncode)]
 pub struct AddLiquidityEvent<M: ManagedTypeApi> {
@@ -31,10 +31,10 @@ pub struct RemoveLiquidityEvent<M: ManagedTypeApi> {
     timestamp: u64,
 }
 
-#[elrond_wasm::module]
+#[multiversx_sc::module]
 pub trait EventsModule:
     crate::config::ConfigModule
-    + elrond_wasm_modules::default_issue_callbacks::DefaultIssueCallbacksModule
+    + multiversx_sc_modules::default_issue_callbacks::DefaultIssueCallbacksModule
 {
     fn emit_add_liquidity_event(
         &self,

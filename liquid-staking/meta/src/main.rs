@@ -1,3 +1,3 @@
 fn main() {
-    elrond_wasm_debug::meta::perform::<liquid_staking::AbiProvider>();
+    multiversx_sc_meta::cli_main::<liquid_staking::AbiProvider>();
 }

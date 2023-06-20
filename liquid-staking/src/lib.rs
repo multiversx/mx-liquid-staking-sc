@@ -1,10 +1,10 @@
 #![no_std]
 
-elrond_wasm::imports!();
-elrond_wasm::derive_imports!();
+multiversx_sc::imports!();
+multiversx_sc::derive_imports!();
 
-use elrond_wasm::types::OperationCompletionStatus;
-use elrond_wasm_modules::ongoing_operation::{
+use multiversx_sc::types::OperationCompletionStatus;
+use multiversx_sc_modules::ongoing_operation::{
     CONTINUE_OP, DEFAULT_MIN_GAS_TO_SAVE_PROGRESS, STOP_OP,
 };
 pub const DEFAULT_GAS_TO_CLAIM_REWARDS: u64 = 6_000_000;
@@ -31,14 +31,14 @@ use config::{UnstakeTokenAttributes, UNBOND_PERIOD};
 use contexts::base::*;
 use liquidity_pool::State;
 
-#[elrond_wasm::contract]
+#[multiversx_sc::contract]
 pub trait LiquidStaking<ContractReader>:
     liquidity_pool::LiquidityPoolModule
     + config::ConfigModule
     + events::EventsModule
     + delegation::DelegationModule
-    + elrond_wasm_modules::ongoing_operation::OngoingOperationModule
-    + elrond_wasm_modules::default_issue_callbacks::DefaultIssueCallbacksModule
+    + multiversx_sc_modules::ongoing_operation::OngoingOperationModule
+    + multiversx_sc_modules::default_issue_callbacks::DefaultIssueCallbacksModule
 {
     #[init]
     fn init(&self) {
@@ -65,7 +65,7 @@ pub trait LiquidStaking<ContractReader>:
         let storage_cache = StorageCache::new(self);
         let caller = self.blockchain().get_caller();
 
-        let payment = self.call_value().egld_value();
+        let payment = self.call_value().egld_value().clone_value();
         require!(
             self.is_state_active(storage_cache.contract_state),
             ERROR_NOT_ACTIVE
@@ -301,7 +301,7 @@ pub trait LiquidStaking<ContractReader>:
         self.blockchain().check_caller_is_user_account();
         match result {
             ManagedAsyncCallResult::Ok(()) => {
-                let withdraw_amount = self.call_value().egld_value();
+                let withdraw_amount = self.call_value().egld_value().clone_value();
                 let mut storage_cache = StorageCache::new(self);
                 let delegation_contract_mapper =
                     self.delegation_contract_data(&delegation_contract);

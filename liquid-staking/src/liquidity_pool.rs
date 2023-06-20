@@ -1,5 +1,5 @@
-elrond_wasm::imports!();
-elrond_wasm::derive_imports!();
+multiversx_sc::imports!();
+multiversx_sc::derive_imports!();
 
 use crate::contexts::base::StorageCache;
 use crate::errors::*;
@@ -14,9 +14,9 @@ pub enum State {
     Active,
 }
 
-#[elrond_wasm::module]
+#[multiversx_sc::module]
 pub trait LiquidityPoolModule:
-    config::ConfigModule + elrond_wasm_modules::default_issue_callbacks::DefaultIssueCallbacksModule
+    config::ConfigModule + multiversx_sc_modules::default_issue_callbacks::DefaultIssueCallbacksModule
 {
     fn pool_add_liquidity(
         &self,

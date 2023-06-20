@@ -1,5 +1,5 @@
-elrond_wasm::imports!();
-elrond_wasm::derive_imports!();
+multiversx_sc::imports!();
+multiversx_sc::derive_imports!();
 
 use crate::liquidity_pool::State;
 
@@ -16,9 +16,9 @@ pub struct UnstakeTokenAttributes<M: ManagedTypeApi> {
     pub unbond_epoch: u64,
 }
 
-#[elrond_wasm::module]
+#[multiversx_sc::module]
 pub trait ConfigModule:
-    elrond_wasm_modules::default_issue_callbacks::DefaultIssueCallbacksModule
+    multiversx_sc_modules::default_issue_callbacks::DefaultIssueCallbacksModule
 {
     #[only_owner]
     #[payable("EGLD")]
@@ -29,7 +29,7 @@ pub trait ConfigModule:
         token_ticker: ManagedBuffer,
         num_decimals: usize,
     ) {
-        let payment_amount = self.call_value().egld_value();
+        let payment_amount = self.call_value().egld_value().clone_value();
         self.ls_token().issue_and_set_all_roles(
             payment_amount,
             token_display_name,
@@ -48,7 +48,7 @@ pub trait ConfigModule:
         token_ticker: ManagedBuffer,
         num_decimals: usize,
     ) {
-        let payment_amount = self.call_value().egld_value();
+        let payment_amount = self.call_value().egld_value().clone_value();
         self.unstake_token().issue_and_set_all_roles(
             EsdtTokenType::NonFungible,
             payment_amount,

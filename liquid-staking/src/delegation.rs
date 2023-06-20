@@ -4,8 +4,8 @@ use crate::errors::{
     ERROR_NO_DELEGATION_CONTRACTS, ERROR_OLD_CLAIM_START, ERROR_ONLY_DELEGATION_ADMIN,
 };
 
-elrond_wasm::imports!();
-elrond_wasm::derive_imports!();
+multiversx_sc::imports!();
+multiversx_sc::derive_imports!();
 
 #[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, PartialEq, Eq, TypeAbi, Clone)]
 pub enum ClaimStatusType {
@@ -52,10 +52,10 @@ pub struct DelegationContractData<M: ManagedTypeApi> {
     pub total_unbonded_from_ls_contract: BigUint<M>,
 }
 
-#[elrond_wasm::module]
+#[multiversx_sc::module]
 pub trait DelegationModule:
     crate::config::ConfigModule
-    + elrond_wasm_modules::default_issue_callbacks::DefaultIssueCallbacksModule
+    + multiversx_sc_modules::default_issue_callbacks::DefaultIssueCallbacksModule
 {
     #[only_owner]
     #[endpoint(updateMaxDelegationAddressesNumber)]
