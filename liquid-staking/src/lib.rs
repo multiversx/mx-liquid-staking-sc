@@ -97,7 +97,6 @@ pub trait LiquidStaking<ContractReader>:
         staked_tokens: BigUint,
         #[call_result] result: ManagedAsyncCallResult<()>,
     ) {
-        self.blockchain().check_caller_is_user_account();
         match result {
             ManagedAsyncCallResult::Ok(()) => {
                 let mut storage_cache = StorageCache::new(self);
@@ -179,7 +178,6 @@ pub trait LiquidStaking<ContractReader>:
         ls_tokens_to_be_burned: BigUint,
         #[call_result] result: ManagedAsyncCallResult<()>,
     ) {
-        self.blockchain().check_caller_is_user_account();
         let mut storage_cache = StorageCache::new(self);
         match result {
             ManagedAsyncCallResult::Ok(()) => {
@@ -298,7 +296,6 @@ pub trait LiquidStaking<ContractReader>:
         unstake_token_amount: BigUint,
         #[call_result] result: ManagedAsyncCallResult<()>,
     ) {
-        self.blockchain().check_caller_is_user_account();
         match result {
             ManagedAsyncCallResult::Ok(()) => {
                 let withdraw_amount = self.call_value().egld_value().clone_value();
