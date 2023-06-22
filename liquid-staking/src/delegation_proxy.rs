@@ -1,6 +1,6 @@
-elrond_wasm::imports!();
+multiversx_sc::imports!();
 
-#[elrond_wasm::proxy]
+#[multiversx_sc::proxy]
 pub trait DelegationProxy {
     #[payable("EGLD")]
     #[endpoint(delegate)]

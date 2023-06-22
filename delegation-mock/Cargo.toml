@@ -1,19 +1,17 @@
 [package]
 name = "delegation-mock"
 version = "0.0.0"
-authors = [ "Sorin Petreasca <sorin.petreasca@multiversx.com>",]
+authors = ["Sorin Petreasca <sorin.petreasca@multiversx.com>"]
 edition = "2021"
 publish = false
 
 [lib]
 path = "src/delegation.rs"
-
-[dependencies.elrond-wasm]
-version = "0.38.0"
-
-[dev-dependencies.elrond-wasm-debug]
-version = "0.38.0"
+[dependencies.multiversx-sc]
+version = "0.41.3"
 
 [dependencies.itertools]
 version = "0.10.1"
 default-features = false
+[dev-dependencies.multiversx-sc-scenario]
+version = "0.41.3"

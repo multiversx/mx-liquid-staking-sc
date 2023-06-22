@@ -1,5 +1,5 @@
-elrond_wasm::imports!();
-elrond_wasm::derive_imports!();
+multiversx_sc::imports!();
+multiversx_sc::derive_imports!();
 
 use crate::contexts::base::StorageCache;
 use crate::errors::*;
@@ -14,9 +14,9 @@ pub enum State {
     Active,
 }
 
-#[elrond_wasm::module]
+#[multiversx_sc::module]
 pub trait LiquidityPoolModule:
-    config::ConfigModule + elrond_wasm_modules::default_issue_callbacks::DefaultIssueCallbacksModule
+    config::ConfigModule + multiversx_sc_modules::default_issue_callbacks::DefaultIssueCallbacksModule
 {
     fn pool_add_liquidity(
         &self,
@@ -60,9 +60,8 @@ pub trait LiquidityPoolModule:
             ERROR_NOT_ENOUGH_LP
         );
 
-        let egld_amount = (ls_token_amount
-            * &(&storage_cache.virtual_egld_reserve + &storage_cache.rewards_reserve))
-            / &storage_cache.ls_token_supply;
+        let egld_amount =
+            ls_token_amount * &storage_cache.virtual_egld_reserve / &storage_cache.ls_token_supply;
         require!(egld_amount > 0u64, ERROR_INSUFFICIENT_LIQ_BURNED);
 
         egld_amount

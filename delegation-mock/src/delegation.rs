@@ -1,6 +1,6 @@
 #![no_std]
 
-elrond_wasm::imports!();
+multiversx_sc::imports!();
 
 pub type Epoch = u64;
 pub const MAX_PERCENTAGE: u64 = 100_000;
@@ -8,7 +8,7 @@ pub const APY: u64 = 10_000; //10%
 pub const EPOCHS_IN_YEAR: u64 = 365;
 pub const UNBOND_PERIOD: u64 = 10;
 
-#[elrond_wasm::derive::contract]
+#[multiversx_sc::derive::contract]
 pub trait DelegationMock {
     #[init]
     fn init(&self) {}
@@ -17,7 +17,7 @@ pub trait DelegationMock {
     #[only_owner]
     #[endpoint(depositEGLD)]
     fn deposit_egld(&self) {
-        let payment_amount = self.call_value().egld_value();
+        let payment_amount = self.call_value().egld_value().clone_value();
         self.egld_token_supply()
             .update(|value| *value += &payment_amount);
     }
@@ -26,7 +26,7 @@ pub trait DelegationMock {
     #[endpoint(delegate)]
     fn delegate(&self) {
         let caller = self.blockchain().get_caller();
-        let payment_amount = self.call_value().egld_value();
+        let payment_amount = self.call_value().egld_value().clone_value();
         self.address_deposit(&caller)
             .update(|value| *value += &payment_amount);
         self.egld_token_supply()

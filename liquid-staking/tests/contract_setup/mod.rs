@@ -1,12 +1,12 @@
 use std::ops::Mul;
 
-use elrond_wasm::{
+use multiversx_sc::{
     storage::mappers::StorageTokenWrapper,
     types::{Address, BigUint, EsdtLocalRole},
 };
 
-use elrond_wasm_debug::{
-    managed_token_id, num_bigint, rust_biguint, testing_framework::*, DebugApi,
+use multiversx_sc_scenario::{
+    managed_token_id, num_bigint, rust_biguint, whitebox::*, DebugApi,
 };
 
 use liquid_staking::config::ConfigModule;

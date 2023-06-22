@@ -1,6 +1,6 @@
 use crate::contract_setup::LiquidStakingContractSetup;
-use elrond_wasm::types::Address;
-use elrond_wasm_debug::{managed_address, num_bigint, rust_biguint, DebugApi};
+use multiversx_sc::types::Address;
+use multiversx_sc_scenario::{managed_address, num_bigint, rust_biguint, DebugApi};
 use liquid_staking::config::{ConfigModule, UnstakeTokenAttributes};
 use liquid_staking::LiquidStaking;
 
