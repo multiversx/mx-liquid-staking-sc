@@ -12,7 +12,6 @@ pub const MIN_GAS_FOR_ASYNC_CALL: u64 = 12_000_000;
 pub const MIN_GAS_FOR_CALLBACK: u64 = 12_000_000;
 pub const MIN_EGLD_TO_DELEGATE: u64 = 1_000_000_000_000_000_000;
 pub const RECOMPUTE_BLOCK_OFFSET: u64 = 10;
-pub const MAX_DELEGATION_ADDRESSES: usize = 50;
 
 pub mod config;
 mod contexts;
@@ -43,9 +42,6 @@ pub trait LiquidStaking<ContractReader>:
     #[init]
     fn init(&self) {
         self.state().set(State::Inactive);
-        self.max_delegation_addresses()
-            .set(MAX_DELEGATION_ADDRESSES);
-
         let current_epoch = self.blockchain().get_block_epoch();
         let claim_status = ClaimStatus {
             status: ClaimStatusType::Insufficient,
@@ -383,6 +379,7 @@ pub trait LiquidStaking<ContractReader>:
                 claim_status_mapper.update(|claim_status| {
                     claim_status.status = ClaimStatusType::Finished;
                     claim_status.last_claim_block = self.blockchain().get_block_nonce();
+                    claim_status.last_claim_epoch = self.blockchain().get_block_epoch();
                 });
             }
         };
@@ -484,7 +481,7 @@ pub trait LiquidStaking<ContractReader>:
                 self.emit_add_liquidity_event(&storage_cache, &sc_address, BigUint::zero());
             }
             ManagedAsyncCallResult::Err(_) => {
-                storage_cache.rewards_reserve = staked_tokens;
+                storage_cache.rewards_reserve += staked_tokens;
                 self.move_delegation_contract_to_back(delegation_contract);
             }
         }

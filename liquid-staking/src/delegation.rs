@@ -3,9 +3,10 @@ use crate::errors::{
     ERROR_DELEGATION_CAP, ERROR_FIRST_DELEGATION_NODE, ERROR_NOT_WHITELISTED,
     ERROR_NO_DELEGATION_CONTRACTS, ERROR_OLD_CLAIM_START, ERROR_ONLY_DELEGATION_ADMIN,
 };
-
 multiversx_sc::imports!();
 multiversx_sc::derive_imports!();
+
+pub const MAX_DELEGATION_ADDRESSES: usize = 50;
 
 #[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, PartialEq, Eq, TypeAbi, Clone)]
 pub enum ClaimStatusType {
@@ -56,13 +57,8 @@ pub struct DelegationContractData<M: ManagedTypeApi> {
 pub trait DelegationModule:
     crate::config::ConfigModule
     + multiversx_sc_modules::default_issue_callbacks::DefaultIssueCallbacksModule
+    + multiversx_sc_modules::ongoing_operation::OngoingOperationModule
 {
-    #[only_owner]
-    #[endpoint(updateMaxDelegationAddressesNumber)]
-    fn update_max_delegation_addresses_number(&self, number: usize) {
-        self.max_delegation_addresses().set(number);
-    }
-
     #[only_owner]
     #[endpoint(whitelistDelegationContract)]
     fn whitelist_delegation_contract(
@@ -74,11 +70,6 @@ pub trait DelegationModule:
         nr_nodes: u64,
         apy: u64,
     ) {
-        require!(
-            self.delegation_addresses_list().len() <= self.max_delegation_addresses().get(),
-            "Maximum number of delegation addresses reached"
-        );
-
         require!(
             self.delegation_contract_data(&contract_address).is_empty(),
             ERROR_ALREADY_WHITELISTED
@@ -103,6 +94,10 @@ pub trait DelegationModule:
         self.delegation_contract_data(&contract_address)
             .set(contract_data);
         self.add_and_order_delegation_address_in_list(contract_address, apy);
+        require!(
+            self.delegation_addresses_list().len() <= MAX_DELEGATION_ADDRESSES,
+            "Maximum number of delegation addresses reached"
+        );
     }
 
     #[only_owner]
@@ -129,6 +124,11 @@ pub trait DelegationModule:
         nr_nodes: u64,
         apy: u64,
     ) {
+        let current_claim_status = self.load_operation::<ClaimStatus<Self::Api>>();
+        require!(
+            current_claim_status.status != ClaimStatusType::Pending,
+            "Operation cannot be performed now",
+        );
         let caller = self.blockchain().get_caller();
         let delegation_address_mapper = self.delegation_contract_data(&contract_address);
         let old_contract_data = delegation_address_mapper.get();
@@ -191,6 +191,11 @@ pub trait DelegationModule:
     }
 
     fn move_delegation_contract_to_back(&self, delegation_contract: ManagedAddress) {
+        let current_claim_status = self.load_operation::<ClaimStatus<Self::Api>>();
+        require!(
+            current_claim_status.status != ClaimStatusType::Pending,
+            "Operation cannot be performed now",
+        );
         self.remove_delegation_address_from_list(&delegation_contract);
         self.delegation_addresses_list()
             .push_back(delegation_contract);
@@ -324,10 +329,6 @@ pub trait DelegationModule:
     #[view(getDelegationClaimStatus)]
     #[storage_mapper("delegationClaimStatus")]
     fn delegation_claim_status(&self) -> SingleValueMapper<ClaimStatus<Self::Api>>;
-
-    #[view(maxDelegationAddresses)]
-    #[storage_mapper("maxDelegationAddresses")]
-    fn max_delegation_addresses(&self) -> SingleValueMapper<usize>;
 
     #[view(getDelegationContractData)]
     #[storage_mapper("delegationContractData")]
