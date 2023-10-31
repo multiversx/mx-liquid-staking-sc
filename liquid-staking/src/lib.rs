@@ -273,7 +273,7 @@ pub trait LiquidStaking<ContractReader>:
                 .withdraw()
                 .with_gas_limit(gas_for_async_call)
                 .async_call()
-                .with_callback(LiquidStaking::callbacks(self).withdraw_tokens_callback(
+                .with_callback(LiquidStaking::callbacks(self).unbound_tokens_callback(
                     caller,
                     delegation_contract,
                     payment.token_nonce,
@@ -284,7 +284,7 @@ pub trait LiquidStaking<ContractReader>:
     }
 
     #[callback]
-    fn withdraw_tokens_callback(
+    fn unbound_tokens_callback(
         &self,
         caller: ManagedAddress,
         delegation_contract: ManagedAddress,
