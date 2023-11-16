@@ -124,11 +124,6 @@ pub trait DelegationModule:
         nr_nodes: u64,
         apy: u64,
     ) {
-        let current_claim_status = self.load_operation::<ClaimStatus<Self::Api>>();
-        require!(
-            current_claim_status.status != ClaimStatusType::Pending,
-            "Operation cannot be performed now",
-        );
         let caller = self.blockchain().get_caller();
         let delegation_address_mapper = self.delegation_contract_data(&contract_address);
         let old_contract_data = delegation_address_mapper.get();
@@ -191,11 +186,6 @@ pub trait DelegationModule:
     }
 
     fn move_delegation_contract_to_back(&self, delegation_contract: ManagedAddress) {
-        let current_claim_status = self.load_operation::<ClaimStatus<Self::Api>>();
-        require!(
-            current_claim_status.status != ClaimStatusType::Pending,
-            "Operation cannot be performed now",
-        );
         self.remove_delegation_address_from_list(&delegation_contract);
         self.delegation_addresses_list()
             .push_back(delegation_contract);
@@ -269,13 +259,13 @@ pub trait DelegationModule:
         );
     }
 
-    fn prepare_claim_operation(
+    fn prepare_claim_operation_and_get_delegation_addresses(
         &self,
         current_claim_status: &mut ClaimStatus<Self::Api>,
         current_epoch: u64,
-    ) {
+    ) -> ManagedVec<ManagedAddress> {
+        let delegation_addresses_mapper = self.delegation_addresses_list();
         if current_claim_status.status == ClaimStatusType::None {
-            let delegation_addresses_mapper = self.delegation_addresses_list();
             require!(
                 delegation_addresses_mapper.front().unwrap().get_node_id() != 0,
                 ERROR_FIRST_DELEGATION_NODE
@@ -290,6 +280,20 @@ pub trait DelegationModule:
                 .get_sc_balance(&EgldOrEsdtTokenIdentifier::egld(), 0)
                 - current_total_withdrawn_egld;
         }
+
+        let mut last_node = current_claim_status.current_node;
+        let mut delegation_addresses: ManagedVec<Self::Api, ManagedAddress> = ManagedVec::new();
+
+        while last_node != 0 {
+            let current_node = delegation_addresses_mapper
+                .get_node_by_id(last_node)
+                .unwrap();
+            let current_address = current_node.clone().into_value();
+            delegation_addresses.push(current_address);
+            last_node = current_node.get_next_node_id();
+        }
+
+        delegation_addresses
     }
 
     #[view(getDelegationStatus)]

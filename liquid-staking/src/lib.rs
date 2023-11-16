@@ -71,6 +71,7 @@ pub trait LiquidStaking<ContractReader>:
         let delegation_contract = self.get_delegation_contract_for_delegate(&payment);
         let gas_for_async_call = self.get_gas_for_async_call();
 
+        drop(storage_cache);
         self.delegation_proxy_obj()
             .contract(delegation_contract.clone())
             .delegate()
@@ -151,6 +152,7 @@ pub trait LiquidStaking<ContractReader>:
         let delegation_contract = self.get_delegation_contract_for_undelegate(&egld_to_unstake);
         let gas_for_async_call = self.get_gas_for_async_call();
 
+        drop(storage_cache);
         self.delegation_proxy_obj()
             .contract(delegation_contract.clone())
             .undelegate(egld_to_unstake.clone())
@@ -268,6 +270,8 @@ pub trait LiquidStaking<ContractReader>:
             self.send().direct_egld(&caller, &unstake_amount)
         } else {
             let gas_for_async_call = self.get_gas_for_async_call();
+
+            drop(storage_cache);
             self.delegation_proxy_obj()
                 .contract(delegation_contract.clone())
                 .withdraw()
@@ -346,26 +350,24 @@ pub trait LiquidStaking<ContractReader>:
         let mut current_claim_status = self.load_operation::<ClaimStatus<Self::Api>>();
 
         self.check_claim_operation(&current_claim_status, old_claim_status, current_epoch);
-        self.prepare_claim_operation(&mut current_claim_status, current_epoch);
+        let mut delegation_addresses = self.prepare_claim_operation_and_get_delegation_addresses(
+            &mut current_claim_status,
+            current_epoch,
+        );
 
         let run_result = self.run_while_it_has_gas(DEFAULT_MIN_GAS_TO_SAVE_PROGRESS, || {
-            let delegation_address_node = delegation_addresses_mapper
-                .get_node_by_id(current_claim_status.current_node)
-                .unwrap();
-            let next_node = delegation_address_node.get_next_node_id();
-            let delegation_address = delegation_address_node.into_value();
+            let address = delegation_addresses.get(0).clone_value();
 
             self.delegation_proxy_obj()
-                .contract(delegation_address)
+                .contract(address)
                 .claim_rewards()
                 .with_gas_limit(DEFAULT_GAS_TO_CLAIM_REWARDS)
                 .transfer_execute();
 
-            if next_node == 0 {
+            delegation_addresses.remove(0);
+            if delegation_addresses.len() == 0 {
                 claim_status_mapper.set(current_claim_status.clone());
                 return STOP_OP;
-            } else {
-                current_claim_status.current_node = next_node;
             }
 
             CONTINUE_OP
@@ -445,6 +447,7 @@ pub trait LiquidStaking<ContractReader>:
         let delegation_contract = self.get_delegation_contract_for_delegate(&rewards_reserve);
         let gas_for_async_call = self.get_gas_for_async_call();
 
+        drop(storage_cache);
         self.delegation_proxy_obj()
             .contract(delegation_contract.clone())
             .delegate()
