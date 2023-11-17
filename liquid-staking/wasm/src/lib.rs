@@ -5,9 +5,9 @@
 ////////////////////////////////////////////////////
 
 // Init:                                 1
-// Endpoints:                           29
+// Endpoints:                           31
 // Async Callback:                       1
-// Total number of exported functions:  31
+// Total number of exported functions:  33
 
 #![no_std]
 #![feature(lang_items)]
@@ -21,6 +21,7 @@ multiversx_sc_wasm_adapter::endpoints! {
         addLiquidity
         removeLiquidity
         unbondTokens
+        withdrawAll
         claimRewards
         recomputeTokenReserve
         delegateRewards
@@ -37,6 +38,7 @@ multiversx_sc_wasm_adapter::endpoints! {
         getTotalWithdrawnEgld
         getUnstakeTokenId
         getUnstakeTokenSupply
+        getUnbondFromProvider
         whitelistDelegationContract
         changeDelegationContractAdmin
         changeDelegationContractParams

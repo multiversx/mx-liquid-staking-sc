@@ -7,7 +7,16 @@ pub const MAX_PERCENTAGE: u64 = 100_000;
 pub const UNBOND_PERIOD: u64 = 10;
 
 #[derive(
-    TopEncode, TopDecode, NestedEncode, NestedDecode, TypeAbi, Clone, PartialEq, Eq, Debug,
+    TopEncode,
+    TopDecode,
+    NestedEncode,
+    NestedDecode,
+    TypeAbi,
+    Clone,
+    PartialEq,
+    Eq,
+    Debug,
+    ManagedVecItem,
 )]
 pub struct UnstakeTokenAttributes<M: ManagedTypeApi> {
     pub delegation_contract: ManagedAddress<M>,
@@ -107,4 +116,11 @@ pub trait ConfigModule:
     #[view(getUnstakeTokenSupply)]
     #[storage_mapper("unstakeTokenSupply")]
     fn unstake_token_supply(&self) -> SingleValueMapper<BigUint>;
+
+    #[view(getUnbondFromProvider)]
+    #[storage_mapper("unbondFromProvider")]
+    fn unbond_from_provider(
+        &self,
+        caller: &ManagedAddress,
+    ) -> UnorderedSetMapper<UnstakeTokenAttributes<Self::Api>>;
 }

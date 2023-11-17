@@ -1,8 +1,8 @@
 use crate::contract_setup::LiquidStakingContractSetup;
-use multiversx_sc::types::Address;
-use multiversx_sc_scenario::{managed_address, num_bigint, rust_biguint, DebugApi};
 use liquid_staking::config::{ConfigModule, UnstakeTokenAttributes};
 use liquid_staking::LiquidStaking;
+use multiversx_sc::types::Address;
+use multiversx_sc_scenario::{managed_address, num_bigint, rust_biguint, DebugApi};
 
 use delegation_mock::*;
 use liquid_staking::delegation::DelegationModule;
@@ -163,7 +163,16 @@ where
             .assert_error(4, "Old claimed rewards must be greater than 1 EGLD");
     }
 
-    pub fn unbond_tokens(&mut self, caller: &Address, payment_token: &[u8], token_nonce: u64) {
+    pub fn unbond_tokens(&mut self, caller: &Address) {
+        let rust_zero = rust_biguint!(0u64);
+        self.b_mock
+            .execute_tx(caller, &self.sc_wrapper, &rust_zero, |sc| {
+                sc.unbond_tokens();
+            })
+            .assert_ok();
+    }
+
+    pub fn withdraw_all(&mut self, caller: &Address, payment_token: &[u8], token_nonce: u64) {
         self.b_mock
             .execute_esdt_transfer(
                 caller,
@@ -172,7 +181,7 @@ where
                 token_nonce,
                 &num_bigint::BigUint::from(1u64), // NFT
                 |sc| {
-                    sc.unbond_tokens();
+                    sc.withdraw_all();
                 },
             )
             .assert_ok();
