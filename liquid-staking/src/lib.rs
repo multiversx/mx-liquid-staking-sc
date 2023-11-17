@@ -305,7 +305,7 @@ pub trait LiquidStaking<ContractReader>:
 
         drop(storage_cache);
         self.delegation_proxy_obj()
-            .contract(delegation_contract.clone())
+            .contract(delegation_contract)
             .withdraw()
             .with_gas_limit(gas_for_async_call)
             .async_call()
