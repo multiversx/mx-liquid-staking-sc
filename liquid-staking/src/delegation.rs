@@ -259,11 +259,11 @@ pub trait DelegationModule:
         );
     }
 
-    fn prepare_claim_operation_and_get_delegation_addresses(
+    fn prepare_claim_operation(
         &self,
         current_claim_status: &mut ClaimStatus<Self::Api>,
         current_epoch: u64,
-    ) -> ManagedVec<ManagedAddress> {
+    ) {
         let delegation_addresses_mapper = self.delegation_addresses_list();
         if current_claim_status.status == ClaimStatusType::None {
             require!(
@@ -282,18 +282,15 @@ pub trait DelegationModule:
         }
 
         let mut last_node = current_claim_status.current_node;
-        let mut delegation_addresses: ManagedVec<Self::Api, ManagedAddress> = ManagedVec::new();
 
         while last_node != 0 {
             let current_node = delegation_addresses_mapper
                 .get_node_by_id(last_node)
                 .unwrap();
             let current_address = current_node.clone().into_value();
-            delegation_addresses.push(current_address);
+            self.addresses_to_claim().push_front(current_address);
             last_node = current_node.get_next_node_id();
         }
-
-        delegation_addresses
     }
 
     #[view(getDelegationStatus)]
@@ -329,6 +326,10 @@ pub trait DelegationModule:
     #[view(getDelegationAddressesList)]
     #[storage_mapper("delegationAddressesList")]
     fn delegation_addresses_list(&self) -> LinkedListMapper<ManagedAddress>;
+
+    #[view(getAddressesToClaim)]
+    #[storage_mapper("addressesToClaim")]
+    fn addresses_to_claim(&self) -> LinkedListMapper<ManagedAddress>;
 
     #[view(getDelegationClaimStatus)]
     #[storage_mapper("delegationClaimStatus")]

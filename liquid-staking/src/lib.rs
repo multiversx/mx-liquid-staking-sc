@@ -43,12 +43,12 @@ pub trait LiquidStaking<ContractReader>:
     fn init(&self) {
         self.state().set(State::Inactive);
         let current_epoch = self.blockchain().get_block_epoch();
+        let current_round = self.blockchain().get_block_round();
         let claim_status = ClaimStatus {
             status: ClaimStatusType::Insufficient,
             last_claim_epoch: current_epoch,
-            last_claim_block: 0u64,
-            current_node: 0,
-            starting_token_reserve: BigUint::zero(),
+            last_claim_block: current_round,
+            ..Default::default()
         };
 
         self.delegation_claim_status().set_if_empty(claim_status);
@@ -225,16 +225,23 @@ pub trait LiquidStaking<ContractReader>:
         }
     }
 
+    #[payable("*")]
     #[endpoint(unbondTokens)]
     fn unbond_tokens(&self) {
         self.blockchain().check_caller_is_user_account();
         let mut storage_cache = StorageCache::new(self);
+        let payment = self.call_value().single_esdt();
         let caller = self.blockchain().get_caller();
 
         require!(
             self.is_state_active(storage_cache.contract_state),
             ERROR_NOT_ACTIVE
         );
+        require!(
+            payment.token_identifier == self.unstake_token().get_token_id(),
+            ERROR_BAD_PAYMENT_TOKEN
+        );
+        require!(payment.amount > 0, ERROR_BAD_PAYMENT_AMOUNT);
 
         let providers_to_unbond_from = self.unbond_from_provider(&caller);
         let mut providers_unbond_from =
@@ -365,13 +372,11 @@ pub trait LiquidStaking<ContractReader>:
         let mut current_claim_status = self.load_operation::<ClaimStatus<Self::Api>>();
 
         self.check_claim_operation(&current_claim_status, old_claim_status, current_epoch);
-        let mut delegation_addresses = self.prepare_claim_operation_and_get_delegation_addresses(
-            &mut current_claim_status,
-            current_epoch,
-        );
+        self.prepare_claim_operation(&mut current_claim_status, current_epoch);
+        let mut delegation_addresses = self.addresses_to_claim();
 
         let run_result = self.run_while_it_has_gas(DEFAULT_MIN_GAS_TO_SAVE_PROGRESS, || {
-            let address = delegation_addresses.get(0).clone_value();
+            let address = delegation_addresses.pop_back().unwrap().into_value();
 
             self.delegation_proxy_obj()
                 .contract(address)
@@ -379,7 +384,6 @@ pub trait LiquidStaking<ContractReader>:
                 .with_gas_limit(DEFAULT_GAS_TO_CLAIM_REWARDS)
                 .transfer_execute();
 
-            delegation_addresses.remove(0);
             if delegation_addresses.is_empty() {
                 claim_status_mapper.set(current_claim_status.clone());
                 return STOP_OP;
