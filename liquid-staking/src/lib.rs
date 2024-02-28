@@ -225,23 +225,16 @@ pub trait LiquidStaking<ContractReader>:
         }
     }
 
-    #[payable("*")]
     #[endpoint(unbondTokens)]
     fn unbond_tokens(&self) {
         self.blockchain().check_caller_is_user_account();
         let mut storage_cache = StorageCache::new(self);
-        let payment = self.call_value().single_esdt();
         let caller = self.blockchain().get_caller();
 
         require!(
             self.is_state_active(storage_cache.contract_state),
             ERROR_NOT_ACTIVE
         );
-        require!(
-            payment.token_identifier == self.unstake_token().get_token_id(),
-            ERROR_BAD_PAYMENT_TOKEN
-        );
-        require!(payment.amount > 0, ERROR_BAD_PAYMENT_AMOUNT);
 
         let providers_to_unbond_from = self.unbond_from_provider(&caller);
         let mut providers_unbond_from =
