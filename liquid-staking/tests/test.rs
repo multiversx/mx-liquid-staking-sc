@@ -1,4 +1,3 @@
-#![feature(build_hasher_simple_hash_one)]
 mod contract_interactions;
 mod contract_setup;
 use std::ops::Mul;
