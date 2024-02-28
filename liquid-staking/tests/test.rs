@@ -1,3 +1,4 @@
+#![feature(build_hasher_simple_hash_one)]
 mod contract_interactions;
 mod contract_setup;
 use std::ops::Mul;
@@ -60,7 +61,7 @@ fn liquid_staking_claim_rewards_and_withdraw_test() {
 
     sc_setup.b_mock.set_block_epoch(60u64);
     sc_setup.withdraw_all(&first_user, UNSTAKE_TOKEN_ID, 1);
-    sc_setup.unbond_tokens(&first_user);
+    sc_setup.unbond_tokens(&first_user, UNSTAKE_TOKEN_ID, 1);
 
     sc_setup.check_user_balance(&first_user, LS_TOKEN_ID, 10u64);
     sc_setup.check_user_egld_balance_denominated(&first_user, 91232876712328767122u128);
@@ -215,7 +216,7 @@ fn liquid_staking_multiple_operations() {
     sc_setup.b_mock.set_block_epoch(60u64);
     sc_setup.check_user_egld_balance(&first_user, 20u64);
     sc_setup.withdraw_all(&first_user, UNSTAKE_TOKEN_ID, 1);
-    sc_setup.unbond_tokens(&first_user);
+    sc_setup.unbond_tokens(&first_user, UNSTAKE_TOKEN_ID, 1);
 
     let ls_value = sc_setup.get_ls_value_for_position(1u64);
     let initial_egld_balance = exp18_128(20u64);
@@ -250,7 +251,7 @@ fn liquid_staking_multiple_withdraw_test() {
 
     sc_setup.b_mock.set_block_epoch(60u64);
     sc_setup.withdraw_all(&first_user, UNSTAKE_TOKEN_ID, 1);
-    sc_setup.unbond_tokens(&first_user);
+    sc_setup.unbond_tokens(&first_user, UNSTAKE_TOKEN_ID, 1);
     sc_setup.check_user_balance(&first_user, LS_TOKEN_ID, 30u64);
     sc_setup.check_user_egld_balance(&first_user, 70);
     sc_setup.check_user_balance(&second_user, LS_TOKEN_ID, 20u64);

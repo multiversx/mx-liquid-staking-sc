@@ -1,7 +1,8 @@
 use crate::errors::{
-    ERROR_ALREADY_WHITELISTED, ERROR_BAD_DELEGATION_ADDRESS, ERROR_CLAIM_EPOCH, ERROR_CLAIM_START,
-    ERROR_DELEGATION_CAP, ERROR_FIRST_DELEGATION_NODE, ERROR_NOT_WHITELISTED,
-    ERROR_NO_DELEGATION_CONTRACTS, ERROR_OLD_CLAIM_START, ERROR_ONLY_DELEGATION_ADMIN,
+    ERROR_ALREADY_WHITELISTED, ERROR_BAD_DELEGATION_ADDRESS, ERROR_CLAIM_EPOCH,
+    ERROR_CLAIM_IN_PROGRESS, ERROR_CLAIM_START, ERROR_DELEGATION_CAP, ERROR_FIRST_DELEGATION_NODE,
+    ERROR_NOT_WHITELISTED, ERROR_NO_DELEGATION_CONTRACTS, ERROR_OLD_CLAIM_START,
+    ERROR_ONLY_DELEGATION_ADMIN,
 };
 multiversx_sc::imports!();
 multiversx_sc::derive_imports!();
@@ -269,6 +270,10 @@ pub trait DelegationModule:
             require!(
                 delegation_addresses_mapper.front().unwrap().get_node_id() != 0,
                 ERROR_FIRST_DELEGATION_NODE
+            );
+            require!(
+                self.addresses_to_claim().is_empty(),
+                ERROR_CLAIM_IN_PROGRESS
             );
             current_claim_status.status = ClaimStatusType::Pending;
             current_claim_status.last_claim_epoch = current_epoch;

@@ -361,7 +361,7 @@ pub trait LiquidStaking<ContractReader>:
             ERROR_NOT_ACTIVE
         );
 
-        let delegation_addresses_mapper = self.delegation_addresses_list();
+        let mut delegation_addresses_mapper = self.delegation_addresses_list();
         require!(
             !delegation_addresses_mapper.is_empty(),
             ERROR_NO_DELEGATION_CONTRACTS
@@ -376,7 +376,8 @@ pub trait LiquidStaking<ContractReader>:
         let mut delegation_addresses = self.addresses_to_claim();
 
         let run_result = self.run_while_it_has_gas(DEFAULT_MIN_GAS_TO_SAVE_PROGRESS, || {
-            let address = delegation_addresses.pop_back().unwrap().into_value();
+            let current_node = delegation_addresses.pop_back().unwrap();
+            let address = current_node.clone().into_value();
 
             self.delegation_proxy_obj()
                 .contract(address)
@@ -389,6 +390,7 @@ pub trait LiquidStaking<ContractReader>:
                 return STOP_OP;
             }
 
+            delegation_addresses_mapper.remove_node(&current_node);
             CONTINUE_OP
         });
 
