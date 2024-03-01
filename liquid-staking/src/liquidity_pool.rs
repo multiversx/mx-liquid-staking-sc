@@ -25,7 +25,7 @@ pub trait LiquidityPoolModule:
     ) -> BigUint {
         let ls_amount = if storage_cache.virtual_egld_reserve > 0 {
             token_amount.clone() * &storage_cache.ls_token_supply
-                / (&storage_cache.virtual_egld_reserve + &storage_cache.rewards_reserve)
+                / &storage_cache.virtual_egld_reserve
         } else {
             token_amount.clone()
         };

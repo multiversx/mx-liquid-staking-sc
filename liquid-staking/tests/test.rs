@@ -59,7 +59,8 @@ fn liquid_staking_claim_rewards_and_withdraw_test() {
     sc_setup.remove_liquidity(&first_user, LS_TOKEN_ID, 90u64);
 
     sc_setup.b_mock.set_block_epoch(60u64);
-    sc_setup.unbond_tokens(&first_user, UNSTAKE_TOKEN_ID, 1);
+    sc_setup.withdraw_all(&first_user, UNSTAKE_TOKEN_ID, 1);
+    sc_setup.unbond_tokens(&first_user);
 
     sc_setup.check_user_balance(&first_user, LS_TOKEN_ID, 10u64);
     sc_setup.check_user_egld_balance_denominated(&first_user, 91232876712328767122u128);
@@ -204,21 +205,22 @@ fn liquid_staking_multiple_operations() {
         9_000u64,
     );
 
-    sc_setup.check_user_balance_denominated(&first_user, LS_TOKEN_ID, 79313093831536454488u128);
-    sc_setup.check_user_balance_denominated(&second_user, LS_TOKEN_ID, 89450475065229163590u128);
-    sc_setup.check_user_balance_denominated(&third_user, LS_TOKEN_ID, 69560533894550287992u128);
+    sc_setup.check_user_balance_denominated(&first_user, LS_TOKEN_ID, 79324324324324324325u128);
+    sc_setup.check_user_balance_denominated(&second_user, LS_TOKEN_ID, 89459459459459459460u128);
+    sc_setup.check_user_balance_denominated(&third_user, LS_TOKEN_ID, 69594594594594594595u128);
 
     sc_setup.remove_liquidity(&first_user, LS_TOKEN_ID, 70u64);
-    sc_setup.check_user_balance_denominated(&first_user, LS_TOKEN_ID, 9313093831536454488u128);
+    sc_setup.check_user_balance_denominated(&first_user, LS_TOKEN_ID, 9324324324324324325u128);
 
     sc_setup.b_mock.set_block_epoch(60u64);
     sc_setup.check_user_egld_balance(&first_user, 20u64);
-    sc_setup.unbond_tokens(&first_user, UNSTAKE_TOKEN_ID, 1);
+    sc_setup.withdraw_all(&first_user, UNSTAKE_TOKEN_ID, 1);
+    sc_setup.unbond_tokens(&first_user);
 
     let ls_value = sc_setup.get_ls_value_for_position(1u64);
     let initial_egld_balance = exp18_128(20u64);
     let ls_token_balance_in_egld = 70 * ls_value;
-    let rounding_offset = 6u128;
+    let rounding_offset = 24u128;
     sc_setup.check_user_egld_balance_denominated(
         &first_user,
         initial_egld_balance + ls_token_balance_in_egld + rounding_offset,
@@ -247,7 +249,8 @@ fn liquid_staking_multiple_withdraw_test() {
     sc_setup.check_contract_storage(70, 70, 0, 0);
 
     sc_setup.b_mock.set_block_epoch(60u64);
-    sc_setup.unbond_tokens(&first_user, UNSTAKE_TOKEN_ID, 1);
+    sc_setup.withdraw_all(&first_user, UNSTAKE_TOKEN_ID, 1);
+    sc_setup.unbond_tokens(&first_user);
     sc_setup.check_user_balance(&first_user, LS_TOKEN_ID, 30u64);
     sc_setup.check_user_egld_balance(&first_user, 70);
     sc_setup.check_user_balance(&second_user, LS_TOKEN_ID, 20u64);

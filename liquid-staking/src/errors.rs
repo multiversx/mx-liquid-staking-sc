@@ -4,6 +4,7 @@ pub static ERROR_LS_TOKEN_NOT_ISSUED: &[u8] = b"LS token not issued";
 pub static ERROR_INSUFFICIENT_GAS: &[u8] = b"Insufficient gas remaining for the callback";
 
 pub static ERROR_CLAIM_START: &[u8] = b"Claim operation must be new or pending";
+pub static ERROR_CLAIM_IN_PROGRESS: &[u8] = b"Claim operation is already in progress";
 pub static ERROR_OLD_CLAIM_START: &[u8] =
     b"Previous claimed rewards must be redelegated or lesser than 1 EGLD";
 pub static ERROR_CLAIM_REDELEGATE: &[u8] = b"Old claimed rewards must be greater than 1 EGLD";

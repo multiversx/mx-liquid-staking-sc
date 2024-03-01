@@ -1,11 +1,13 @@
 use crate::errors::{
-    ERROR_ALREADY_WHITELISTED, ERROR_BAD_DELEGATION_ADDRESS, ERROR_CLAIM_EPOCH, ERROR_CLAIM_START,
-    ERROR_DELEGATION_CAP, ERROR_FIRST_DELEGATION_NODE, ERROR_NOT_WHITELISTED,
-    ERROR_NO_DELEGATION_CONTRACTS, ERROR_OLD_CLAIM_START, ERROR_ONLY_DELEGATION_ADMIN,
+    ERROR_ALREADY_WHITELISTED, ERROR_BAD_DELEGATION_ADDRESS, ERROR_CLAIM_EPOCH,
+    ERROR_CLAIM_IN_PROGRESS, ERROR_CLAIM_START, ERROR_DELEGATION_CAP, ERROR_FIRST_DELEGATION_NODE,
+    ERROR_NOT_WHITELISTED, ERROR_NO_DELEGATION_CONTRACTS, ERROR_OLD_CLAIM_START,
+    ERROR_ONLY_DELEGATION_ADMIN,
 };
-
 multiversx_sc::imports!();
 multiversx_sc::derive_imports!();
+
+pub const MAX_DELEGATION_ADDRESSES: usize = 50;
 
 #[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, PartialEq, Eq, TypeAbi, Clone)]
 pub enum ClaimStatusType {
@@ -56,13 +58,8 @@ pub struct DelegationContractData<M: ManagedTypeApi> {
 pub trait DelegationModule:
     crate::config::ConfigModule
     + multiversx_sc_modules::default_issue_callbacks::DefaultIssueCallbacksModule
+    + multiversx_sc_modules::ongoing_operation::OngoingOperationModule
 {
-    #[only_owner]
-    #[endpoint(updateMaxDelegationAddressesNumber)]
-    fn update_max_delegation_addresses_number(&self, number: usize) {
-        self.max_delegation_addresses().set(number);
-    }
-
     #[only_owner]
     #[endpoint(whitelistDelegationContract)]
     fn whitelist_delegation_contract(
@@ -74,11 +71,6 @@ pub trait DelegationModule:
         nr_nodes: u64,
         apy: u64,
     ) {
-        require!(
-            self.delegation_addresses_list().len() <= self.max_delegation_addresses().get(),
-            "Maximum number of delegation addresses reached"
-        );
-
         require!(
             self.delegation_contract_data(&contract_address).is_empty(),
             ERROR_ALREADY_WHITELISTED
@@ -103,6 +95,10 @@ pub trait DelegationModule:
         self.delegation_contract_data(&contract_address)
             .set(contract_data);
         self.add_and_order_delegation_address_in_list(contract_address, apy);
+        require!(
+            self.delegation_addresses_list().len() <= MAX_DELEGATION_ADDRESSES,
+            "Maximum number of delegation addresses reached"
+        );
     }
 
     #[only_owner]
@@ -153,6 +149,14 @@ pub trait DelegationModule:
             contract_data.nr_nodes = nr_nodes;
             contract_data.apy = apy;
         });
+    }
+
+    fn add_address_to_be_claimed(&self, contract_address: ManagedAddress) {
+        if self.addresses_to_claim().is_empty() {
+            self.addresses_to_claim().push_front(contract_address);
+        } else {
+            self.addresses_to_claim().push_back(contract_address);
+        }
     }
 
     fn add_and_order_delegation_address_in_list(&self, contract_address: ManagedAddress, apy: u64) {
@@ -269,11 +273,15 @@ pub trait DelegationModule:
         current_claim_status: &mut ClaimStatus<Self::Api>,
         current_epoch: u64,
     ) {
+        let mut delegation_addresses_mapper = self.delegation_addresses_list();
         if current_claim_status.status == ClaimStatusType::None {
-            let delegation_addresses_mapper = self.delegation_addresses_list();
             require!(
                 delegation_addresses_mapper.front().unwrap().get_node_id() != 0,
                 ERROR_FIRST_DELEGATION_NODE
+            );
+            require!(
+                self.addresses_to_claim().is_empty(),
+                ERROR_CLAIM_IN_PROGRESS
             );
             current_claim_status.status = ClaimStatusType::Pending;
             current_claim_status.last_claim_epoch = current_epoch;
@@ -284,6 +292,18 @@ pub trait DelegationModule:
                 .blockchain()
                 .get_sc_balance(&EgldOrEsdtTokenIdentifier::egld(), 0)
                 - current_total_withdrawn_egld;
+        }
+
+        let mut last_node = current_claim_status.current_node;
+
+        while last_node != 0 {
+            let current_node = delegation_addresses_mapper
+                .get_node_by_id(last_node)
+                .unwrap();
+            let current_address = current_node.clone().into_value();
+            self.add_address_to_be_claimed(current_address);
+            last_node = current_node.get_next_node_id();
+            delegation_addresses_mapper.remove_node(&current_node);
         }
     }
 
@@ -321,13 +341,13 @@ pub trait DelegationModule:
     #[storage_mapper("delegationAddressesList")]
     fn delegation_addresses_list(&self) -> LinkedListMapper<ManagedAddress>;
 
+    #[view(getAddressesToClaim)]
+    #[storage_mapper("addressesToClaim")]
+    fn addresses_to_claim(&self) -> LinkedListMapper<ManagedAddress>;
+
     #[view(getDelegationClaimStatus)]
     #[storage_mapper("delegationClaimStatus")]
     fn delegation_claim_status(&self) -> SingleValueMapper<ClaimStatus<Self::Api>>;
-
-    #[view(maxDelegationAddresses)]
-    #[storage_mapper("maxDelegationAddresses")]
-    fn max_delegation_addresses(&self) -> SingleValueMapper<usize>;
 
     #[view(getDelegationContractData)]
     #[storage_mapper("delegationContractData")]
