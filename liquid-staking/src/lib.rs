@@ -354,7 +354,7 @@ pub trait LiquidStaking<ContractReader>:
             ERROR_NOT_ACTIVE
         );
 
-        let mut delegation_addresses_mapper = self.delegation_addresses_list();
+        let delegation_addresses_mapper = self.delegation_addresses_list();
         require!(
             !delegation_addresses_mapper.is_empty(),
             ERROR_NO_DELEGATION_CONTRACTS
@@ -383,7 +383,7 @@ pub trait LiquidStaking<ContractReader>:
                 return STOP_OP;
             }
 
-            delegation_addresses_mapper.remove_node(&current_node);
+            delegation_addresses.remove_node(&current_node);
             CONTINUE_OP
         });
 

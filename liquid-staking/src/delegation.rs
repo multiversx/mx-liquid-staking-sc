@@ -151,6 +151,14 @@ pub trait DelegationModule:
         });
     }
 
+    fn add_address_to_be_claimed(&self, contract_address: ManagedAddress) {
+        if self.addresses_to_claim().is_empty() {
+            self.addresses_to_claim().push_front(contract_address);
+        } else {
+            self.addresses_to_claim().push_back(contract_address);
+        }
+    }
+
     fn add_and_order_delegation_address_in_list(&self, contract_address: ManagedAddress, apy: u64) {
         let mut delegation_addresses_mapper = self.delegation_addresses_list();
         if delegation_addresses_mapper.is_empty() {
@@ -265,7 +273,7 @@ pub trait DelegationModule:
         current_claim_status: &mut ClaimStatus<Self::Api>,
         current_epoch: u64,
     ) {
-        let delegation_addresses_mapper = self.delegation_addresses_list();
+        let mut delegation_addresses_mapper = self.delegation_addresses_list();
         if current_claim_status.status == ClaimStatusType::None {
             require!(
                 delegation_addresses_mapper.front().unwrap().get_node_id() != 0,
@@ -293,8 +301,9 @@ pub trait DelegationModule:
                 .get_node_by_id(last_node)
                 .unwrap();
             let current_address = current_node.clone().into_value();
-            self.addresses_to_claim().push_front(current_address);
+            self.add_address_to_be_claimed(current_address);
             last_node = current_node.get_next_node_id();
+            delegation_addresses_mapper.remove_node(&current_node);
         }
     }
 
