@@ -225,57 +225,11 @@ pub trait LiquidStaking<ContractReader>:
         }
     }
 
+    #[payable("*")]
     #[endpoint(unbondTokens)]
     fn unbond_tokens(&self) {
         self.blockchain().check_caller_is_user_account();
         let mut storage_cache = StorageCache::new(self);
-        let caller = self.blockchain().get_caller();
-
-        require!(
-            self.is_state_active(storage_cache.contract_state),
-            ERROR_NOT_ACTIVE
-        );
-
-        let providers_to_unbond_from = self.unbond_from_provider(&caller);
-        let mut providers_unbond_from =
-            ManagedVec::<Self::Api, UnstakeTokenAttributes<Self::Api>>::new();
-        let current_epoch = self.blockchain().get_block_epoch();
-        let mut total_unstake_amount = BigUint::zero();
-
-        for unstake_token_attributes in providers_to_unbond_from.iter() {
-            if current_epoch < unstake_token_attributes.unbond_epoch {
-                continue;
-            }
-
-            let delegation_contract = unstake_token_attributes.delegation_contract.clone();
-            let unstake_amount = unstake_token_attributes.unstake_amount.clone();
-            let delegation_contract_mapper = self.delegation_contract_data(&delegation_contract);
-            let delegation_contract_data = delegation_contract_mapper.get();
-
-            if delegation_contract_data.total_unbonded_from_ls_contract < unstake_amount {
-                continue;
-            }
-
-            delegation_contract_mapper.update(|contract_data| {
-                contract_data.total_unstaked_from_ls_contract -= &unstake_amount;
-                contract_data.total_unbonded_from_ls_contract -= &unstake_amount
-            });
-
-            total_unstake_amount += unstake_amount;
-            providers_unbond_from.push(unstake_token_attributes);
-        }
-
-        storage_cache.total_withdrawn_egld -= &total_unstake_amount;
-        self.unstake_token_supply()
-            .update(|x| *x -= &total_unstake_amount);
-        self.send().direct_egld(&caller, &total_unstake_amount)
-    }
-
-    #[payable("*")]
-    #[endpoint(withdrawAll)]
-    fn withdraw_all(&self) {
-        self.blockchain().check_caller_is_user_account();
-        let storage_cache = StorageCache::new(self);
         let payment = self.call_value().single_esdt();
         let caller = self.blockchain().get_caller();
 
@@ -283,11 +237,14 @@ pub trait LiquidStaking<ContractReader>:
             self.is_state_active(storage_cache.contract_state),
             ERROR_NOT_ACTIVE
         );
+
         require!(
             payment.token_identifier == self.unstake_token().get_token_id(),
             ERROR_BAD_PAYMENT_TOKEN
         );
         require!(payment.amount > 0, ERROR_BAD_PAYMENT_AMOUNT);
+
+        let mut total_unstake_amount = BigUint::zero();
 
         let unstake_token_attributes: UnstakeTokenAttributes<Self::Api> = self
             .unstake_token()
@@ -298,47 +255,71 @@ pub trait LiquidStaking<ContractReader>:
             current_epoch >= unstake_token_attributes.unbond_epoch,
             ERROR_UNSTAKE_PERIOD_NOT_PASSED
         );
+        if current_epoch < unstake_token_attributes.unbond_epoch {
+            return;
+        }
 
         let delegation_contract = unstake_token_attributes.delegation_contract.clone();
+        let unstake_amount = unstake_token_attributes.unstake_amount.clone();
+        let delegation_contract_mapper = self.delegation_contract_data(&delegation_contract);
+        let delegation_contract_data = delegation_contract_mapper.get();
+
+        if delegation_contract_data.total_unbonded_from_ls_contract < unstake_amount {
+            return;
+        }
+
+        delegation_contract_mapper.update(|contract_data| {
+            contract_data.total_unstaked_from_ls_contract -= &unstake_amount;
+            contract_data.total_unbonded_from_ls_contract -= &unstake_amount
+        });
+
+        total_unstake_amount += unstake_amount;
+
+        storage_cache.total_withdrawn_egld -= &total_unstake_amount;
+        self.unstake_token_supply()
+            .update(|x| *x -= &total_unstake_amount);
+        self.burn_unstake_tokens(payment.token_nonce);
+        self.send().direct_egld(&caller, &total_unstake_amount)
+    }
+
+    #[endpoint(withdrawAll)]
+    fn withdraw_all(&self, provider: ManagedAddress) {
+        self.blockchain().check_caller_is_user_account();
+        let storage_cache = StorageCache::new(self);
+
+        require!(
+            self.is_state_active(storage_cache.contract_state),
+            ERROR_NOT_ACTIVE
+        );
 
         let gas_for_async_call = self.get_gas_for_async_call();
 
         drop(storage_cache);
         self.delegation_proxy_obj()
-            .contract(delegation_contract)
+            .contract(provider.clone())
             .withdraw()
             .with_gas_limit(gas_for_async_call)
             .async_call()
-            .with_callback(LiquidStaking::callbacks(self).withdraw_tokens_callback(
-                unstake_token_attributes,
-                caller,
-                payment.token_nonce,
-            ))
+            .with_callback(LiquidStaking::callbacks(self).withdraw_tokens_callback(provider))
             .call_and_exit();
     }
 
     #[callback]
     fn withdraw_tokens_callback(
         &self,
-        unstake_token_attributes: UnstakeTokenAttributes<Self::Api>,
-        caller: ManagedAddress,
-        nonce_to_burn: u64,
+        provider: ManagedAddress,
         #[call_result] result: ManagedAsyncCallResult<()>,
     ) {
         match result {
             ManagedAsyncCallResult::Ok(()) => {
                 let withdraw_amount = self.call_value().egld_value().clone_value();
                 let mut storage_cache = StorageCache::new(self);
-                let delegation_contract_mapper =
-                    self.delegation_contract_data(&unstake_token_attributes.delegation_contract);
+                let delegation_contract_mapper = self.delegation_contract_data(&provider);
                 if withdraw_amount > 0u64 {
                     delegation_contract_mapper.update(|contract_data| {
                         contract_data.total_unbonded_from_ls_contract += &withdraw_amount
                     });
                     storage_cache.total_withdrawn_egld += &withdraw_amount;
-                    self.unbond_from_provider(&caller)
-                        .insert(unstake_token_attributes);
-                    self.burn_unstake_tokens(nonce_to_burn);
                 }
             }
             ManagedAsyncCallResult::Err(_) => {}

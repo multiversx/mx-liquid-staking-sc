@@ -116,11 +116,4 @@ pub trait ConfigModule:
     #[view(getUnstakeTokenSupply)]
     #[storage_mapper("unstakeTokenSupply")]
     fn unstake_token_supply(&self) -> SingleValueMapper<BigUint>;
-
-    #[view(getUnbondFromProvider)]
-    #[storage_mapper("unbondFromProvider")]
-    fn unbond_from_provider(
-        &self,
-        caller: &ManagedAddress,
-    ) -> UnorderedSetMapper<UnstakeTokenAttributes<Self::Api>>;
 }
