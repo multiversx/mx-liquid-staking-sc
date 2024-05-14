@@ -33,3 +33,4 @@ pub static ERROR_DELEGATION_CAP: &[u8] =
     b"Delegation cap must be higher than the total staked amount";
 pub static ERROR_ONLY_DELEGATION_ADMIN: &[u8] =
     b"Only the admin of the delegation contract can change the status";
+pub static ERROR_NOTHING_TO_UNBOND: &[u8] = b"Nothing to unbond";
