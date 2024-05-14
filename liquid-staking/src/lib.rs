@@ -255,31 +255,25 @@ pub trait LiquidStaking<ContractReader>:
             current_epoch >= unstake_token_attributes.unbond_epoch,
             ERROR_UNSTAKE_PERIOD_NOT_PASSED
         );
-        if current_epoch < unstake_token_attributes.unbond_epoch {
-            return;
-        }
 
         let delegation_contract = unstake_token_attributes.delegation_contract.clone();
         let unstake_amount = unstake_token_attributes.unstake_amount.clone();
         let delegation_contract_mapper = self.delegation_contract_data(&delegation_contract);
         let delegation_contract_data = delegation_contract_mapper.get();
 
-        if delegation_contract_data.total_unbonded_from_ls_contract < unstake_amount {
-            return;
+        if delegation_contract_data.total_unbonded_from_ls_contract >= unstake_amount {
+            delegation_contract_mapper.update(|contract_data| {
+                contract_data.total_unstaked_from_ls_contract -= &unstake_amount;
+                contract_data.total_unbonded_from_ls_contract -= &unstake_amount
+            });
+
+            total_unstake_amount += unstake_amount;
+            storage_cache.total_withdrawn_egld -= &total_unstake_amount;
+            self.unstake_token_supply()
+                .update(|x| *x -= &total_unstake_amount);
+            self.burn_unstake_tokens(payment.token_nonce);
+            self.send().direct_egld(&caller, &total_unstake_amount)
         }
-
-        delegation_contract_mapper.update(|contract_data| {
-            contract_data.total_unstaked_from_ls_contract -= &unstake_amount;
-            contract_data.total_unbonded_from_ls_contract -= &unstake_amount
-        });
-
-        total_unstake_amount += unstake_amount;
-
-        storage_cache.total_withdrawn_egld -= &total_unstake_amount;
-        self.unstake_token_supply()
-            .update(|x| *x -= &total_unstake_amount);
-        self.burn_unstake_tokens(payment.token_nonce);
-        self.send().direct_egld(&caller, &total_unstake_amount)
     }
 
     #[endpoint(withdrawAll)]
