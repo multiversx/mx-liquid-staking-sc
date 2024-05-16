@@ -355,10 +355,12 @@ pub trait LiquidStaking<ContractReader>:
             let current_node = delegation_addresses.pop_back().unwrap();
             let address = current_node.clone().into_value();
 
-            self.delegation_proxy_obj()
-                .contract(address)
+            let _ = self
+                .tx()
+                .to(address)
+                .typed(delegation_mock_proxy::DelegationMockProxy)
                 .claim_rewards()
-                .with_gas_limit(DEFAULT_GAS_TO_CLAIM_REWARDS)
+                .gas(DEFAULT_GAS_TO_CLAIM_REWARDS)
                 .transfer_execute();
 
             if delegation_addresses.is_empty() {
