@@ -1,0 +1,8 @@
+[settings]
+
+[[proxy]]
+path = "src/delegation-mock.rs"
+
+
+[[proxy]]
+path = "../liquid-staking/src/delegation-mock.rs"
