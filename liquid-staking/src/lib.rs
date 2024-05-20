@@ -16,7 +16,6 @@ pub const RECOMPUTE_BLOCK_OFFSET: u64 = 10;
 pub mod config;
 mod contexts;
 pub mod delegation;
-pub mod delegation_mock_proxy;
 pub mod delegation_proxy;
 pub mod errors;
 mod events;
@@ -75,11 +74,9 @@ pub trait LiquidStaking<ContractReader>:
         drop(storage_cache);
 
         let _ = self
-            .tx()
-            .to(delegation_contract.clone())
-            .typed(delegation_mock_proxy::DelegationMockProxy)
+            .delegation_proxy_obj()
+            .contract(delegation_contract.clone())
             .delegate()
-            .egld(payment.clone())
             .gas(gas_for_async_call)
             .callback(LiquidStaking::callbacks(self).add_liquidity_callback(
                 caller,
@@ -158,9 +155,8 @@ pub trait LiquidStaking<ContractReader>:
         drop(storage_cache);
 
         let _ = self
-            .tx()
-            .to(delegation_contract.clone())
-            .typed(delegation_mock_proxy::DelegationMockProxy)
+            .delegation_proxy_obj()
+            .contract(delegation_contract.clone())
             .undelegate(egld_to_unstake.clone())
             .gas(gas_for_async_call)
             .callback(LiquidStaking::callbacks(self).remove_liquidity_callback(
@@ -297,9 +293,8 @@ pub trait LiquidStaking<ContractReader>:
 
         drop(storage_cache);
         let _ = self
-            .tx()
-            .to(delegation_contract.clone())
-            .typed(delegation_mock_proxy::DelegationMockProxy)
+            .delegation_proxy_obj()
+            .contract(delegation_contract.clone())
             .withdraw()
             .gas(gas_for_async_call)
             .callback(LiquidStaking::callbacks(self).withdraw_tokens_callback(delegation_contract))
@@ -355,12 +350,10 @@ pub trait LiquidStaking<ContractReader>:
             let current_node = delegation_addresses.pop_back().unwrap();
             let address = current_node.clone().into_value();
 
-            let _ = self
-                .tx()
-                .to(address)
-                .typed(delegation_mock_proxy::DelegationMockProxy)
+            self.delegation_proxy_obj()
+                .contract(address)
                 .claim_rewards()
-                .gas(DEFAULT_GAS_TO_CLAIM_REWARDS)
+                .with_gas_limit(DEFAULT_GAS_TO_CLAIM_REWARDS)
                 .transfer_execute();
 
             if delegation_addresses.is_empty() {
@@ -448,9 +441,8 @@ pub trait LiquidStaking<ContractReader>:
 
         drop(storage_cache);
         let _ = self
-            .tx()
-            .to(delegation_contract.clone())
-            .typed(delegation_mock_proxy::DelegationMockProxy)
+            .delegation_proxy_obj()
+            .contract(delegation_contract.clone())
             .delegate()
             .egld(rewards_reserve.clone())
             .gas(gas_for_async_call)
@@ -505,4 +497,9 @@ pub trait LiquidStaking<ContractReader>:
         let storage_cache = StorageCache::new(self);
         self.get_egld_amount(&ls_token_amount, &storage_cache)
     }
+
+    // proxy
+
+    #[proxy]
+    fn delegation_proxy_obj(&self) -> delegation_proxy::Proxy<Self::Api>;
 }
