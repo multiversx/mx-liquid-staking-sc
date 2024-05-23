@@ -54,6 +54,9 @@ pub trait LiquidStaking<ContractReader>:
         self.delegation_claim_status().set_if_empty(claim_status);
     }
 
+    #[upgrade]
+    fn upgrade(&self) {}
+
     #[payable("EGLD")]
     #[endpoint(addLiquidity)]
     fn add_liquidity(&self) {
@@ -77,6 +80,7 @@ pub trait LiquidStaking<ContractReader>:
             .delegation_proxy_obj()
             .contract(delegation_contract.clone())
             .delegate()
+            .egld(payment.clone())
             .gas(gas_for_async_call)
             .callback(LiquidStaking::callbacks(self).add_liquidity_callback(
                 caller,
