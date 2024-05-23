@@ -292,10 +292,10 @@ pub trait LiquidStaking<ContractReader>:
         drop(storage_cache);
 
         self.tx()
-            .to(provider.clone())
+            .to(delegation_contract.clone())
             .typed(delegation_proxy::DelegationMockProxy)
             .withdraw()
-            .callback(LiquidStaking::callbacks(self).withdraw_tokens_callback(provider))
+            .callback(LiquidStaking::callbacks(self).withdraw_tokens_callback(delegation_contract))
             .async_call_and_exit();
     }
 
