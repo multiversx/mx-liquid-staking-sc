@@ -54,6 +54,9 @@ pub trait LiquidStaking<ContractReader>:
         self.delegation_claim_status().set_if_empty(claim_status);
     }
 
+    #[upgrade]
+    fn upgrade(&self) {}
+
     #[payable("EGLD")]
     #[endpoint(addLiquidity)]
     fn add_liquidity(&self) {
@@ -277,7 +280,7 @@ pub trait LiquidStaking<ContractReader>:
     }
 
     #[endpoint(withdrawAll)]
-    fn withdraw_all(&self, provider: ManagedAddress) {
+    fn withdraw_all(&self, delegation_contract: ManagedAddress) {
         self.blockchain().check_caller_is_user_account();
         let storage_cache = StorageCache::new(self);
 
