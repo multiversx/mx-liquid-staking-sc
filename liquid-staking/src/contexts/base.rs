@@ -21,7 +21,6 @@ where
     C: crate::config::ConfigModule,
 {
     pub fn new(sc_ref: &'a C) -> Self {
-
         StorageCache {
             contract_state: sc_ref.state().get(),
             ls_token_id: sc_ref.ls_token().get_token_id(),
@@ -41,8 +40,12 @@ where
     fn drop(&mut self) {
         // commit changes to storage for the mutable fields
         self.sc_ref.ls_token_supply().set(&self.ls_token_supply);
-        self.sc_ref.virtual_egld_reserve().set(&self.virtual_egld_reserve);
+        self.sc_ref
+            .virtual_egld_reserve()
+            .set(&self.virtual_egld_reserve);
         self.sc_ref.rewards_reserve().set(&self.rewards_reserve);
-        self.sc_ref.total_withdrawn_egld().set(&self.total_withdrawn_egld);
+        self.sc_ref
+            .total_withdrawn_egld()
+            .set(&self.total_withdrawn_egld);
     }
 }
