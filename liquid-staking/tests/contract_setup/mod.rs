@@ -5,9 +5,7 @@ use multiversx_sc::{
     types::{Address, BigUint, EsdtLocalRole},
 };
 
-use multiversx_sc_scenario::{
-    managed_token_id, num_bigint, rust_biguint, whitebox::*, DebugApi,
-};
+use multiversx_sc_scenario::{managed_token_id, num_bigint, rust_biguint, whitebox::*, DebugApi};
 
 use liquid_staking::config::ConfigModule;
 use liquid_staking::*;
@@ -76,12 +74,6 @@ where
 
         b_mock.set_esdt_local_roles(sc_wrapper.address_ref(), LS_TOKEN_ID, ESDT_ROLES);
         b_mock.set_esdt_local_roles(sc_wrapper.address_ref(), UNSTAKE_TOKEN_ID, SFT_ROLES);
-
-        b_mock
-            .execute_tx(&owner_address, &sc_wrapper, &rust_zero, |sc| {
-                sc.set_state_active();
-            })
-            .assert_ok();
 
         LiquidStakingContractSetup {
             b_mock,

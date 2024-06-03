@@ -1,8 +1,8 @@
 multiversx_sc::imports!();
 multiversx_sc::derive_imports!();
 
-use crate::contexts::base::StorageCache;
-use crate::errors::*;
+use super::contexts::base::StorageCache;
+use super::errors::*;
 
 use super::config;
 

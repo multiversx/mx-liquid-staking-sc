@@ -21,7 +21,7 @@ pub mod errors;
 mod events;
 mod liquidity_pool;
 
-use crate::{
+use {
     delegation::{ClaimStatus, ClaimStatusType},
     errors::*,
 };
@@ -152,6 +152,11 @@ pub trait LiquidStaking<ContractReader>:
         let delegation_contract = self.get_delegation_contract_for_undelegate(&egld_to_unstake);
         let gas_for_async_call = self.get_gas_for_async_call();
 
+        let delegation_contract_mapper = self.delegation_contract_data(&delegation_contract);
+        delegation_contract_mapper.update(|contract_data| {
+            contract_data.egld_in_ongoing_undelegation += &egld_to_unstake;
+            contract_data.egld_in_ongoing_undelegation += &egld_to_unstake
+        });
         drop(storage_cache);
         self.delegation_proxy_obj()
             .contract(delegation_contract.clone())
@@ -182,13 +187,15 @@ pub trait LiquidStaking<ContractReader>:
                 let current_epoch = self.blockchain().get_block_epoch();
                 let unbond_epoch = current_epoch + UNBOND_PERIOD;
 
-                self.delegation_contract_data(&delegation_contract)
-                    .update(|contract_data| {
-                        contract_data.total_staked_from_ls_contract -= &egld_to_unstake;
-                        contract_data.total_unstaked_from_ls_contract += &egld_to_unstake;
-                    });
-                self.unstake_token_supply()
-                    .update(|x| *x += &egld_to_unstake);
+                let delegation_contract_mapper =
+                    self.delegation_contract_data(&delegation_contract);
+
+                delegation_contract_mapper.update(|contract_data| {
+                    contract_data.egld_in_ongoing_undelegation -= &egld_to_unstake;
+                    contract_data.egld_in_ongoing_undelegation -= &egld_to_unstake;
+                    contract_data.total_staked_from_ls_contract -= &egld_to_unstake;
+                    contract_data.total_unstaked_from_ls_contract += &egld_to_unstake;
+                });
 
                 let virtual_position = UnstakeTokenAttributes {
                     delegation_contract,
@@ -272,8 +279,6 @@ pub trait LiquidStaking<ContractReader>:
 
         total_unstake_amount += unstake_amount;
         storage_cache.total_withdrawn_egld -= &total_unstake_amount;
-        self.unstake_token_supply()
-            .update(|x| *x -= &total_unstake_amount);
         self.burn_unstake_tokens(payment.token_nonce);
         self.send().direct_egld(&caller, &total_unstake_amount);
     }

@@ -1,11 +1,12 @@
 multiversx_sc::imports!();
 multiversx_sc::derive_imports!();
 
+use crate::config::ConfigModule;
 use crate::State;
 
 pub struct StorageCache<'a, C>
 where
-    C: crate::config::ConfigModule,
+    C: ConfigModule,
 {
     sc_ref: &'a C,
     pub contract_state: State,
@@ -18,10 +19,9 @@ where
 
 impl<'a, C> StorageCache<'a, C>
 where
-    C: crate::config::ConfigModule,
+    C: ConfigModule,
 {
     pub fn new(sc_ref: &'a C) -> Self {
-
         StorageCache {
             contract_state: sc_ref.state().get(),
             ls_token_id: sc_ref.ls_token().get_token_id(),
@@ -36,13 +36,17 @@ where
 
 impl<'a, C> Drop for StorageCache<'a, C>
 where
-    C: crate::config::ConfigModule,
+    C: ConfigModule,
 {
     fn drop(&mut self) {
         // commit changes to storage for the mutable fields
         self.sc_ref.ls_token_supply().set(&self.ls_token_supply);
-        self.sc_ref.virtual_egld_reserve().set(&self.virtual_egld_reserve);
+        self.sc_ref
+            .virtual_egld_reserve()
+            .set(&self.virtual_egld_reserve);
         self.sc_ref.rewards_reserve().set(&self.rewards_reserve);
-        self.sc_ref.total_withdrawn_egld().set(&self.total_withdrawn_egld);
+        self.sc_ref
+            .total_withdrawn_egld()
+            .set(&self.total_withdrawn_egld);
     }
 }

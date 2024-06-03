@@ -1,4 +1,4 @@
-use crate::contract_setup::LiquidStakingContractSetup;
+use super::contract_setup::LiquidStakingContractSetup;
 use liquid_staking::config::{ConfigModule, UnstakeTokenAttributes};
 use liquid_staking::LiquidStaking;
 use multiversx_sc::types::Address;
@@ -62,6 +62,11 @@ where
                     nr_nodes,
                     apy,
                 );
+            })
+            .assert_ok();
+        self.b_mock
+            .execute_tx(&owner_address, &self.sc_wrapper, &rust_zero, |sc| {
+                sc.set_state_active();
             })
             .assert_ok();
 

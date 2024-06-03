@@ -1,7 +1,7 @@
 multiversx_sc::imports!();
 multiversx_sc::derive_imports!();
 
-use crate::liquidity_pool::State;
+use super::liquidity_pool::State;
 
 pub const MAX_PERCENTAGE: u64 = 100_000;
 pub const UNBOND_PERIOD: u64 = 10;
@@ -68,23 +68,6 @@ pub trait ConfigModule:
         );
     }
 
-    #[only_owner]
-    #[endpoint(setStateActive)]
-    fn set_state_active(&self) {
-        self.state().set(State::Active);
-    }
-
-    #[only_owner]
-    #[endpoint(setStateInactive)]
-    fn set_state_inactive(&self) {
-        self.state().set(State::Inactive);
-    }
-
-    #[inline]
-    fn is_state_active(&self, state: State) -> bool {
-        state == State::Active
-    }
-
     #[view(getState)]
     #[storage_mapper("state")]
     fn state(&self) -> SingleValueMapper<State>;
@@ -112,8 +95,4 @@ pub trait ConfigModule:
     #[view(getUnstakeTokenId)]
     #[storage_mapper("unstakeTokenId")]
     fn unstake_token(&self) -> NonFungibleTokenMapper<Self::Api>;
-
-    #[view(getUnstakeTokenSupply)]
-    #[storage_mapper("unstakeTokenSupply")]
-    fn unstake_token_supply(&self) -> SingleValueMapper<BigUint>;
 }

@@ -5,9 +5,9 @@
 ////////////////////////////////////////////////////
 
 // Init:                                 1
-// Endpoints:                           31
+// Endpoints:                           30
 // Async Callback:                       1
-// Total number of exported functions:  33
+// Total number of exported functions:  32
 
 #![no_std]
 #![feature(lang_items)]
@@ -28,8 +28,6 @@ multiversx_sc_wasm_adapter::endpoints! {
         getLsValueForPosition
         registerLsToken
         registerUnstakeToken
-        setStateActive
-        setStateInactive
         getState
         getLsTokenId
         getLsSupply
@@ -37,7 +35,6 @@ multiversx_sc_wasm_adapter::endpoints! {
         getRewardsReserve
         getTotalWithdrawnEgld
         getUnstakeTokenId
-        getUnstakeTokenSupply
         whitelistDelegationContract
         changeDelegationContractAdmin
         changeDelegationContractParams
@@ -45,6 +42,8 @@ multiversx_sc_wasm_adapter::endpoints! {
         getDelegationContractStakedAmount
         getDelegationContractUnstakedAmount
         getDelegationContractUnbondedAmount
+        setStateActive
+        setStateInactive
         getDelegationAddressesList
         getAddressesToClaim
         getDelegationClaimStatus
