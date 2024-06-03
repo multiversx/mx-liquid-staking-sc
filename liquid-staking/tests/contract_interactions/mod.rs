@@ -1,11 +1,12 @@
 use crate::contract_setup::LiquidStakingContractSetup;
-use liquid_staking::config::{ConfigModule, UnstakeTokenAttributes};
-use liquid_staking::LiquidStaking;
+use delegation_mock::DelegationMock;
+use liquid_staking::{
+    config::{ConfigModule, UnstakeTokenAttributes},
+    delegation::DelegationModule,
+    LiquidStaking,
+};
 use multiversx_sc::types::Address;
 use multiversx_sc_scenario::{managed_address, num_bigint, rust_biguint, DebugApi};
-
-use delegation_mock::*;
-use liquid_staking::delegation::DelegationModule;
 
 impl<LiquidStakingContractObjBuilder> LiquidStakingContractSetup<LiquidStakingContractObjBuilder>
 where

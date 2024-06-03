@@ -1,14 +1,15 @@
 use std::ops::Mul;
 
+use liquid_staking::{config::ConfigModule, LiquidStaking};
 use multiversx_sc::{
-    storage::mappers::StorageTokenWrapper,
+    imports::StorageTokenWrapper,
     types::{Address, BigUint, EsdtLocalRole},
 };
 
-use multiversx_sc_scenario::{managed_token_id, num_bigint, rust_biguint, whitebox::*, DebugApi};
-
-use liquid_staking::config::ConfigModule;
-use liquid_staking::*;
+use multiversx_sc_scenario::{
+    imports::{BlockchainStateWrapper, ContractObjWrapper},
+    managed_token_id, num_bigint, rust_biguint, DebugApi,
+};
 
 pub const LIQUID_STAKING_WASM_PATH: &str = "liquid-staking/output/liquid-staking.wasm";
 

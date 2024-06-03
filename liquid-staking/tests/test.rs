@@ -8,12 +8,12 @@ use multiversx_sc_scenario::{num_bigint, rust_biguint, DebugApi};
 
 #[test]
 fn init_test() {
-    let _ = LiquidStakingContractSetup::new(liquid_staking::contract_obj);
+    LiquidStakingContractSetup::new(liquid_staking::contract_obj);
 }
 
 #[test]
 fn liquid_staking_add_liquidity_test() {
-    let _ = DebugApi::dummy();
+    DebugApi::dummy();
     let mut sc_setup = LiquidStakingContractSetup::new(liquid_staking::contract_obj);
 
     sc_setup.deploy_staking_contract(&sc_setup.owner_address.clone(), 1000, 1000, 1500, 0, 0);
@@ -26,7 +26,7 @@ fn liquid_staking_add_liquidity_test() {
 
 #[test]
 fn liquid_staking_remove_liquidity_test() {
-    let _ = DebugApi::dummy();
+    DebugApi::dummy();
     let mut sc_setup = LiquidStakingContractSetup::new(liquid_staking::contract_obj);
 
     sc_setup.deploy_staking_contract(&sc_setup.owner_address.clone(), 1000, 1000, 1500, 0, 0);
@@ -42,7 +42,7 @@ fn liquid_staking_remove_liquidity_test() {
 
 #[test]
 fn liquid_staking_claim_rewards_and_withdraw_test() {
-    let _ = DebugApi::dummy();
+    DebugApi::dummy();
     let mut sc_setup = LiquidStakingContractSetup::new(liquid_staking::contract_obj);
 
     let delegation_contract =
@@ -69,7 +69,7 @@ fn liquid_staking_claim_rewards_and_withdraw_test() {
 
 #[test]
 fn liquid_staking_multiple_operations() {
-    let _ = DebugApi::dummy();
+    DebugApi::dummy();
     let mut sc_setup = LiquidStakingContractSetup::new(liquid_staking::contract_obj);
 
     let delegation_contract1 = sc_setup.deploy_staking_contract(
@@ -232,7 +232,7 @@ fn liquid_staking_multiple_operations() {
 
 #[test]
 fn liquid_staking_multiple_withdraw_test() {
-    let _ = DebugApi::dummy();
+    DebugApi::dummy();
     let mut sc_setup = LiquidStakingContractSetup::new(liquid_staking::contract_obj);
 
     let delegation_contract =
