@@ -65,6 +65,11 @@ where
                 );
             })
             .assert_ok();
+        self.b_mock
+            .execute_tx(owner_address, &self.sc_wrapper, &rust_zero, |sc| {
+                sc.set_state_active();
+            })
+            .assert_ok();
 
         delegation_wrapper.address_ref().clone()
     }

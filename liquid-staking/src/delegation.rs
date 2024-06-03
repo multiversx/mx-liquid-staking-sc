@@ -1,4 +1,4 @@
-use crate::errors::{
+use super::errors::{
     ERROR_ALREADY_WHITELISTED, ERROR_BAD_DELEGATION_ADDRESS, ERROR_CLAIM_EPOCH,
     ERROR_CLAIM_IN_PROGRESS, ERROR_CLAIM_START, ERROR_DELEGATION_CAP, ERROR_FIRST_DELEGATION_NODE,
     ERROR_NOT_WHITELISTED, ERROR_NO_DELEGATION_CONTRACTS, ERROR_OLD_CLAIM_START,
@@ -7,7 +7,8 @@ use crate::errors::{
 multiversx_sc::imports!();
 multiversx_sc::derive_imports!();
 
-pub const MAX_DELEGATION_ADDRESSES: usize = 50;
+pub const MAX_DELEGATION_ADDRESSES: usize = 20;
+use super::liquidity_pool::State;
 
 #[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, PartialEq, Eq, TypeAbi, Clone)]
 pub enum ClaimStatusType {
@@ -24,7 +25,6 @@ pub struct ClaimStatus<M: ManagedTypeApi> {
     pub status: ClaimStatusType,
     pub last_claim_epoch: u64,
     pub last_claim_block: u64,
-    pub current_node: u32,
     pub starting_token_reserve: BigUint<M>,
 }
 
@@ -34,7 +34,6 @@ impl<M: ManagedTypeApi> Default for ClaimStatus<M> {
             status: ClaimStatusType::None,
             last_claim_epoch: 0,
             last_claim_block: 0,
-            current_node: 0,
             starting_token_reserve: BigUint::zero(),
         }
     }
@@ -52,11 +51,12 @@ pub struct DelegationContractData<M: ManagedTypeApi> {
     pub total_staked_from_ls_contract: BigUint<M>,
     pub total_unstaked_from_ls_contract: BigUint<M>,
     pub total_unbonded_from_ls_contract: BigUint<M>,
+    pub egld_in_ongoing_undelegation: BigUint<M>,
 }
 
 #[multiversx_sc::module]
 pub trait DelegationModule:
-    crate::config::ConfigModule
+    super::config::ConfigModule
     + multiversx_sc_modules::default_issue_callbacks::DefaultIssueCallbacksModule
     + multiversx_sc_modules::ongoing_operation::OngoingOperationModule
 {
@@ -90,10 +90,12 @@ pub trait DelegationModule:
             total_staked_from_ls_contract: BigUint::zero(),
             total_unstaked_from_ls_contract: BigUint::zero(),
             total_unbonded_from_ls_contract: BigUint::zero(),
+            egld_in_ongoing_undelegation: BigUint::zero(),
         };
 
         self.delegation_contract_data(&contract_address)
             .set(contract_data);
+
         self.add_and_order_delegation_address_in_list(contract_address, apy);
         require!(
             self.delegation_addresses_list().len() <= MAX_DELEGATION_ADDRESSES,
@@ -239,7 +241,9 @@ pub trait DelegationModule:
             let delegation_address = delegation_address_element.into_value();
             let delegation_contract_data = self.delegation_contract_data(&delegation_address).get();
 
-            if &delegation_contract_data.total_staked_from_ls_contract >= amount_to_undelegate {
+            if delegation_contract_data.total_staked_from_ls_contract
+                >= amount_to_undelegate + &delegation_contract_data.egld_in_ongoing_undelegation
+            {
                 return delegation_address;
             }
         }
@@ -283,26 +287,25 @@ pub trait DelegationModule:
                 self.addresses_to_claim().is_empty(),
                 ERROR_CLAIM_IN_PROGRESS
             );
+            let mut last_node = delegation_addresses_mapper.front().unwrap().get_node_id();
+
+            while last_node != 0 {
+                let current_node = delegation_addresses_mapper
+                    .get_node_by_id(last_node)
+                    .unwrap();
+                let current_address = current_node.clone().into_value();
+                self.add_address_to_be_claimed(current_address);
+                last_node = current_node.get_next_node_id();
+            }
+
             current_claim_status.status = ClaimStatusType::Pending;
             current_claim_status.last_claim_epoch = current_epoch;
-            current_claim_status.current_node =
-                delegation_addresses_mapper.front().unwrap().get_node_id();
+
             let current_total_withdrawn_egld = self.total_withdrawn_egld().get();
             current_claim_status.starting_token_reserve = self
                 .blockchain()
                 .get_sc_balance(&EgldOrEsdtTokenIdentifier::egld(), 0)
                 - current_total_withdrawn_egld;
-        }
-
-        let mut last_node = current_claim_status.current_node;
-
-        while last_node != 0 {
-            let current_node = delegation_addresses_mapper
-                .get_node_by_id(last_node)
-                .unwrap();
-            let current_address = current_node.clone().into_value();
-            self.add_address_to_be_claimed(current_address);
-            last_node = current_node.get_next_node_id();
         }
     }
 
@@ -336,6 +339,26 @@ pub trait DelegationModule:
         delegation_contract_data.total_unbonded_from_ls_contract
     }
 
+    #[only_owner]
+    #[endpoint(setStateActive)]
+    fn set_state_active(&self) {
+        require!(
+            !self.delegation_addresses_list().is_empty(),
+            ERROR_NO_DELEGATION_CONTRACTS
+        );
+        self.state().set(State::Active);
+    }
+
+    #[only_owner]
+    #[endpoint(setStateInactive)]
+    fn set_state_inactive(&self) {
+        self.state().set(State::Inactive);
+    }
+
+    #[inline]
+    fn is_state_active(&self, state: State) -> bool {
+        state == State::Active
+    }
     #[view(getDelegationAddressesList)]
     #[storage_mapper("delegationAddressesList")]
     fn delegation_addresses_list(&self) -> LinkedListMapper<ManagedAddress>;
