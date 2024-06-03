@@ -1,4 +1,4 @@
-use super::contract_setup::LiquidStakingContractSetup;
+use crate::contract_setup::LiquidStakingContractSetup;
 use liquid_staking::config::{ConfigModule, UnstakeTokenAttributes};
 use liquid_staking::LiquidStaking;
 use multiversx_sc::types::Address;
