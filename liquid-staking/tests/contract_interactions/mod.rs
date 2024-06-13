@@ -8,6 +8,9 @@ use liquid_staking::{
 use multiversx_sc::types::Address;
 use multiversx_sc_scenario::{managed_address, num_bigint, rust_biguint, DebugApi};
 
+pub const EGLD_TO_WHITELIST: u64 = 1;
+pub const FIRST_ADD_LIQUIDITY_AMOUNT: u64 = 100;
+
 impl<LiquidStakingContractObjBuilder> LiquidStakingContractSetup<LiquidStakingContractObjBuilder>
 where
     LiquidStakingContractObjBuilder: 'static + Copy + Fn() -> liquid_staking::ContractObj<DebugApi>,
@@ -23,6 +26,8 @@ where
     ) -> Address {
         let rust_zero = rust_biguint!(0u64);
         let egld_balance_biguint = &Self::exp18(egld_balance);
+        let deposit_amount =
+            &Self::exp18(egld_balance - EGLD_TO_WHITELIST - FIRST_ADD_LIQUIDITY_AMOUNT);
         let total_staked_biguint = Self::exp18(total_staked);
         let delegation_contract_cap_biguint = Self::exp18(delegation_contract_cap);
 
@@ -43,27 +48,27 @@ where
             .assert_ok();
 
         self.b_mock
-            .execute_tx(
-                owner_address,
-                &delegation_wrapper,
-                egld_balance_biguint,
-                |sc| {
-                    sc.deposit_egld();
-                },
-            )
+            .execute_tx(owner_address, &delegation_wrapper, deposit_amount, |sc| {
+                sc.deposit_egld();
+            })
             .assert_ok();
 
         self.b_mock
-            .execute_tx(owner_address, &self.sc_wrapper, &rust_zero, |sc| {
-                sc.whitelist_delegation_contract(
-                    managed_address!(delegation_wrapper.address_ref()),
-                    managed_address!(owner_address),
-                    Self::to_managed_biguint(total_staked_biguint),
-                    Self::to_managed_biguint(delegation_contract_cap_biguint),
-                    nr_nodes,
-                    apy,
-                );
-            })
+            .execute_tx(
+                owner_address,
+                &self.sc_wrapper,
+                &Self::exp18(EGLD_TO_WHITELIST),
+                |sc| {
+                    sc.whitelist_delegation_contract(
+                        managed_address!(delegation_wrapper.address_ref()),
+                        managed_address!(owner_address),
+                        Self::to_managed_biguint(total_staked_biguint),
+                        Self::to_managed_biguint(delegation_contract_cap_biguint),
+                        nr_nodes,
+                        apy,
+                    );
+                },
+            )
             .assert_ok();
         self.b_mock
             .execute_tx(owner_address, &self.sc_wrapper, &rust_zero, |sc| {
@@ -97,6 +102,24 @@ where
                     apy,
                 );
             })
+            .assert_ok();
+    }
+
+    pub fn init_delegation_contract(
+        &mut self,
+        caller: &Address,
+        delegation_contract: &Address,
+        payment_amount: u64,
+    ) {
+        self.b_mock
+            .execute_tx(
+                caller,
+                &self.sc_wrapper,
+                &Self::exp18(payment_amount),
+                |sc| {
+                    sc.init_delegation_contract(managed_address!(delegation_contract));
+                },
+            )
             .assert_ok();
     }
 

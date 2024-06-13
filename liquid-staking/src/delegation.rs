@@ -1,3 +1,5 @@
+use crate::{delegation_proxy, ERROR_BAD_WHITELIST_FEE};
+
 use super::errors::{
     ERROR_ALREADY_WHITELISTED, ERROR_BAD_DELEGATION_ADDRESS, ERROR_CLAIM_EPOCH,
     ERROR_CLAIM_IN_PROGRESS, ERROR_CLAIM_START, ERROR_DELEGATION_CAP, ERROR_FIRST_DELEGATION_NODE,
@@ -8,6 +10,7 @@ multiversx_sc::imports!();
 multiversx_sc::derive_imports!();
 
 pub const MAX_DELEGATION_ADDRESSES: usize = 20;
+pub const EGLD_TO_WHITELIST: u64 = 1_000_000_000_000_000_000;
 use super::liquidity_pool::State;
 
 #[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, PartialEq, Eq, TypeAbi, Clone)]
@@ -61,6 +64,7 @@ pub trait DelegationModule:
     + multiversx_sc_modules::ongoing_operation::OngoingOperationModule
 {
     #[only_owner]
+    #[payable("EGLD")]
     #[endpoint(whitelistDelegationContract)]
     fn whitelist_delegation_contract(
         &self,
@@ -71,14 +75,28 @@ pub trait DelegationModule:
         nr_nodes: u64,
         apy: u64,
     ) {
+        let caller = self.blockchain().get_caller();
+
+        let payment = self.call_value().egld_value().clone_value();
+        require!(payment == EGLD_TO_WHITELIST, ERROR_BAD_WHITELIST_FEE);
         require!(
             self.delegation_contract_data(&contract_address).is_empty(),
             ERROR_ALREADY_WHITELISTED
         );
 
         require!(
+            !self.whitelisting_delegation_ongoing().get(),
+            "Another whitelisting is currently ongoing"
+        );
+
+        require!(
             delegation_contract_cap >= total_staked,
             ERROR_DELEGATION_CAP
+        );
+
+        require!(
+            self.delegation_addresses_list().len() <= MAX_DELEGATION_ADDRESSES,
+            "Maximum number of delegation addresses reached"
         );
 
         let contract_data = DelegationContractData {
@@ -93,14 +111,46 @@ pub trait DelegationModule:
             egld_in_ongoing_undelegation: BigUint::zero(),
         };
 
-        self.delegation_contract_data(&contract_address)
-            .set(contract_data);
+        self.whitelisting_delegation_ongoing().set(true);
 
-        self.add_and_order_delegation_address_in_list(contract_address, apy);
-        require!(
-            self.delegation_addresses_list().len() <= MAX_DELEGATION_ADDRESSES,
-            "Maximum number of delegation addresses reached"
-        );
+        self.tx()
+            .to(contract_address.clone())
+            .typed(delegation_proxy::DelegationMockProxy)
+            .delegate()
+            .egld(payment.clone())
+            .callback(
+                DelegationModule::callbacks(self).whitelist_contract_callback(
+                    caller,
+                    contract_address,
+                    contract_data,
+                    apy,
+                ),
+            )
+            .async_call_and_exit();
+    }
+
+    #[callback]
+    fn whitelist_contract_callback(
+        &self,
+        caller: ManagedAddress,
+        contract_address: ManagedAddress,
+        contract_data: DelegationContractData<Self::Api>,
+        apy: u64,
+        #[call_result] result: ManagedAsyncCallResult<()>,
+    ) {
+        match result {
+            ManagedAsyncCallResult::Ok(()) => {
+                self.delegation_contract_data(&contract_address)
+                    .set(contract_data);
+
+                self.add_and_order_delegation_address_in_list(contract_address, apy);
+            }
+            ManagedAsyncCallResult::Err(_) => {
+                self.send().direct_egld(&caller, &EGLD_TO_WHITELIST.into());
+            }
+        }
+
+        self.whitelisting_delegation_ongoing().set(false);
     }
 
     #[only_owner]
@@ -377,4 +427,7 @@ pub trait DelegationModule:
         &self,
         contract_address: &ManagedAddress,
     ) -> SingleValueMapper<DelegationContractData<Self::Api>>;
+
+    #[storage_mapper("whitelistingDelegationOngoing")]
+    fn whitelisting_delegation_ongoing(&self) -> SingleValueMapper<bool>;
 }

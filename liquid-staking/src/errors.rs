@@ -1,6 +1,8 @@
 pub static ERROR_ACTIVE: &[u8] = b"Active state";
 pub static ERROR_NOT_ACTIVE: &[u8] = b"Not active";
 pub static ERROR_LS_TOKEN_NOT_ISSUED: &[u8] = b"LS token not issued";
+pub static ERROR_DELEGATION_CONTRACT_NOT_INITIALIZED: &[u8] =
+    b"Delegation contract was not initialized yet";
 pub static ERROR_INSUFFICIENT_GAS: &[u8] = b"Insufficient gas remaining for the callback";
 
 pub static ERROR_CLAIM_START: &[u8] = b"Claim operation must be new or pending";
@@ -15,6 +17,7 @@ pub static ERROR_UNSTAKE_PERIOD_NOT_PASSED: &[u8] = b"The unstake period has not
 
 pub static ERROR_BAD_PAYMENT_TOKEN: &[u8] = b"Bad payment token";
 pub static ERROR_BAD_PAYMENT_AMOUNT: &[u8] = b"Insufficient delegated amount";
+pub static ERROR_BAD_WHITELIST_FEE: &[u8] = b"Whitelisting contracts costs 1 EGLD";
 pub static ERROR_INSUFFICIENT_UNSTAKE_AMOUNT: &[u8] = b"Insufficient unstake amount";
 pub static ERROR_INSUFFICIENT_UNBONDED_AMOUNT: &[u8] = b"Insufficient incoming withdraw amount";
 pub static ERROR_INSUFFICIENT_LIQUIDITY: &[u8] = b"Insufficient liquidity minted";
@@ -24,7 +27,7 @@ pub static ERROR_NOT_ENOUGH_RESERVE: &[u8] = b"Not enough reserve";
 pub static ERROR_NOT_ENOUGH_LP: &[u8] = b"Not enough LP token supply";
 
 pub static ERROR_BAD_DELEGATION_ADDRESS: &[u8] = b"No delegation contract available";
-pub static ERROR_BAD_DELEGATION_AMOUNT: &[u8] = b"Delegation amount must be greater than 0";
+pub static ERROR_BAD_DELEGATION_AMOUNT: &[u8] = b"Delegation amount must be at least 1 EGLD";
 pub static ERROR_NO_DELEGATION_CONTRACTS: &[u8] = b"There are no delegation contracts whitelisted";
 pub static ERROR_FIRST_DELEGATION_NODE: &[u8] = b"The first delegation node is incorrect";
 pub static ERROR_ALREADY_WHITELISTED: &[u8] = b"Delegation contract already whitelisted";

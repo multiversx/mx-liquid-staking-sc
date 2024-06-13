@@ -12,6 +12,7 @@ pub const MIN_GAS_FOR_ASYNC_CALL: u64 = 12_000_000;
 pub const MIN_GAS_FOR_CALLBACK: u64 = 12_000_000;
 pub const MIN_EGLD_TO_DELEGATE: u64 = 1_000_000_000_000_000_000;
 pub const RECOMPUTE_BLOCK_OFFSET: u64 = 10;
+pub const MINIMUM_LIQUIDITY: u64 = 1_000;
 
 pub mod config;
 mod contexts;
@@ -69,11 +70,39 @@ pub trait LiquidStaking<ContractReader>:
             self.is_state_active(storage_cache.contract_state),
             ERROR_NOT_ACTIVE
         );
+        if storage_cache.ls_token_supply == 0 {
+            require!(
+                caller == self.blockchain().get_owner_address(),
+                ERROR_DELEGATION_CONTRACT_NOT_INITIALIZED
+            );
+        }
         require!(payment >= MIN_EGLD_TO_DELEGATE, ERROR_BAD_PAYMENT_AMOUNT);
 
         let delegation_contract = self.get_delegation_contract_for_delegate(&payment);
 
         drop(storage_cache);
+
+        self.tx()
+            .to(delegation_contract.clone())
+            .typed(delegation_proxy::DelegationMockProxy)
+            .delegate()
+            .egld(payment.clone())
+            .callback(LiquidStaking::callbacks(self).add_liquidity_callback(
+                caller,
+                delegation_contract,
+                payment,
+            ))
+            .async_call_and_exit();
+    }
+
+    #[only_owner]
+    #[payable("EGLD")]
+    #[endpoint(initDelegationContract)]
+    fn init_delegation_contract(&self, delegation_contract: ManagedAddress) {
+        let caller = self.blockchain().get_caller();
+
+        let payment = self.call_value().egld_value().clone_value();
+        require!(payment >= MIN_EGLD_TO_DELEGATE, ERROR_BAD_PAYMENT_AMOUNT);
 
         self.tx()
             .to(delegation_contract.clone())
@@ -104,7 +133,12 @@ pub trait LiquidStaking<ContractReader>:
                         contract_data.total_staked_from_ls_contract += &staked_tokens;
                     });
 
-                let ls_token_amount = self.pool_add_liquidity(&staked_tokens, &mut storage_cache);
+                let mut ls_token_amount_before_add = BigUint::zero();
+                if storage_cache.ls_token_supply == 0 {
+                    ls_token_amount_before_add += MINIMUM_LIQUIDITY;
+                }
+                let ls_token_amount = self.pool_add_liquidity(&staked_tokens, &mut storage_cache)
+                    - ls_token_amount_before_add;
                 let user_payment = self.mint_ls_token(ls_token_amount);
                 self.send().direct_esdt(
                     &caller,
@@ -439,6 +473,12 @@ pub trait LiquidStaking<ContractReader>:
         );
 
         let rewards_reserve = storage_cache.rewards_reserve.clone();
+
+        require!(
+            rewards_reserve >= MIN_EGLD_TO_DELEGATE,
+            ERROR_BAD_DELEGATION_AMOUNT
+        );
+
         storage_cache.rewards_reserve = BigUint::zero();
         let delegation_contract = self.get_delegation_contract_for_delegate(&rewards_reserve);
 
