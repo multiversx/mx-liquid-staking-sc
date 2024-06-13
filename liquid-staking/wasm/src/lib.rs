@@ -6,8 +6,9 @@
 
 // Init:                                 1
 // Upgrade:                              1
-// Endpoints:                           31
+// Endpoints:                           30
 // Async Callback:                       1
+// Promise callbacks:                    1
 // Total number of exported functions:  34
 
 #![no_std]
@@ -36,7 +37,6 @@ multiversx_sc_wasm_adapter::endpoints! {
         getLsSupply => ls_token_supply
         getVirtualEgldReserve => virtual_egld_reserve
         getRewardsReserve => rewards_reserve
-        getTotalWithdrawnEgld => total_withdrawn_egld
         getUnstakeTokenId => unstake_token
         whitelistDelegationContract => whitelist_delegation_contract
         changeDelegationContractAdmin => change_delegation_contract_admin
@@ -51,6 +51,7 @@ multiversx_sc_wasm_adapter::endpoints! {
         getAddressesToClaim => addresses_to_claim
         getDelegationClaimStatus => delegation_claim_status
         getDelegationContractData => delegation_contract_data
+        claim_rewards_callback => claim_rewards_callback
     )
 }
 

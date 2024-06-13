@@ -258,7 +258,6 @@ where
         ls_token_supply: u64,
         virtual_egld_reserve: u64,
         rewards_reserve: u64,
-        withdrawn_egld: u64,
     ) {
         self.b_mock
             .execute_query(&self.sc_wrapper, |sc| {
@@ -273,10 +272,6 @@ where
                 assert_eq!(
                     sc.rewards_reserve().get(),
                     Self::to_managed_biguint(Self::exp18(rewards_reserve))
-                );
-                assert_eq!(
-                    sc.total_withdrawn_egld().get(),
-                    Self::to_managed_biguint(Self::exp18(withdrawn_egld))
                 );
             })
             .assert_ok();

@@ -24,20 +24,18 @@ pub enum ClaimStatusType {
 }
 
 #[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, PartialEq, Eq, TypeAbi, Clone)]
-pub struct ClaimStatus<M: ManagedTypeApi> {
+pub struct ClaimStatus {
     pub status: ClaimStatusType,
     pub last_claim_epoch: u64,
     pub last_claim_block: u64,
-    pub starting_token_reserve: BigUint<M>,
 }
 
-impl<M: ManagedTypeApi> Default for ClaimStatus<M> {
+impl Default for ClaimStatus {
     fn default() -> Self {
         Self {
             status: ClaimStatusType::None,
             last_claim_epoch: 0,
             last_claim_block: 0,
-            starting_token_reserve: BigUint::zero(),
         }
     }
 }
@@ -302,8 +300,8 @@ pub trait DelegationModule:
 
     fn check_claim_operation(
         &self,
-        current_claim_status: &ClaimStatus<Self::Api>,
-        old_claim_status: ClaimStatus<Self::Api>,
+        current_claim_status: &ClaimStatus,
+        old_claim_status: ClaimStatus,
         current_epoch: u64,
     ) {
         require!(
@@ -322,11 +320,7 @@ pub trait DelegationModule:
         );
     }
 
-    fn prepare_claim_operation(
-        &self,
-        current_claim_status: &mut ClaimStatus<Self::Api>,
-        current_epoch: u64,
-    ) {
+    fn prepare_claim_operation(&self, current_claim_status: &mut ClaimStatus, current_epoch: u64) {
         let delegation_addresses_mapper = self.delegation_addresses_list();
         if current_claim_status.status == ClaimStatusType::None {
             require!(
@@ -350,12 +344,6 @@ pub trait DelegationModule:
 
             current_claim_status.status = ClaimStatusType::Pending;
             current_claim_status.last_claim_epoch = current_epoch;
-
-            let current_total_withdrawn_egld = self.total_withdrawn_egld().get();
-            current_claim_status.starting_token_reserve = self
-                .blockchain()
-                .get_sc_balance(&EgldOrEsdtTokenIdentifier::egld(), 0)
-                - current_total_withdrawn_egld;
         }
     }
 
@@ -419,7 +407,7 @@ pub trait DelegationModule:
 
     #[view(getDelegationClaimStatus)]
     #[storage_mapper("delegationClaimStatus")]
-    fn delegation_claim_status(&self) -> SingleValueMapper<ClaimStatus<Self::Api>>;
+    fn delegation_claim_status(&self) -> SingleValueMapper<ClaimStatus>;
 
     #[view(getDelegationContractData)]
     #[storage_mapper("delegationContractData")]
