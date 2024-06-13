@@ -3,10 +3,7 @@
 multiversx_sc::imports!();
 multiversx_sc::derive_imports!();
 
-use multiversx_sc::types::OperationCompletionStatus;
-use multiversx_sc_modules::ongoing_operation::{
-    CONTINUE_OP, DEFAULT_MIN_GAS_TO_SAVE_PROGRESS, STOP_OP,
-};
+use multiversx_sc_modules::ongoing_operation::DEFAULT_MIN_GAS_TO_SAVE_PROGRESS;
 pub const DEFAULT_GAS_TO_CLAIM_REWARDS: u64 = 6_000_000;
 pub const MIN_GAS_FOR_ASYNC_CALL: u64 = 12_000_000;
 pub const MIN_GAS_FOR_CALLBACK: u64 = 12_000_000;
@@ -380,7 +377,14 @@ pub trait LiquidStaking<ContractReader>:
         self.prepare_claim_operation(&mut current_claim_status, current_epoch);
         let mut delegation_addresses = self.addresses_to_claim();
 
-        let run_result = self.run_while_it_has_gas(DEFAULT_MIN_GAS_TO_SAVE_PROGRESS, || {
+        while !delegation_addresses.is_empty() {
+            let gas_left = self.blockchain().get_gas_left();
+
+            if gas_left < DEFAULT_MIN_GAS_TO_SAVE_PROGRESS {
+                self.save_progress(&current_claim_status);
+                break;
+            }
+
             let current_node = delegation_addresses.pop_back().unwrap();
             let address = current_node.clone().into_value();
 
@@ -392,27 +396,16 @@ pub trait LiquidStaking<ContractReader>:
                 .callback(LiquidStaking::callbacks(self).claim_rewards_callback())
                 .register_promise();
 
-            if delegation_addresses.is_empty() {
-                claim_status_mapper.set(current_claim_status.clone());
-                return STOP_OP;
-            }
-
             delegation_addresses.remove_node(&current_node);
-            CONTINUE_OP
-        });
+        }
 
-        match run_result {
-            OperationCompletionStatus::InterruptedBeforeOutOfGas => {
-                self.save_progress(&current_claim_status);
-            }
-            OperationCompletionStatus::Completed => {
-                claim_status_mapper.update(|claim_status| {
-                    claim_status.status = ClaimStatusType::Finished;
-                    claim_status.last_claim_block = self.blockchain().get_block_nonce();
-                    claim_status.last_claim_epoch = self.blockchain().get_block_epoch();
-                });
-            }
-        };
+        if delegation_addresses.is_empty() {
+            claim_status_mapper.update(|claim_status| {
+                claim_status.status = ClaimStatusType::Finished;
+                claim_status.last_claim_block = self.blockchain().get_block_nonce();
+                claim_status.last_claim_epoch = self.blockchain().get_block_epoch();
+            });
+        }
     }
 
     #[promises_callback]
