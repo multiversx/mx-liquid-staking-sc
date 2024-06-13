@@ -46,7 +46,6 @@ pub trait LiquidStaking<ContractReader>:
             status: ClaimStatusType::Insufficient,
             last_claim_epoch: current_epoch,
             last_claim_block: current_round,
-            ..Default::default()
         };
 
         self.delegation_claim_status().set_if_empty(claim_status);
