@@ -11,6 +11,7 @@ multiversx_sc::derive_imports!();
 
 pub const MAX_DELEGATION_ADDRESSES: usize = 20;
 pub const EGLD_TO_WHITELIST: u64 = 1_000_000_000_000_000_000;
+pub const MIN_BLOCKS_BEFORE_CLEAR_ONGOING_OP: u64 = 10;
 use super::liquidity_pool::State;
 
 #[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, PartialEq, Eq, TypeAbi, Clone)]
@@ -62,6 +63,22 @@ pub trait DelegationModule:
     + multiversx_sc_modules::ongoing_operation::OngoingOperationModule
 {
     #[only_owner]
+    #[endpoint(clearOngoingWhitelistOp)]
+    fn clear_ongoing_whitelist_op(&self) {
+        let current_nonce = self.blockchain().get_block_nonce();
+
+        require!(
+            !self.last_whitelisting_delegation_nonce().is_empty()
+                && self.last_whitelisting_delegation_nonce().get()
+                    + MIN_BLOCKS_BEFORE_CLEAR_ONGOING_OP
+                    > current_nonce,
+            "Whitelist operation cannot be cleared now"
+        );
+
+        self.last_whitelisting_delegation_nonce().clear();
+    }
+
+    #[only_owner]
     #[payable("EGLD")]
     #[endpoint(whitelistDelegationContract)]
     fn whitelist_delegation_contract(
@@ -83,7 +100,7 @@ pub trait DelegationModule:
         );
 
         require!(
-            !self.whitelisting_delegation_ongoing().get(),
+            self.last_whitelisting_delegation_nonce().is_empty(),
             "Another whitelisting is currently ongoing"
         );
 
@@ -109,7 +126,8 @@ pub trait DelegationModule:
             egld_in_ongoing_undelegation: BigUint::zero(),
         };
 
-        self.whitelisting_delegation_ongoing().set(true);
+        self.last_whitelisting_delegation_nonce()
+            .set(self.blockchain().get_block_epoch());
 
         self.tx()
             .to(contract_address.clone())
@@ -148,7 +166,7 @@ pub trait DelegationModule:
             }
         }
 
-        self.whitelisting_delegation_ongoing().set(false);
+        self.last_whitelisting_delegation_nonce().clear();
     }
 
     #[only_owner]
@@ -417,5 +435,5 @@ pub trait DelegationModule:
     ) -> SingleValueMapper<DelegationContractData<Self::Api>>;
 
     #[storage_mapper("whitelistingDelegationOngoing")]
-    fn whitelisting_delegation_ongoing(&self) -> SingleValueMapper<bool>;
+    fn last_whitelisting_delegation_nonce(&self) -> SingleValueMapper<u64>;
 }

@@ -105,24 +105,6 @@ where
             .assert_ok();
     }
 
-    pub fn init_delegation_contract(
-        &mut self,
-        caller: &Address,
-        delegation_contract: &Address,
-        payment_amount: u64,
-    ) {
-        self.b_mock
-            .execute_tx(
-                caller,
-                &self.sc_wrapper,
-                &Self::exp18(payment_amount),
-                |sc| {
-                    sc.init_delegation_contract(managed_address!(delegation_contract));
-                },
-            )
-            .assert_ok();
-    }
-
     pub fn add_liquidity(&mut self, caller: &Address, payment_amount: u64) {
         self.b_mock
             .execute_tx(

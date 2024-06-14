@@ -72,33 +72,11 @@ pub trait LiquidStaking<ContractReader>:
                 ERROR_DELEGATION_CONTRACT_NOT_INITIALIZED
             );
         }
-        require!(payment >= MIN_EGLD_TO_DELEGATE, ERROR_BAD_PAYMENT_AMOUNT);
+        require!(payment > MIN_EGLD_TO_DELEGATE, ERROR_BAD_PAYMENT_AMOUNT);
 
         let delegation_contract = self.get_delegation_contract_for_delegate(&payment);
 
         drop(storage_cache);
-
-        self.tx()
-            .to(delegation_contract.clone())
-            .typed(delegation_proxy::DelegationMockProxy)
-            .delegate()
-            .egld(payment.clone())
-            .callback(LiquidStaking::callbacks(self).add_liquidity_callback(
-                caller,
-                delegation_contract,
-                payment,
-            ))
-            .async_call_and_exit();
-    }
-
-    #[only_owner]
-    #[payable("EGLD")]
-    #[endpoint(initDelegationContract)]
-    fn init_delegation_contract(&self, delegation_contract: ManagedAddress) {
-        let caller = self.blockchain().get_caller();
-
-        let payment = self.call_value().egld_value().clone_value();
-        require!(payment >= MIN_EGLD_TO_DELEGATE, ERROR_BAD_PAYMENT_AMOUNT);
 
         self.tx()
             .to(delegation_contract.clone())

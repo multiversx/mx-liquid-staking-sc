@@ -22,7 +22,6 @@ multiversx_sc_wasm_adapter::endpoints! {
         init => init
         upgrade => upgrade
         addLiquidity => add_liquidity
-        initDelegationContract => init_delegation_contract
         removeLiquidity => remove_liquidity
         unbondTokens => unbond_tokens
         withdrawAll => withdraw_all
@@ -38,6 +37,7 @@ multiversx_sc_wasm_adapter::endpoints! {
         getVirtualEgldReserve => virtual_egld_reserve
         getRewardsReserve => rewards_reserve
         getUnstakeTokenId => unstake_token
+        clearOngoingWhitelistOp => clear_ongoing_whitelist_op
         whitelistDelegationContract => whitelist_delegation_contract
         changeDelegationContractAdmin => change_delegation_contract_admin
         changeDelegationContractParams => change_delegation_contract_params

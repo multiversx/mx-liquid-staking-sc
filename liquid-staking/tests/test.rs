@@ -17,15 +17,10 @@ fn liquid_staking_add_liquidity_test() {
     DebugApi::dummy();
     let mut sc_setup = LiquidStakingContractSetup::new(liquid_staking::contract_obj);
 
-    let delegation_contract =
-        sc_setup.deploy_staking_contract(&sc_setup.owner_address.clone(), 1000, 1000, 1500, 0, 0);
+    sc_setup.deploy_staking_contract(&sc_setup.owner_address.clone(), 1000, 1000, 1500, 0, 0);
 
     let first_user = sc_setup.setup_new_user(100u64);
-    sc_setup.init_delegation_contract(
-        &sc_setup.owner_address.clone(),
-        &delegation_contract,
-        FIRST_ADD_LIQUIDITY_AMOUNT,
-    );
+    sc_setup.add_liquidity(&sc_setup.owner_address.clone(), FIRST_ADD_LIQUIDITY_AMOUNT);
     sc_setup.add_liquidity(&first_user, 100u64);
     sc_setup.check_contract_storage(200, 200, 0);
     sc_setup.check_user_balance(&first_user, LS_TOKEN_ID, 100u64);
@@ -36,15 +31,10 @@ fn liquid_staking_remove_liquidity_test() {
     DebugApi::dummy();
     let mut sc_setup = LiquidStakingContractSetup::new(liquid_staking::contract_obj);
 
-    let delegation_contract =
-        sc_setup.deploy_staking_contract(&sc_setup.owner_address.clone(), 1000, 1000, 1500, 0, 0);
+    sc_setup.deploy_staking_contract(&sc_setup.owner_address.clone(), 1000, 1000, 1500, 0, 0);
 
     let first_user = sc_setup.setup_new_user(100u64);
-    sc_setup.init_delegation_contract(
-        &sc_setup.owner_address.clone(),
-        &delegation_contract,
-        FIRST_ADD_LIQUIDITY_AMOUNT,
-    );
+    sc_setup.add_liquidity(&sc_setup.owner_address.clone(), FIRST_ADD_LIQUIDITY_AMOUNT);
     sc_setup.add_liquidity(&first_user, 100u64);
     sc_setup.remove_liquidity(&first_user, LS_TOKEN_ID, 90u64);
     sc_setup.check_contract_storage(110, 110, 0);
@@ -62,11 +52,7 @@ fn liquid_staking_claim_rewards_and_withdraw_test() {
         sc_setup.deploy_staking_contract(&sc_setup.owner_address.clone(), 1000, 1000, 1500, 0, 0);
 
     let first_user = sc_setup.setup_new_user(100u64);
-    sc_setup.init_delegation_contract(
-        &sc_setup.owner_address.clone(),
-        &delegation_contract,
-        FIRST_ADD_LIQUIDITY_AMOUNT,
-    );
+    sc_setup.add_liquidity(&sc_setup.owner_address.clone(), FIRST_ADD_LIQUIDITY_AMOUNT);
     sc_setup.add_liquidity(&first_user, 100u64);
     sc_setup.b_mock.set_block_epoch(50u64);
     sc_setup.b_mock.set_block_nonce(10u64);
@@ -115,23 +101,19 @@ fn liquid_staking_multiple_operations() {
         11_000u64,
     );
 
-    sc_setup.init_delegation_contract(&sc_setup.owner_address.clone(), &delegation_contract1, 10);
-
-    sc_setup.init_delegation_contract(&sc_setup.owner_address.clone(), &delegation_contract2, 10);
-
-    sc_setup.init_delegation_contract(&sc_setup.owner_address.clone(), &delegation_contract3, 10);
+    sc_setup.add_liquidity(&sc_setup.owner_address.clone(), FIRST_ADD_LIQUIDITY_AMOUNT);
 
     let first_user = sc_setup.setup_new_user(100u64);
     let second_user = sc_setup.setup_new_user(100u64);
     let third_user = sc_setup.setup_new_user(100u64);
     sc_setup.add_liquidity(&first_user, 10u64);
-    sc_setup.check_delegation_contract_values(&delegation_contract2, 20u64);
+    sc_setup.check_delegation_contract_values(&delegation_contract2, 110u64);
 
     sc_setup.add_liquidity(&first_user, 20u64);
-    sc_setup.check_delegation_contract_values(&delegation_contract2, 40u64);
+    sc_setup.check_delegation_contract_values(&delegation_contract2, 130u64);
 
     sc_setup.add_liquidity(&second_user, 50u64);
-    sc_setup.check_delegation_contract_values(&delegation_contract2, 90u64);
+    sc_setup.check_delegation_contract_values(&delegation_contract2, 180u64);
 
     sc_setup.update_staking_contract_params(
         &sc_setup.owner_address.clone(),
@@ -143,7 +125,7 @@ fn liquid_staking_multiple_operations() {
     );
 
     sc_setup.add_liquidity(&third_user, 30u64);
-    sc_setup.check_delegation_contract_values(&delegation_contract3, 40u64);
+    sc_setup.check_delegation_contract_values(&delegation_contract3, 30u64);
 
     sc_setup.update_staking_contract_params(
         &sc_setup.owner_address.clone(),
@@ -172,9 +154,9 @@ fn liquid_staking_multiple_operations() {
     sc_setup.recompute_token_reserve(&first_user);
     sc_setup.check_user_egld_balance_denominated(
         sc_setup.sc_wrapper.address_ref(),
-        391780821917808218u128,
+        583561643835616437u128,
     );
-    sc_setup.check_contract_rewards_storage_denominated(391780821917808218u128);
+    sc_setup.check_contract_rewards_storage_denominated(583561643835616437u128);
     sc_setup.delegate_rewards_check_insufficient(&first_user);
 
     sc_setup.add_liquidity(&third_user, 10u64);
@@ -185,16 +167,16 @@ fn liquid_staking_multiple_operations() {
     sc_setup.recompute_token_reserve(&first_user);
     sc_setup.check_user_egld_balance_denominated(
         sc_setup.sc_wrapper.address_ref(),
-        2068493150684931504u128,
+        3027397260273972600u128,
     );
-    sc_setup.check_contract_rewards_storage_denominated(2068493150684931504u128);
+    sc_setup.check_contract_rewards_storage_denominated(3027397260273972600u128);
     sc_setup.delegate_rewards(&first_user);
     sc_setup.check_user_egld_balance_denominated(sc_setup.sc_wrapper.address_ref(), 0u128);
 
     sc_setup.add_liquidity(&first_user, 50u64);
     sc_setup.check_delegation_contract_values_denominated(
         &delegation_contract1,
-        72068493150684931504u128,
+        63027397260273972600u128,
     );
     sc_setup.update_staking_contract_params(
         &sc_setup.owner_address.clone(),
@@ -208,7 +190,7 @@ fn liquid_staking_multiple_operations() {
     sc_setup.add_liquidity(&second_user, 40u64);
     sc_setup.check_delegation_contract_values_denominated(
         &delegation_contract1,
-        72068493150684931504u128,
+        63027397260273972600u128,
     );
     sc_setup.update_staking_contract_params(
         &sc_setup.owner_address.clone(),
@@ -220,7 +202,7 @@ fn liquid_staking_multiple_operations() {
     );
 
     sc_setup.add_liquidity(&third_user, 30u64);
-    sc_setup.check_delegation_contract_values(&delegation_contract3, 110u64);
+    sc_setup.check_delegation_contract_values(&delegation_contract3, 100u64);
     sc_setup.update_staking_contract_params(
         &sc_setup.owner_address.clone(),
         &delegation_contract3,
@@ -230,12 +212,12 @@ fn liquid_staking_multiple_operations() {
         9_000u64,
     );
 
-    sc_setup.check_user_balance_denominated(&first_user, LS_TOKEN_ID, 79319881091793532115u128);
-    sc_setup.check_user_balance_denominated(&second_user, LS_TOKEN_ID, 89455904873434825692u128);
-    sc_setup.check_user_balance_denominated(&third_user, LS_TOKEN_ID, 69591928655076119269u128);
+    sc_setup.check_user_balance_denominated(&first_user, LS_TOKEN_ID, 79321294760764080831u128);
+    sc_setup.check_user_balance_denominated(&second_user, LS_TOKEN_ID, 89457035808611264664u128);
+    sc_setup.check_user_balance_denominated(&third_user, LS_TOKEN_ID, 69592776856458448498u128);
 
     sc_setup.remove_liquidity(&first_user, LS_TOKEN_ID, 70u64);
-    sc_setup.check_user_balance_denominated(&first_user, LS_TOKEN_ID, 9319881091793532115u128);
+    sc_setup.check_user_balance_denominated(&first_user, LS_TOKEN_ID, 9321294760764080831u128);
 
     sc_setup.b_mock.set_block_epoch(60u64);
     sc_setup.check_user_egld_balance(&first_user, 20u64);
@@ -265,11 +247,7 @@ fn liquid_staking_multiple_withdraw_test() {
     let first_user = sc_setup.setup_new_user(100u64);
     let second_user = sc_setup.setup_new_user(100u64);
     let third_user = sc_setup.setup_new_user(100u64);
-    sc_setup.init_delegation_contract(
-        &sc_setup.owner_address.clone(),
-        &delegation_contract,
-        FIRST_ADD_LIQUIDITY_AMOUNT,
-    );
+    sc_setup.add_liquidity(&sc_setup.owner_address.clone(), FIRST_ADD_LIQUIDITY_AMOUNT);
     sc_setup.add_liquidity(&first_user, 50u64);
     sc_setup.add_liquidity(&second_user, 40u64);
     sc_setup.add_liquidity(&third_user, 40u64);
