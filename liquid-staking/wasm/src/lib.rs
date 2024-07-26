@@ -8,8 +8,8 @@
 // Upgrade:                              1
 // Endpoints:                           30
 // Async Callback:                       1
-// Promise callbacks:                    1
-// Total number of exported functions:  34
+// Promise callbacks:                    2
+// Total number of exported functions:  35
 
 #![no_std]
 
@@ -51,6 +51,7 @@ multiversx_sc_wasm_adapter::endpoints! {
         getAddressesToClaim => addresses_to_claim
         getDelegationClaimStatus => delegation_claim_status
         getDelegationContractData => delegation_contract_data
+        add_liquidity_callback => add_liquidity_callback
         claim_rewards_callback => claim_rewards_callback
     )
 }
