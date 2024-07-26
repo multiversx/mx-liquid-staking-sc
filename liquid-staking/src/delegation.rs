@@ -2,7 +2,7 @@ use crate::{delegation_proxy, ERROR_BAD_WHITELIST_FEE};
 
 use super::errors::{
     ERROR_ALREADY_WHITELISTED, ERROR_BAD_DELEGATION_ADDRESS, ERROR_CLAIM_EPOCH,
-    ERROR_CLAIM_IN_PROGRESS, ERROR_CLAIM_START, ERROR_DELEGATION_CAP, ERROR_FIRST_DELEGATION_NODE,
+    ERROR_CLAIM_IN_PROGRESS, ERROR_DELEGATION_CAP, ERROR_FIRST_DELEGATION_NODE,
     ERROR_NOT_WHITELISTED, ERROR_NO_DELEGATION_CONTRACTS, ERROR_OLD_CLAIM_START,
     ERROR_ONLY_DELEGATION_ADMIN,
 };
@@ -316,17 +316,7 @@ pub trait DelegationModule:
         sc_panic!(ERROR_BAD_DELEGATION_ADDRESS);
     }
 
-    fn check_claim_operation(
-        &self,
-        current_claim_status: &ClaimStatus,
-        old_claim_status: ClaimStatus,
-        current_epoch: u64,
-    ) {
-        require!(
-            current_claim_status.status == ClaimStatusType::None
-                || current_claim_status.status == ClaimStatusType::Pending,
-            ERROR_CLAIM_START
-        );
+    fn check_claim_operation(&self, old_claim_status: ClaimStatus, current_epoch: u64) {
         require!(
             old_claim_status.status == ClaimStatusType::Redelegated
                 || old_claim_status.status == ClaimStatusType::Insufficient,
@@ -338,30 +328,25 @@ pub trait DelegationModule:
         );
     }
 
-    fn prepare_claim_operation(&self, current_claim_status: &mut ClaimStatus, current_epoch: u64) {
+    fn prepare_claim_operation(&self) {
+        require!(
+            self.addresses_to_claim().is_empty(),
+            ERROR_CLAIM_IN_PROGRESS
+        );
         let delegation_addresses_mapper = self.delegation_addresses_list();
-        if current_claim_status.status == ClaimStatusType::None {
-            require!(
-                delegation_addresses_mapper.front().unwrap().get_node_id() != 0,
-                ERROR_FIRST_DELEGATION_NODE
-            );
-            require!(
-                self.addresses_to_claim().is_empty(),
-                ERROR_CLAIM_IN_PROGRESS
-            );
-            let mut last_node = delegation_addresses_mapper.front().unwrap().get_node_id();
+        require!(
+            delegation_addresses_mapper.front().unwrap().get_node_id() != 0,
+            ERROR_FIRST_DELEGATION_NODE
+        );
+        let mut last_node = delegation_addresses_mapper.front().unwrap().get_node_id();
 
-            while last_node != 0 {
-                let current_node = delegation_addresses_mapper
-                    .get_node_by_id(last_node)
-                    .unwrap();
-                let current_address = current_node.clone().into_value();
-                self.add_address_to_be_claimed(current_address);
-                last_node = current_node.get_next_node_id();
-            }
-
-            current_claim_status.status = ClaimStatusType::Pending;
-            current_claim_status.last_claim_epoch = current_epoch;
+        while last_node != 0 {
+            let current_node = delegation_addresses_mapper
+                .get_node_by_id(last_node)
+                .unwrap();
+            let current_address = current_node.clone().into_value();
+            self.add_address_to_be_claimed(current_address);
+            last_node = current_node.get_next_node_id();
         }
     }
 

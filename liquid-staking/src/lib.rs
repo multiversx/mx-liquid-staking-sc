@@ -3,7 +3,6 @@
 multiversx_sc::imports!();
 multiversx_sc::derive_imports!();
 
-use multiversx_sc_modules::ongoing_operation::DEFAULT_MIN_GAS_TO_SAVE_PROGRESS;
 pub const DEFAULT_GAS_TO_CLAIM_REWARDS: u64 = 6_000_000;
 pub const MIN_GAS_FOR_ASYNC_CALL: u64 = 12_000_000;
 pub const MIN_GAS_FOR_CALLBACK: u64 = 12_000_000;
@@ -74,6 +73,8 @@ pub trait LiquidStaking<ContractReader>:
         }
         require!(payment > MIN_EGLD_TO_DELEGATE, ERROR_BAD_PAYMENT_AMOUNT);
 
+        let gas_for_async_call = self.get_gas_for_async_call();
+
         let delegation_contract = self.get_delegation_contract_for_delegate(&payment);
 
         drop(storage_cache);
@@ -83,15 +84,16 @@ pub trait LiquidStaking<ContractReader>:
             .typed(delegation_proxy::DelegationMockProxy)
             .delegate()
             .egld(payment.clone())
+            .gas(gas_for_async_call)
             .callback(LiquidStaking::callbacks(self).add_liquidity_callback(
                 caller,
                 delegation_contract,
                 payment,
             ))
-            .async_call_and_exit();
+            .register_promise();
     }
 
-    #[callback]
+    #[promises_callback]
     fn add_liquidity_callback(
         &self,
         caller: ManagedAddress,
@@ -162,10 +164,8 @@ pub trait LiquidStaking<ContractReader>:
         let delegation_contract = self.get_delegation_contract_for_undelegate(&egld_to_unstake);
 
         let delegation_contract_mapper = self.delegation_contract_data(&delegation_contract);
-        delegation_contract_mapper.update(|contract_data| {
-            contract_data.egld_in_ongoing_undelegation += &egld_to_unstake;
-            contract_data.egld_in_ongoing_undelegation += &egld_to_unstake
-        });
+        delegation_contract_mapper
+            .update(|contract_data| contract_data.egld_in_ongoing_undelegation += &egld_to_unstake);
         drop(storage_cache);
 
         self.tx()
@@ -191,17 +191,18 @@ pub trait LiquidStaking<ContractReader>:
         #[call_result] result: ManagedAsyncCallResult<()>,
     ) {
         let mut storage_cache = StorageCache::new(self);
+        let delegation_contract_mapper = self.delegation_contract_data(&delegation_contract);
+
+        delegation_contract_mapper.update(|contract_data| {
+            contract_data.egld_in_ongoing_undelegation -= &egld_to_unstake;
+        });
+
         match result {
             ManagedAsyncCallResult::Ok(()) => {
                 let current_epoch = self.blockchain().get_block_epoch();
                 let unbond_epoch = current_epoch + UNBOND_PERIOD;
 
-                let delegation_contract_mapper =
-                    self.delegation_contract_data(&delegation_contract);
-
                 delegation_contract_mapper.update(|contract_data| {
-                    contract_data.egld_in_ongoing_undelegation -= &egld_to_unstake;
-                    contract_data.egld_in_ongoing_undelegation -= &egld_to_unstake;
                     contract_data.total_staked_from_ls_contract -= &egld_to_unstake;
                     contract_data.total_unstaked_from_ls_contract += &egld_to_unstake;
                 });
@@ -348,20 +349,12 @@ pub trait LiquidStaking<ContractReader>:
         let claim_status_mapper = self.delegation_claim_status();
         let old_claim_status = claim_status_mapper.get();
         let current_epoch = self.blockchain().get_block_epoch();
-        let mut current_claim_status = self.load_operation::<ClaimStatus>();
 
-        self.check_claim_operation(&current_claim_status, old_claim_status, current_epoch);
-        self.prepare_claim_operation(&mut current_claim_status, current_epoch);
+        self.check_claim_operation(old_claim_status, current_epoch);
+        self.prepare_claim_operation();
         let mut delegation_addresses = self.addresses_to_claim();
 
         while !delegation_addresses.is_empty() {
-            let gas_left = self.blockchain().get_gas_left();
-
-            if gas_left < DEFAULT_MIN_GAS_TO_SAVE_PROGRESS {
-                self.save_progress(&current_claim_status);
-                break;
-            }
-
             let current_node = delegation_addresses.pop_back().unwrap();
             let address = current_node.clone().into_value();
 
@@ -389,10 +382,8 @@ pub trait LiquidStaking<ContractReader>:
     fn claim_rewards_callback(&self, #[call_result] result: ManagedAsyncCallResult<()>) {
         match result {
             ManagedAsyncCallResult::Ok(_) => {
-                let current_egld_balance = self
-                    .blockchain()
-                    .get_sc_balance(&EgldOrEsdtTokenIdentifier::egld(), 0);
-                self.rewards_reserve().set(current_egld_balance);
+                let payment = self.call_value().egld_value().clone_value();
+                self.rewards_reserve().update(|value| *value += payment);
             }
             ManagedAsyncCallResult::Err(_) => {}
         }
@@ -442,6 +433,7 @@ pub trait LiquidStaking<ContractReader>:
         );
 
         let rewards_reserve = self.rewards_reserve().get();
+        self.rewards_reserve().set(BigUint::zero());
 
         require!(
             rewards_reserve >= MIN_EGLD_TO_DELEGATE,
@@ -488,6 +480,8 @@ pub trait LiquidStaking<ContractReader>:
             }
             ManagedAsyncCallResult::Err(_) => {
                 self.move_delegation_contract_to_back(delegation_contract);
+                self.rewards_reserve()
+                    .update(|value| *value += staked_tokens)
             }
         }
     }
