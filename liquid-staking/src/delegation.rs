@@ -71,7 +71,7 @@ pub trait DelegationModule:
             !self.last_whitelisting_delegation_nonce().is_empty()
                 && self.last_whitelisting_delegation_nonce().get()
                     + MIN_BLOCKS_BEFORE_CLEAR_ONGOING_OP
-                    > current_nonce,
+                    < current_nonce,
             "Whitelist operation cannot be cleared now"
         );
 
