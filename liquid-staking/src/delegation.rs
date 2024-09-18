@@ -190,10 +190,10 @@ pub trait DelegationModule:
         }
     }
 
-    fn move_delegation_contract_to_back(&self, delegation_contract: ManagedAddress) {
+    fn move_delegation_contract_to_back(&self, delegation_contract: &ManagedAddress) {
         self.remove_delegation_address_from_list(&delegation_contract);
         self.delegation_addresses_list()
-            .push_back(delegation_contract);
+            .push_back(delegation_contract.clone());
     }
 
     fn get_delegation_contract_for_delegate(

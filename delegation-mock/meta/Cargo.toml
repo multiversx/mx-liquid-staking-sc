@@ -6,8 +6,9 @@ publish = false
 authors = ["Sorin Petreasca <sorin.petreasca@multiversx.com>"]
 
 [dev-dependencies]
+
 [dependencies.delegation-mock]
 path = ".."
 
 [dependencies.multiversx-sc-meta]
-version = "0.41.3"
+version = "0.53.0"
