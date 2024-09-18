@@ -507,4 +507,11 @@ pub trait LiquidStaking<ContractReader>:
             .single_esdt(&unstake_token_id, unstake_token_nonce, &BigUint::from(1u64))
             .transfer();
     }
+
+    // views
+    #[view(getLsValueForPosition)]
+    fn get_ls_value_for_position(&self, ls_token_amount: BigUint) -> BigUint {
+        let storage_cache = StorageCache::new(self);
+        self.get_egld_amount(&ls_token_amount, &storage_cache)
+    }
 }
