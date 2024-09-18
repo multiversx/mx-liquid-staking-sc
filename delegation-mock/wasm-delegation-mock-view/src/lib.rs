@@ -5,24 +5,20 @@
 ////////////////////////////////////////////////////
 
 // Init:                                 1
-// Endpoints:                            5
+// Endpoints:                            0
 // Async Callback (empty):               1
-// Total number of exported functions:   7
+// Total number of exported functions:   2
 
 #![no_std]
 
 multiversx_sc_wasm_adapter::allocator!();
 multiversx_sc_wasm_adapter::panic_handler!();
 
-multiversx_sc_wasm_adapter::endpoints! {
+multiversx_sc_wasm_adapter::external_view_init! {}
+
+multiversx_sc_wasm_adapter::external_view_endpoints! {
     delegation_mock
     (
-        init => init
-        depositEGLD => deposit_egld
-        delegate => delegate
-        unDelegate => undelegate
-        withdraw => withdraw
-        claimRewards => claim_rewards
     )
 }
 

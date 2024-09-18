@@ -5,7 +5,7 @@
 # ##########################################
 
 [package]
-name = "delegation-mock-wasm"
+name = "delegation-mock-view-wasm"
 version = "0.0.0"
 edition = "2021"
 publish = false

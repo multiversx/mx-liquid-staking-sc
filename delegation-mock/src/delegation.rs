@@ -68,12 +68,7 @@ pub trait DelegationMock {
         self.address_undelegate_epoch(&caller).clear();
         self.address_undelegate_amount(&caller).clear();
 
-        self.send_raw().async_call_raw(
-            &caller,
-            &withdraw_amount,
-            &ManagedBuffer::new(),
-            &ManagedArgBuffer::new(),
-        );
+        self.tx().to(&caller).egld(&withdraw_amount).transfer();
     }
 
     #[endpoint(claimRewards)]
@@ -88,7 +83,7 @@ pub trait DelegationMock {
                 * (current_epoch - last_claim_epoch)
                 / EPOCHS_IN_YEAR;
             if rewards > 0u64 {
-                self.send().direct_egld(&caller, &rewards);
+                self.tx().to(&caller).egld(&rewards).transfer();
                 self.address_last_claim_epoch(&caller).set(current_epoch);
                 self.egld_token_supply().update(|value| *value -= &rewards);
             }

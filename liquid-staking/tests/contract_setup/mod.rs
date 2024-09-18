@@ -6,7 +6,8 @@ use multiversx_sc::{
 };
 
 use multiversx_sc_scenario::{
-    managed_token_id, num_bigint, rust_biguint, whitebox::*, DebugApi,
+    imports::{BlockchainStateWrapper, ContractObjWrapper},
+    managed_token_id, num_bigint, rust_biguint, DebugApi,
 };
 
 use liquid_staking::config::ConfigModule;
