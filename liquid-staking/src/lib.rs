@@ -322,7 +322,7 @@ pub trait LiquidStaking<ContractReader>:
                     self.unstake_token_supply()
                         .update(|x| *x -= &unstake_token_amount);
                     self.burn_unstake_tokens(unstake_token_nonce);
-                    self.tx().to(&caller).egld(&unstake_token_amount);
+                    self.tx().to(&caller).egld(&unstake_token_amount).transfer();
                 } else {
                     self.send_back_unbond_nft(&caller, unstake_token_nonce);
                 }
@@ -367,7 +367,6 @@ pub trait LiquidStaking<ContractReader>:
                 .typed(delegation_proxy::DelegationMockProxy)
                 .claim_rewards()
                 .sync_call();
-
             // self.delegation_proxy_obj()
             //     .contract(delegation_address)
             //     .claim_rewards()
