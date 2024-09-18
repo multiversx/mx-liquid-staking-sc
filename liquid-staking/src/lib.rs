@@ -366,12 +366,7 @@ pub trait LiquidStaking<ContractReader>:
                 .to(&delegation_address)
                 .typed(delegation_proxy::DelegationMockProxy)
                 .claim_rewards()
-                .sync_call();
-            // self.delegation_proxy_obj()
-            //     .contract(delegation_address)
-            //     .claim_rewards()
-            //     .with_gas_limit(DEFAULT_GAS_TO_CLAIM_REWARDS)
-            //     .transfer_execute();
+                .transfer_execute();
             if next_node == 0 {
                 claim_status_mapper.set(current_claim_status.clone());
                 return STOP_OP;
