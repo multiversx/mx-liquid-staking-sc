@@ -16,8 +16,6 @@ use super::liquidity_pool::State;
 
 #[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, PartialEq, Eq, TypeAbi, Clone)]
 pub enum ClaimStatusType {
-    None,
-    Pending,
     Finished,
     Delegable,
     Insufficient,
@@ -34,7 +32,7 @@ pub struct ClaimStatus {
 impl Default for ClaimStatus {
     fn default() -> Self {
         Self {
-            status: ClaimStatusType::None,
+            status: ClaimStatusType::Finished,
             last_claim_epoch: 0,
             last_claim_block: 0,
         }
@@ -60,7 +58,6 @@ pub struct DelegationContractData<M: ManagedTypeApi> {
 pub trait DelegationModule:
     super::config::ConfigModule
     + multiversx_sc_modules::default_issue_callbacks::DefaultIssueCallbacksModule
-    + multiversx_sc_modules::ongoing_operation::OngoingOperationModule
 {
     #[only_owner]
     #[endpoint(clearOngoingWhitelistOp)]
@@ -302,9 +299,16 @@ pub trait DelegationModule:
         );
 
         let delegation_addresses_mapper = self.delegation_addresses_list();
+        let mut wrapped_last_node = delegation_addresses_mapper.back();
 
-        for delegation_address_element in delegation_addresses_mapper.iter() {
-            let delegation_address = delegation_address_element.into_value();
+        while wrapped_last_node.is_some() {
+            let last_node = wrapped_last_node.clone().unwrap();
+
+            // the previous node is assigned here, in stead of the end of the loop, in order to avoid cloning a value for it
+            wrapped_last_node =
+                delegation_addresses_mapper.get_node_by_id(last_node.get_prev_node_id());
+
+            let delegation_address = last_node.into_value();
             let delegation_contract_data = self.delegation_contract_data(&delegation_address).get();
 
             if delegation_contract_data.total_staked_from_ls_contract
@@ -338,15 +342,13 @@ pub trait DelegationModule:
             delegation_addresses_mapper.front().unwrap().get_node_id() != 0,
             ERROR_FIRST_DELEGATION_NODE
         );
-        let mut last_node = delegation_addresses_mapper.front().unwrap().get_node_id();
 
-        while last_node != 0 {
+        for delegation in delegation_addresses_mapper.iter() {
             let current_node = delegation_addresses_mapper
-                .get_node_by_id(last_node)
+                .get_node_by_id(delegation.get_node_id())
                 .unwrap();
             let current_address = current_node.clone().into_value();
             self.add_address_to_be_claimed(current_address);
-            last_node = current_node.get_next_node_id();
         }
     }
 
