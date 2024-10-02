@@ -184,7 +184,7 @@ pub trait LiquidStaking<ContractReader>:
             .register_promise();
     }
 
-    #[callback]
+    #[promises_callback]
     fn remove_liquidity_callback(
         &self,
         caller: ManagedAddress,
@@ -317,7 +317,7 @@ pub trait LiquidStaking<ContractReader>:
             .register_promise();
     }
 
-    #[callback]
+    #[promises_callback]
     fn withdraw_tokens_callback(
         &self,
         provider: ManagedAddress,
@@ -470,7 +470,7 @@ pub trait LiquidStaking<ContractReader>:
             .register_promise();
     }
 
-    #[callback]
+    #[promises_callback]
     fn delegate_rewards_callback(
         &self,
         delegation_contract: ManagedAddress,
