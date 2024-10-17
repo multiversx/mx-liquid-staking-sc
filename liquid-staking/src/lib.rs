@@ -9,7 +9,7 @@ pub const MIN_GAS_FOR_CALLBACK: u64 = 12_000_000;
 pub const MIN_EGLD_TO_DELEGATE: u64 = 1_000_000_000_000_000_000;
 pub const RECOMPUTE_BLOCK_OFFSET: u64 = 10;
 pub const MINIMUM_LIQUIDITY: u64 = 1_000;
-pub const DEFAULT_MIN_GAS_TO_SAVE_PROGRESS: u64 = 6_000_000;
+pub const DEFAULT_MIN_GAS_TO_SAVE_PROGRESS: u64 = 30_000_000;
 
 pub mod config;
 mod contexts;
@@ -73,8 +73,6 @@ pub trait LiquidStaking<ContractReader>:
         }
         require!(payment > MIN_EGLD_TO_DELEGATE, ERROR_BAD_PAYMENT_AMOUNT);
 
-        let gas_for_async_call = self.get_gas_for_async_call();
-
         let delegation_contract = self.get_delegation_contract_for_delegate(&payment);
 
         drop(storage_cache);
@@ -84,7 +82,7 @@ pub trait LiquidStaking<ContractReader>:
             .typed(delegation_proxy::DelegationMockProxy)
             .delegate()
             .egld(payment.clone())
-            .gas(gas_for_async_call)
+            .gas(MIN_GAS_FOR_CALLBACK)
             .callback(LiquidStaking::callbacks(self).add_liquidity_callback(
                 caller,
                 delegation_contract,
@@ -168,13 +166,11 @@ pub trait LiquidStaking<ContractReader>:
             .update(|contract_data| contract_data.egld_in_ongoing_undelegation += &egld_to_unstake);
         drop(storage_cache);
 
-        let gas_for_async_call = self.get_gas_for_async_call();
-
         self.tx()
             .to(delegation_contract.clone())
             .typed(delegation_proxy::DelegationMockProxy)
             .undelegate(egld_to_unstake.clone())
-            .gas(gas_for_async_call)
+            .gas(MIN_GAS_FOR_CALLBACK)
             .callback(LiquidStaking::callbacks(self).remove_liquidity_callback(
                 caller,
                 delegation_contract,
@@ -307,12 +303,11 @@ pub trait LiquidStaking<ContractReader>:
 
         drop(storage_cache);
 
-        let gas_for_async_call = self.get_gas_for_async_call();
         self.tx()
             .to(delegation_contract.clone())
             .typed(delegation_proxy::DelegationMockProxy)
             .withdraw()
-            .gas(gas_for_async_call)
+            .gas(MIN_GAS_FOR_CALLBACK)
             .callback(LiquidStaking::callbacks(self).withdraw_tokens_callback(delegation_contract))
             .register_promise();
     }
@@ -456,13 +451,12 @@ pub trait LiquidStaking<ContractReader>:
 
         drop(storage_cache);
 
-        let gas_for_async_call = self.get_gas_for_async_call();
         self.tx()
             .to(delegation_contract.clone())
             .typed(delegation_proxy::DelegationMockProxy)
             .delegate()
             .egld(rewards_reserve.clone())
-            .gas(gas_for_async_call)
+            .gas(MIN_GAS_FOR_CALLBACK)
             .callback(
                 LiquidStaking::callbacks(self)
                     .delegate_rewards_callback(delegation_contract, rewards_reserve),
@@ -498,15 +492,6 @@ pub trait LiquidStaking<ContractReader>:
                     .update(|value| *value += staked_tokens)
             }
         }
-    }
-
-    fn get_gas_for_async_call(&self) -> u64 {
-        let gas_left = self.blockchain().get_gas_left();
-        require!(
-            gas_left > MIN_GAS_FOR_ASYNC_CALL + MIN_GAS_FOR_CALLBACK,
-            ERROR_INSUFFICIENT_GAS
-        );
-        gas_left - MIN_GAS_FOR_CALLBACK
     }
 
     // views
