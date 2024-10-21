@@ -10,6 +10,7 @@ pub const MIN_EGLD_TO_DELEGATE: u64 = 1_000_000_000_000_000_000;
 pub const RECOMPUTE_BLOCK_OFFSET: u64 = 10;
 pub const MINIMUM_LIQUIDITY: u64 = 1_000;
 pub const DEFAULT_MIN_GAS_TO_SAVE_PROGRESS: u64 = 30_000_000;
+pub const MIN_GAS_FINISH_EXEC: u64 = 4_000_000;
 
 pub mod config;
 mod contexts;
@@ -505,10 +506,10 @@ pub trait LiquidStaking<ContractReader>:
     fn get_gas_for_async_call(&self) -> u64 {
         let gas_left = self.blockchain().get_gas_left();
         require!(
-            gas_left > MIN_GAS_FOR_ASYNC_CALL + MIN_GAS_FOR_CALLBACK,
+            gas_left > MIN_GAS_FOR_ASYNC_CALL + MIN_GAS_FOR_CALLBACK + MIN_GAS_FINISH_EXEC,
             ERROR_INSUFFICIENT_GAS
         );
-        gas_left - MIN_GAS_FOR_CALLBACK
+        gas_left - MIN_GAS_FOR_CALLBACK - MIN_GAS_FINISH_EXEC
     }
 
     // views
