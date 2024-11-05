@@ -5,8 +5,6 @@ edition = "2021"
 publish = false
 authors = ["Sorin Petreasca <sorin.petreasca@multiversx.com>"]
 
-[dev-dependencies]
-
 [dependencies.delegation-mock]
 path = ".."
 

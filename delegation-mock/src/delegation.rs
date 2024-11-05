@@ -68,7 +68,6 @@ pub trait DelegationMock {
         self.address_undelegate_epoch(&caller).clear();
         self.address_undelegate_amount(&caller).clear();
 
-        sc_print!("caller {:x} withdraws amount {}", caller, withdraw_amount);
         self.send_raw().async_call_raw(
             &caller,
             &withdraw_amount,
