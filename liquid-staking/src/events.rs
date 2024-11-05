@@ -1,4 +1,4 @@
-use crate::contexts::base::StorageCache;
+use super::contexts::base::StorageCache;
 
 multiversx_sc::imports!();
 multiversx_sc::derive_imports!();
@@ -33,7 +33,7 @@ pub struct RemoveLiquidityEvent<M: ManagedTypeApi> {
 
 #[multiversx_sc::module]
 pub trait EventsModule:
-    crate::config::ConfigModule
+    super::config::ConfigModule
     + multiversx_sc_modules::default_issue_callbacks::DefaultIssueCallbacksModule
 {
     fn emit_add_liquidity_event(
@@ -53,7 +53,7 @@ pub trait EventsModule:
                 ls_token_amount,
                 ls_token_supply: storage_cache.ls_token_supply.clone(),
                 virtual_egld_reserve: storage_cache.virtual_egld_reserve.clone(),
-                rewards_reserve: storage_cache.rewards_reserve.clone(),
+                rewards_reserve: self.rewards_reserve().get(),
                 block: self.blockchain().get_block_nonce(),
                 epoch,
                 timestamp: self.blockchain().get_block_timestamp(),
@@ -81,7 +81,7 @@ pub trait EventsModule:
                 unstake_token_amount,
                 ls_token_supply: storage_cache.ls_token_supply.clone(),
                 virtual_egld_reserve: storage_cache.virtual_egld_reserve.clone(),
-                rewards_reserve: storage_cache.rewards_reserve.clone(),
+                rewards_reserve: self.rewards_reserve().get(),
                 block: self.blockchain().get_block_nonce(),
                 epoch,
                 timestamp: self.blockchain().get_block_timestamp(),

@@ -2,39 +2,42 @@ mod contract_interactions;
 mod contract_setup;
 use std::ops::Mul;
 
+use contract_interactions::FIRST_ADD_LIQUIDITY_AMOUNT;
 use contract_setup::*;
 
 use multiversx_sc_scenario::{num_bigint, rust_biguint, DebugApi};
 
 #[test]
 fn init_test() {
-    let _ = LiquidStakingContractSetup::new(liquid_staking::contract_obj);
+    LiquidStakingContractSetup::new(liquid_staking::contract_obj);
 }
 
 #[test]
 fn liquid_staking_add_liquidity_test() {
-    let _ = DebugApi::dummy();
+    DebugApi::dummy();
     let mut sc_setup = LiquidStakingContractSetup::new(liquid_staking::contract_obj);
 
     sc_setup.deploy_staking_contract(&sc_setup.owner_address.clone(), 1000, 1000, 1500, 0, 0);
 
     let first_user = sc_setup.setup_new_user(100u64);
+    sc_setup.add_liquidity(&sc_setup.owner_address.clone(), FIRST_ADD_LIQUIDITY_AMOUNT);
     sc_setup.add_liquidity(&first_user, 100u64);
-    sc_setup.check_contract_storage(100, 100, 0, 0);
+    sc_setup.check_contract_storage(200, 200, 0);
     sc_setup.check_user_balance(&first_user, LS_TOKEN_ID, 100u64);
 }
 
 #[test]
 fn liquid_staking_remove_liquidity_test() {
-    let _ = DebugApi::dummy();
+    DebugApi::dummy();
     let mut sc_setup = LiquidStakingContractSetup::new(liquid_staking::contract_obj);
 
     sc_setup.deploy_staking_contract(&sc_setup.owner_address.clone(), 1000, 1000, 1500, 0, 0);
 
     let first_user = sc_setup.setup_new_user(100u64);
+    sc_setup.add_liquidity(&sc_setup.owner_address.clone(), FIRST_ADD_LIQUIDITY_AMOUNT);
     sc_setup.add_liquidity(&first_user, 100u64);
     sc_setup.remove_liquidity(&first_user, LS_TOKEN_ID, 90u64);
-    sc_setup.check_contract_storage(10, 10, 0, 0);
+    sc_setup.check_contract_storage(110, 110, 0);
     sc_setup.check_user_balance(&first_user, LS_TOKEN_ID, 10u64);
     sc_setup.check_user_nft_balance_denominated(&first_user, UNSTAKE_TOKEN_ID, 1, 1);
     sc_setup.check_user_egld_balance(&first_user, 0u64);
@@ -42,12 +45,14 @@ fn liquid_staking_remove_liquidity_test() {
 
 #[test]
 fn liquid_staking_claim_rewards_and_withdraw_test() {
-    let _ = DebugApi::dummy();
+    DebugApi::dummy();
     let mut sc_setup = LiquidStakingContractSetup::new(liquid_staking::contract_obj);
 
-    sc_setup.deploy_staking_contract(&sc_setup.owner_address.clone(), 1000, 1000, 1500, 0, 0);
+    let delegation_contract =
+        sc_setup.deploy_staking_contract(&sc_setup.owner_address.clone(), 1000, 1000, 1500, 0, 0);
 
     let first_user = sc_setup.setup_new_user(100u64);
+    sc_setup.add_liquidity(&sc_setup.owner_address.clone(), FIRST_ADD_LIQUIDITY_AMOUNT);
     sc_setup.add_liquidity(&first_user, 100u64);
     sc_setup.b_mock.set_block_epoch(50u64);
     sc_setup.b_mock.set_block_nonce(10u64);
@@ -59,15 +64,16 @@ fn liquid_staking_claim_rewards_and_withdraw_test() {
     sc_setup.remove_liquidity(&first_user, LS_TOKEN_ID, 90u64);
 
     sc_setup.b_mock.set_block_epoch(60u64);
+    sc_setup.withdraw_all(&first_user, &delegation_contract);
     sc_setup.unbond_tokens(&first_user, UNSTAKE_TOKEN_ID, 1);
 
     sc_setup.check_user_balance(&first_user, LS_TOKEN_ID, 10u64);
-    sc_setup.check_user_egld_balance_denominated(&first_user, 91232876712328767122u128);
+    sc_setup.check_user_egld_balance_denominated(&first_user, 91239041095890410958u128);
 }
 
 #[test]
 fn liquid_staking_multiple_operations() {
-    let _ = DebugApi::dummy();
+    DebugApi::dummy();
     let mut sc_setup = LiquidStakingContractSetup::new(liquid_staking::contract_obj);
 
     let delegation_contract1 = sc_setup.deploy_staking_contract(
@@ -95,17 +101,19 @@ fn liquid_staking_multiple_operations() {
         11_000u64,
     );
 
+    sc_setup.add_liquidity(&sc_setup.owner_address.clone(), FIRST_ADD_LIQUIDITY_AMOUNT);
+
     let first_user = sc_setup.setup_new_user(100u64);
     let second_user = sc_setup.setup_new_user(100u64);
     let third_user = sc_setup.setup_new_user(100u64);
     sc_setup.add_liquidity(&first_user, 10u64);
-    sc_setup.check_delegation_contract_values(&delegation_contract2, 10u64);
+    sc_setup.check_delegation_contract_values(&delegation_contract2, 110u64);
 
     sc_setup.add_liquidity(&first_user, 20u64);
-    sc_setup.check_delegation_contract_values(&delegation_contract2, 30u64);
+    sc_setup.check_delegation_contract_values(&delegation_contract2, 130u64);
 
     sc_setup.add_liquidity(&second_user, 50u64);
-    sc_setup.check_delegation_contract_values(&delegation_contract2, 80u64);
+    sc_setup.check_delegation_contract_values(&delegation_contract2, 180u64);
 
     sc_setup.update_staking_contract_params(
         &sc_setup.owner_address.clone(),
@@ -146,9 +154,9 @@ fn liquid_staking_multiple_operations() {
     sc_setup.recompute_token_reserve(&first_user);
     sc_setup.check_user_egld_balance_denominated(
         sc_setup.sc_wrapper.address_ref(),
-        301369863013698629u128,
+        583561643835616437u128,
     );
-    sc_setup.check_contract_rewards_storage_denominated(301369863013698629u128);
+    sc_setup.check_contract_rewards_storage_denominated(583561643835616437u128);
     sc_setup.delegate_rewards_check_insufficient(&first_user);
 
     sc_setup.add_liquidity(&third_user, 10u64);
@@ -159,16 +167,16 @@ fn liquid_staking_multiple_operations() {
     sc_setup.recompute_token_reserve(&first_user);
     sc_setup.check_user_egld_balance_denominated(
         sc_setup.sc_wrapper.address_ref(),
-        1643835616438356161u128,
+        3027397260273972600u128,
     );
-    sc_setup.check_contract_rewards_storage_denominated(1643835616438356161u128);
+    sc_setup.check_contract_rewards_storage_denominated(3027397260273972600u128);
     sc_setup.delegate_rewards(&first_user);
     sc_setup.check_user_egld_balance_denominated(sc_setup.sc_wrapper.address_ref(), 0u128);
 
     sc_setup.add_liquidity(&first_user, 50u64);
     sc_setup.check_delegation_contract_values_denominated(
         &delegation_contract1,
-        61643835616438356161u128,
+        63027397260273972600u128,
     );
     sc_setup.update_staking_contract_params(
         &sc_setup.owner_address.clone(),
@@ -182,7 +190,7 @@ fn liquid_staking_multiple_operations() {
     sc_setup.add_liquidity(&second_user, 40u64);
     sc_setup.check_delegation_contract_values_denominated(
         &delegation_contract1,
-        61643835616438356161u128,
+        63027397260273972600u128,
     );
     sc_setup.update_staking_contract_params(
         &sc_setup.owner_address.clone(),
@@ -204,49 +212,55 @@ fn liquid_staking_multiple_operations() {
         9_000u64,
     );
 
-    sc_setup.check_user_balance_denominated(&first_user, LS_TOKEN_ID, 79313093831536454488u128);
-    sc_setup.check_user_balance_denominated(&second_user, LS_TOKEN_ID, 89450475065229163590u128);
-    sc_setup.check_user_balance_denominated(&third_user, LS_TOKEN_ID, 69560533894550287992u128);
+    sc_setup.check_user_balance_denominated(&first_user, LS_TOKEN_ID, 79321294760764080831u128);
+    sc_setup.check_user_balance_denominated(&second_user, LS_TOKEN_ID, 89457035808611264664u128);
+    sc_setup.check_user_balance_denominated(&third_user, LS_TOKEN_ID, 69592776856458448498u128);
 
     sc_setup.remove_liquidity(&first_user, LS_TOKEN_ID, 70u64);
-    sc_setup.check_user_balance_denominated(&first_user, LS_TOKEN_ID, 9313093831536454488u128);
+    sc_setup.check_user_balance_denominated(&first_user, LS_TOKEN_ID, 9321294760764080831u128);
 
     sc_setup.b_mock.set_block_epoch(60u64);
     sc_setup.check_user_egld_balance(&first_user, 20u64);
+    sc_setup.withdraw_all(&first_user, &delegation_contract1);
+    sc_setup.withdraw_all(&first_user, &delegation_contract2);
+    sc_setup.withdraw_all(&first_user, &delegation_contract3);
     sc_setup.unbond_tokens(&first_user, UNSTAKE_TOKEN_ID, 1);
 
     let ls_value = sc_setup.get_ls_value_for_position(1u64);
     let initial_egld_balance = exp18_128(20u64);
     let ls_token_balance_in_egld = 70 * ls_value;
-    let rounding_offset = 6u128;
+    let rounding_offset = 24u128;
     sc_setup.check_user_egld_balance_denominated(
         &first_user,
-        initial_egld_balance + ls_token_balance_in_egld + rounding_offset,
+        initial_egld_balance + ls_token_balance_in_egld + rounding_offset + 1,
     );
 }
 
 #[test]
 fn liquid_staking_multiple_withdraw_test() {
-    let _ = DebugApi::dummy();
+    DebugApi::dummy();
     let mut sc_setup = LiquidStakingContractSetup::new(liquid_staking::contract_obj);
 
-    sc_setup.deploy_staking_contract(&sc_setup.owner_address.clone(), 1000, 1000, 1500, 0, 0);
+    let delegation_contract =
+        sc_setup.deploy_staking_contract(&sc_setup.owner_address.clone(), 1000, 1000, 1500, 0, 0);
 
     let first_user = sc_setup.setup_new_user(100u64);
     let second_user = sc_setup.setup_new_user(100u64);
     let third_user = sc_setup.setup_new_user(100u64);
+    sc_setup.add_liquidity(&sc_setup.owner_address.clone(), FIRST_ADD_LIQUIDITY_AMOUNT);
     sc_setup.add_liquidity(&first_user, 50u64);
     sc_setup.add_liquidity(&second_user, 40u64);
     sc_setup.add_liquidity(&third_user, 40u64);
-    sc_setup.check_contract_storage(130, 130, 0, 0);
+    sc_setup.check_contract_storage(230, 230, 0);
 
     sc_setup.b_mock.set_block_epoch(50u64);
     sc_setup.remove_liquidity(&first_user, LS_TOKEN_ID, 20u64);
     sc_setup.remove_liquidity(&second_user, LS_TOKEN_ID, 20u64);
     sc_setup.remove_liquidity(&third_user, LS_TOKEN_ID, 20u64);
-    sc_setup.check_contract_storage(70, 70, 0, 0);
+    sc_setup.check_contract_storage(170, 170, 0);
 
     sc_setup.b_mock.set_block_epoch(60u64);
+    sc_setup.withdraw_all(&first_user, &delegation_contract);
     sc_setup.unbond_tokens(&first_user, UNSTAKE_TOKEN_ID, 1);
     sc_setup.check_user_balance(&first_user, LS_TOKEN_ID, 30u64);
     sc_setup.check_user_egld_balance(&first_user, 70);
@@ -254,7 +268,7 @@ fn liquid_staking_multiple_withdraw_test() {
     sc_setup.check_user_egld_balance(&second_user, 60);
     sc_setup.check_user_balance(&third_user, LS_TOKEN_ID, 20u64);
     sc_setup.check_user_egld_balance(&third_user, 60);
-    sc_setup.check_contract_storage(70, 70, 0, 40); // 20 + 20 (second_user + third_user)
+    sc_setup.check_contract_storage(170, 170, 0); // 20 + 20 (second_user + third_user)
 }
 
 pub fn exp9(value: u64) -> num_bigint::BigUint {

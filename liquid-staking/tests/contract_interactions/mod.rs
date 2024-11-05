@@ -1,11 +1,15 @@
 use crate::contract_setup::LiquidStakingContractSetup;
+use delegation_mock::DelegationMock;
+use liquid_staking::{
+    config::{ConfigModule, UnstakeTokenAttributes},
+    delegation::DelegationModule,
+    LiquidStaking,
+};
 use multiversx_sc::types::Address;
 use multiversx_sc_scenario::{managed_address, num_bigint, rust_biguint, DebugApi};
-use liquid_staking::config::{ConfigModule, UnstakeTokenAttributes};
-use liquid_staking::LiquidStaking;
 
-use delegation_mock::*;
-use liquid_staking::delegation::DelegationModule;
+pub const EGLD_TO_WHITELIST: u64 = 1;
+pub const FIRST_ADD_LIQUIDITY_AMOUNT: u64 = 100;
 
 impl<LiquidStakingContractObjBuilder> LiquidStakingContractSetup<LiquidStakingContractObjBuilder>
 where
@@ -22,6 +26,8 @@ where
     ) -> Address {
         let rust_zero = rust_biguint!(0u64);
         let egld_balance_biguint = &Self::exp18(egld_balance);
+        let deposit_amount =
+            &Self::exp18(egld_balance - EGLD_TO_WHITELIST - FIRST_ADD_LIQUIDITY_AMOUNT);
         let total_staked_biguint = Self::exp18(total_staked);
         let delegation_contract_cap_biguint = Self::exp18(delegation_contract_cap);
 
@@ -42,26 +48,31 @@ where
             .assert_ok();
 
         self.b_mock
-            .execute_tx(
-                owner_address,
-                &delegation_wrapper,
-                egld_balance_biguint,
-                |sc| {
-                    sc.deposit_egld();
-                },
-            )
+            .execute_tx(owner_address, &delegation_wrapper, deposit_amount, |sc| {
+                sc.deposit_egld();
+            })
             .assert_ok();
 
         self.b_mock
+            .execute_tx(
+                owner_address,
+                &self.sc_wrapper,
+                &Self::exp18(EGLD_TO_WHITELIST),
+                |sc| {
+                    sc.whitelist_delegation_contract(
+                        managed_address!(delegation_wrapper.address_ref()),
+                        managed_address!(owner_address),
+                        Self::to_managed_biguint(total_staked_biguint),
+                        Self::to_managed_biguint(delegation_contract_cap_biguint),
+                        nr_nodes,
+                        apy,
+                    );
+                },
+            )
+            .assert_ok();
+        self.b_mock
             .execute_tx(owner_address, &self.sc_wrapper, &rust_zero, |sc| {
-                sc.whitelist_delegation_contract(
-                    managed_address!(delegation_wrapper.address_ref()),
-                    managed_address!(owner_address),
-                    Self::to_managed_biguint(total_staked_biguint),
-                    Self::to_managed_biguint(delegation_contract_cap_biguint),
-                    nr_nodes,
-                    apy,
-                );
+                sc.set_state_active();
             })
             .assert_ok();
 
@@ -178,6 +189,15 @@ where
             .assert_ok();
     }
 
+    pub fn withdraw_all(&mut self, caller: &Address, provider: &Address) {
+        let rust_zero = rust_biguint!(0u64);
+        self.b_mock
+            .execute_tx(caller, &self.sc_wrapper, &rust_zero, |sc| {
+                sc.withdraw_all(managed_address!(provider));
+            })
+            .assert_ok();
+    }
+
     pub fn setup_new_user(&mut self, egld_token_amount: u64) -> Address {
         let rust_zero = rust_biguint!(0);
 
@@ -220,7 +240,6 @@ where
         ls_token_supply: u64,
         virtual_egld_reserve: u64,
         rewards_reserve: u64,
-        withdrawn_egld: u64,
     ) {
         self.b_mock
             .execute_query(&self.sc_wrapper, |sc| {
@@ -235,10 +254,6 @@ where
                 assert_eq!(
                     sc.rewards_reserve().get(),
                     Self::to_managed_biguint(Self::exp18(rewards_reserve))
-                );
-                assert_eq!(
-                    sc.total_withdrawn_egld().get(),
-                    Self::to_managed_biguint(Self::exp18(withdrawn_egld))
                 );
             })
             .assert_ok();

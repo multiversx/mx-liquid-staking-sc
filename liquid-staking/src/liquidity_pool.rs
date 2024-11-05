@@ -1,12 +1,10 @@
 multiversx_sc::imports!();
 multiversx_sc::derive_imports!();
 
-use crate::contexts::base::StorageCache;
-use crate::errors::*;
+use super::contexts::base::StorageCache;
+use super::errors::*;
 
 use super::config;
-
-const MINIMUM_LIQUIDITY: u64 = 1_000;
 
 #[derive(TypeAbi, TopEncode, TopDecode, PartialEq, Eq, Copy, Clone, Debug)]
 pub enum State {
@@ -25,7 +23,7 @@ pub trait LiquidityPoolModule:
     ) -> BigUint {
         let ls_amount = if storage_cache.virtual_egld_reserve > 0 {
             token_amount.clone() * &storage_cache.ls_token_supply
-                / (&storage_cache.virtual_egld_reserve + &storage_cache.rewards_reserve)
+                / &storage_cache.virtual_egld_reserve
         } else {
             token_amount.clone()
         };
@@ -55,11 +53,6 @@ pub trait LiquidityPoolModule:
         ls_token_amount: &BigUint,
         storage_cache: &StorageCache<Self>,
     ) -> BigUint {
-        require!(
-            storage_cache.ls_token_supply >= ls_token_amount + MINIMUM_LIQUIDITY,
-            ERROR_NOT_ENOUGH_LP
-        );
-
         let egld_amount =
             ls_token_amount * &storage_cache.virtual_egld_reserve / &storage_cache.ls_token_supply;
         require!(egld_amount > 0u64, ERROR_INSUFFICIENT_LIQ_BURNED);

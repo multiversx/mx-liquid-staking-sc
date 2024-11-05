@@ -1,16 +1,21 @@
-use crate::errors::{
-    ERROR_ALREADY_WHITELISTED, ERROR_BAD_DELEGATION_ADDRESS, ERROR_CLAIM_EPOCH, ERROR_CLAIM_START,
-    ERROR_DELEGATION_CAP, ERROR_FIRST_DELEGATION_NODE, ERROR_NOT_WHITELISTED,
-    ERROR_NO_DELEGATION_CONTRACTS, ERROR_OLD_CLAIM_START, ERROR_ONLY_DELEGATION_ADMIN,
-};
+use crate::{delegation_proxy, ERROR_BAD_WHITELIST_FEE};
 
+use super::errors::{
+    ERROR_ALREADY_WHITELISTED, ERROR_BAD_DELEGATION_ADDRESS, ERROR_CLAIM_EPOCH,
+    ERROR_CLAIM_IN_PROGRESS, ERROR_DELEGATION_CAP, ERROR_FIRST_DELEGATION_NODE,
+    ERROR_NOT_WHITELISTED, ERROR_NO_DELEGATION_CONTRACTS, ERROR_OLD_CLAIM_START,
+    ERROR_ONLY_DELEGATION_ADMIN,
+};
 multiversx_sc::imports!();
 multiversx_sc::derive_imports!();
 
+pub const MAX_DELEGATION_ADDRESSES: usize = 20;
+pub const EGLD_TO_WHITELIST: u64 = 1_000_000_000_000_000_000;
+pub const MIN_BLOCKS_BEFORE_CLEAR_ONGOING_OP: u64 = 10;
+use super::liquidity_pool::State;
+
 #[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, PartialEq, Eq, TypeAbi, Clone)]
 pub enum ClaimStatusType {
-    None,
-    Pending,
     Finished,
     Delegable,
     Insufficient,
@@ -18,22 +23,18 @@ pub enum ClaimStatusType {
 }
 
 #[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, PartialEq, Eq, TypeAbi, Clone)]
-pub struct ClaimStatus<M: ManagedTypeApi> {
+pub struct ClaimStatus {
     pub status: ClaimStatusType,
     pub last_claim_epoch: u64,
     pub last_claim_block: u64,
-    pub current_node: u32,
-    pub starting_token_reserve: BigUint<M>,
 }
 
-impl<M: ManagedTypeApi> Default for ClaimStatus<M> {
+impl Default for ClaimStatus {
     fn default() -> Self {
         Self {
-            status: ClaimStatusType::None,
+            status: ClaimStatusType::Finished,
             last_claim_epoch: 0,
             last_claim_block: 0,
-            current_node: 0,
-            starting_token_reserve: BigUint::zero(),
         }
     }
 }
@@ -50,20 +51,32 @@ pub struct DelegationContractData<M: ManagedTypeApi> {
     pub total_staked_from_ls_contract: BigUint<M>,
     pub total_unstaked_from_ls_contract: BigUint<M>,
     pub total_unbonded_from_ls_contract: BigUint<M>,
+    pub egld_in_ongoing_undelegation: BigUint<M>,
 }
 
 #[multiversx_sc::module]
 pub trait DelegationModule:
-    crate::config::ConfigModule
+    super::config::ConfigModule
     + multiversx_sc_modules::default_issue_callbacks::DefaultIssueCallbacksModule
 {
     #[only_owner]
-    #[endpoint(updateMaxDelegationAddressesNumber)]
-    fn update_max_delegation_addresses_number(&self, number: usize) {
-        self.max_delegation_addresses().set(number);
+    #[endpoint(clearOngoingWhitelistOp)]
+    fn clear_ongoing_whitelist_op(&self) {
+        let current_nonce = self.blockchain().get_block_nonce();
+
+        require!(
+            !self.last_whitelisting_delegation_nonce().is_empty()
+                && self.last_whitelisting_delegation_nonce().get()
+                    + MIN_BLOCKS_BEFORE_CLEAR_ONGOING_OP
+                    < current_nonce,
+            "Whitelist operation cannot be cleared now"
+        );
+
+        self.last_whitelisting_delegation_nonce().clear();
     }
 
     #[only_owner]
+    #[payable("EGLD")]
     #[endpoint(whitelistDelegationContract)]
     fn whitelist_delegation_contract(
         &self,
@@ -74,19 +87,28 @@ pub trait DelegationModule:
         nr_nodes: u64,
         apy: u64,
     ) {
-        require!(
-            self.delegation_addresses_list().len() <= self.max_delegation_addresses().get(),
-            "Maximum number of delegation addresses reached"
-        );
+        let caller = self.blockchain().get_caller();
 
+        let payment = self.call_value().egld_value().clone_value();
+        require!(payment == EGLD_TO_WHITELIST, ERROR_BAD_WHITELIST_FEE);
         require!(
             self.delegation_contract_data(&contract_address).is_empty(),
             ERROR_ALREADY_WHITELISTED
         );
 
         require!(
+            self.last_whitelisting_delegation_nonce().is_empty(),
+            "Another whitelisting is currently ongoing"
+        );
+
+        require!(
             delegation_contract_cap >= total_staked,
             ERROR_DELEGATION_CAP
+        );
+
+        require!(
+            self.delegation_addresses_list().len() <= MAX_DELEGATION_ADDRESSES,
+            "Maximum number of delegation addresses reached"
         );
 
         let contract_data = DelegationContractData {
@@ -98,11 +120,50 @@ pub trait DelegationModule:
             total_staked_from_ls_contract: BigUint::zero(),
             total_unstaked_from_ls_contract: BigUint::zero(),
             total_unbonded_from_ls_contract: BigUint::zero(),
+            egld_in_ongoing_undelegation: BigUint::zero(),
         };
 
-        self.delegation_contract_data(&contract_address)
-            .set(contract_data);
-        self.add_and_order_delegation_address_in_list(contract_address, apy);
+        self.last_whitelisting_delegation_nonce()
+            .set(self.blockchain().get_block_epoch());
+
+        self.tx()
+            .to(contract_address.clone())
+            .typed(delegation_proxy::DelegationMockProxy)
+            .delegate()
+            .egld(payment.clone())
+            .callback(
+                DelegationModule::callbacks(self).whitelist_contract_callback(
+                    caller,
+                    contract_address,
+                    contract_data,
+                    apy,
+                ),
+            )
+            .async_call_and_exit();
+    }
+
+    #[callback]
+    fn whitelist_contract_callback(
+        &self,
+        caller: ManagedAddress,
+        contract_address: ManagedAddress,
+        contract_data: DelegationContractData<Self::Api>,
+        apy: u64,
+        #[call_result] result: ManagedAsyncCallResult<()>,
+    ) {
+        match result {
+            ManagedAsyncCallResult::Ok(()) => {
+                self.delegation_contract_data(&contract_address)
+                    .set(contract_data);
+
+                self.add_and_order_delegation_address_in_list(contract_address, apy);
+            }
+            ManagedAsyncCallResult::Err(_) => {
+                self.send().direct_egld(&caller, &EGLD_TO_WHITELIST.into());
+            }
+        }
+
+        self.last_whitelisting_delegation_nonce().clear();
     }
 
     #[only_owner]
@@ -153,6 +214,14 @@ pub trait DelegationModule:
             contract_data.nr_nodes = nr_nodes;
             contract_data.apy = apy;
         });
+    }
+
+    fn add_address_to_be_claimed(&self, contract_address: ManagedAddress) {
+        if self.addresses_to_claim().is_empty() {
+            self.addresses_to_claim().push_front(contract_address);
+        } else {
+            self.addresses_to_claim().push_back(contract_address);
+        }
     }
 
     fn add_and_order_delegation_address_in_list(&self, contract_address: ManagedAddress, apy: u64) {
@@ -230,29 +299,28 @@ pub trait DelegationModule:
         );
 
         let delegation_addresses_mapper = self.delegation_addresses_list();
+        let mut wrapped_last_node = delegation_addresses_mapper.back();
 
-        for delegation_address_element in delegation_addresses_mapper.iter() {
-            let delegation_address = delegation_address_element.into_value();
+        while wrapped_last_node.is_some() {
+            let last_node = wrapped_last_node.clone().unwrap();
+
+            // the previous node is assigned here, in stead of the end of the loop, in order to avoid cloning a value for it
+            wrapped_last_node =
+                delegation_addresses_mapper.get_node_by_id(last_node.get_prev_node_id());
+
+            let delegation_address = last_node.into_value();
             let delegation_contract_data = self.delegation_contract_data(&delegation_address).get();
 
-            if &delegation_contract_data.total_staked_from_ls_contract >= amount_to_undelegate {
+            if delegation_contract_data.total_staked_from_ls_contract
+                >= amount_to_undelegate + &delegation_contract_data.egld_in_ongoing_undelegation
+            {
                 return delegation_address;
             }
         }
         sc_panic!(ERROR_BAD_DELEGATION_ADDRESS);
     }
 
-    fn check_claim_operation(
-        &self,
-        current_claim_status: &ClaimStatus<Self::Api>,
-        old_claim_status: ClaimStatus<Self::Api>,
-        current_epoch: u64,
-    ) {
-        require!(
-            current_claim_status.status == ClaimStatusType::None
-                || current_claim_status.status == ClaimStatusType::Pending,
-            ERROR_CLAIM_START
-        );
+    fn check_claim_operation(&self, old_claim_status: ClaimStatus, current_epoch: u64) {
         require!(
             old_claim_status.status == ClaimStatusType::Redelegated
                 || old_claim_status.status == ClaimStatusType::Insufficient,
@@ -264,26 +332,23 @@ pub trait DelegationModule:
         );
     }
 
-    fn prepare_claim_operation(
-        &self,
-        current_claim_status: &mut ClaimStatus<Self::Api>,
-        current_epoch: u64,
-    ) {
-        if current_claim_status.status == ClaimStatusType::None {
-            let delegation_addresses_mapper = self.delegation_addresses_list();
-            require!(
-                delegation_addresses_mapper.front().unwrap().get_node_id() != 0,
-                ERROR_FIRST_DELEGATION_NODE
-            );
-            current_claim_status.status = ClaimStatusType::Pending;
-            current_claim_status.last_claim_epoch = current_epoch;
-            current_claim_status.current_node =
-                delegation_addresses_mapper.front().unwrap().get_node_id();
-            let current_total_withdrawn_egld = self.total_withdrawn_egld().get();
-            current_claim_status.starting_token_reserve = self
-                .blockchain()
-                .get_sc_balance(&EgldOrEsdtTokenIdentifier::egld(), 0)
-                - current_total_withdrawn_egld;
+    fn prepare_claim_operation(&self) {
+        require!(
+            self.addresses_to_claim().is_empty(),
+            ERROR_CLAIM_IN_PROGRESS
+        );
+        let delegation_addresses_mapper = self.delegation_addresses_list();
+        require!(
+            delegation_addresses_mapper.front().unwrap().get_node_id() != 0,
+            ERROR_FIRST_DELEGATION_NODE
+        );
+
+        for delegation in delegation_addresses_mapper.iter() {
+            let current_node = delegation_addresses_mapper
+                .get_node_by_id(delegation.get_node_id())
+                .unwrap();
+            let current_address = current_node.clone().into_value();
+            self.add_address_to_be_claimed(current_address);
         }
     }
 
@@ -317,17 +382,37 @@ pub trait DelegationModule:
         delegation_contract_data.total_unbonded_from_ls_contract
     }
 
+    #[only_owner]
+    #[endpoint(setStateActive)]
+    fn set_state_active(&self) {
+        require!(
+            !self.delegation_addresses_list().is_empty(),
+            ERROR_NO_DELEGATION_CONTRACTS
+        );
+        self.state().set(State::Active);
+    }
+
+    #[only_owner]
+    #[endpoint(setStateInactive)]
+    fn set_state_inactive(&self) {
+        self.state().set(State::Inactive);
+    }
+
+    #[inline]
+    fn is_state_active(&self, state: State) -> bool {
+        state == State::Active
+    }
     #[view(getDelegationAddressesList)]
     #[storage_mapper("delegationAddressesList")]
     fn delegation_addresses_list(&self) -> LinkedListMapper<ManagedAddress>;
 
+    #[view(getAddressesToClaim)]
+    #[storage_mapper("addressesToClaim")]
+    fn addresses_to_claim(&self) -> LinkedListMapper<ManagedAddress>;
+
     #[view(getDelegationClaimStatus)]
     #[storage_mapper("delegationClaimStatus")]
-    fn delegation_claim_status(&self) -> SingleValueMapper<ClaimStatus<Self::Api>>;
-
-    #[view(maxDelegationAddresses)]
-    #[storage_mapper("maxDelegationAddresses")]
-    fn max_delegation_addresses(&self) -> SingleValueMapper<usize>;
+    fn delegation_claim_status(&self) -> SingleValueMapper<ClaimStatus>;
 
     #[view(getDelegationContractData)]
     #[storage_mapper("delegationContractData")]
@@ -335,4 +420,7 @@ pub trait DelegationModule:
         &self,
         contract_address: &ManagedAddress,
     ) -> SingleValueMapper<DelegationContractData<Self::Api>>;
+
+    #[storage_mapper("whitelistingDelegationOngoing")]
+    fn last_whitelisting_delegation_nonce(&self) -> SingleValueMapper<u64>;
 }
