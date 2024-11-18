@@ -1,0 +1,32 @@
+[package]
+name = "liquid-staking-interactor"
+version = "0.0.0"
+authors = ["you"]
+edition = "2021"
+publish = false
+
+[[bin]]
+name = "liquid-staking-interactor"
+path = "src/interactor_main.rs"
+
+[lib]
+path = "src/interact.rs"
+
+[dependencies.liquid-staking]
+path = ".."
+
+[dependencies.multiversx-sc-snippets]
+version = "0.54.2"
+
+[dependencies.multiversx-sc]
+version = "0.54.2"
+
+[dependencies]
+clap = { version = "4.4.7", features = ["derive"] }
+serde = { version = "1.0", features = ["derive"] }
+toml = "0.8.6"
+
+[features]
+chain-simulator-tests = []
+blockchain-tests = []
+
