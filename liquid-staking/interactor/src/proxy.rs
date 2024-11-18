@@ -457,7 +457,7 @@ where
 }
 
 #[type_abi]
-#[derive(TopEncode, TopDecode)]
+#[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, PartialEq, Eq, Clone)]
 pub struct RemoveLiquidityEvent<Api>
 where
     Api: ManagedTypeApi,
@@ -476,7 +476,7 @@ where
 }
 
 #[type_abi]
-#[derive(TopEncode, TopDecode)]
+#[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, PartialEq, Eq, Clone)]
 pub enum ClaimStatusType {
     Finished,
     Delegable,
@@ -485,7 +485,7 @@ pub enum ClaimStatusType {
 }
 
 #[type_abi]
-#[derive(TopEncode, TopDecode)]
+#[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, PartialEq, Eq, Clone)]
 pub struct ClaimStatus {
     pub status: ClaimStatusType,
     pub last_claim_epoch: u64,
@@ -493,7 +493,7 @@ pub struct ClaimStatus {
 }
 
 #[type_abi]
-#[derive(TopEncode, TopDecode)]
+#[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, PartialEq, Eq, Clone)]
 pub struct DelegationContractData<Api>
 where
     Api: ManagedTypeApi,
