@@ -1,10 +1,7 @@
 use std::ops::Mul;
 
 use liquid_staking::{config::ConfigModule, LiquidStaking};
-use multiversx_sc::{
-    imports::StorageTokenWrapper,
-    types::{Address, BigUint, EsdtLocalRole},
-};
+use multiversx_sc::types::{Address, BigUint, EsdtLocalRole};
 
 use multiversx_sc_scenario::{
     imports::{BlockchainStateWrapper, ContractObjWrapper},

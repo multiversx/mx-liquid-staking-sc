@@ -1,6 +1,7 @@
 #![allow(non_snake_case)]
 
 mod config;
+mod delegation_proxy;
 mod proxy;
 
 use config::Config;
@@ -12,6 +13,7 @@ use std::{
 };
 
 const STATE_FILE: &str = "state.toml";
+const DELEGATION_MOCK_CONTRACT_CODE: &str = "../delegation-mock/output/delegation-mock.mxsc.json";
 
 pub async fn liquid_staking_cli() {
     env_logger::init();
@@ -44,9 +46,15 @@ pub async fn liquid_staking_cli() {
         "changeDelegationContractAdmin" => interact.change_delegation_contract_admin().await,
         "changeDelegationContractParams" => interact.change_delegation_contract_params().await,
         "getDelegationStatus" => interact.get_delegation_status().await,
-        "getDelegationContractStakedAmount" => interact.get_delegation_contract_staked_amount().await,
-        "getDelegationContractUnstakedAmount" => interact.get_delegation_contract_unstaked_amount().await,
-        "getDelegationContractUnbondedAmount" => interact.get_delegation_contract_unbonded_amount().await,
+        "getDelegationContractStakedAmount" => {
+            interact.get_delegation_contract_staked_amount().await
+        }
+        "getDelegationContractUnstakedAmount" => {
+            interact.get_delegation_contract_unstaked_amount().await
+        }
+        "getDelegationContractUnbondedAmount" => {
+            interact.get_delegation_contract_unbonded_amount().await
+        }
         "setStateActive" => interact.set_state_active().await,
         "setStateInactive" => interact.set_state_inactive().await,
         "getDelegationAddressesList" => interact.delegation_addresses_list().await,
@@ -59,56 +67,61 @@ pub async fn liquid_staking_cli() {
 
 #[derive(Debug, Default, Serialize, Deserialize)]
 pub struct State {
-    contract_address: Option<Bech32Address>
+    contract_address: Option<Bech32Address>,
+    delegation_address: Option<Bech32Address>,
 }
 
 impl State {
-        // Deserializes state from file
-        pub fn load_state() -> Self {
-            if Path::new(STATE_FILE).exists() {
-                let mut file = std::fs::File::open(STATE_FILE).unwrap();
-                let mut content = String::new();
-                file.read_to_string(&mut content).unwrap();
-                toml::from_str(&content).unwrap()
-            } else {
-                Self::default()
-            }
-        }
-    
-        /// Sets the contract address
-        pub fn set_address(&mut self, address: Bech32Address) {
-            self.contract_address = Some(address);
-        }
-    
-        /// Returns the contract address
-        pub fn current_address(&self) -> &Bech32Address {
-            self.contract_address
-                .as_ref()
-                .expect("no known contract, deploy first")
+    // Deserializes state from file
+    pub fn load_state() -> Self {
+        if Path::new(STATE_FILE).exists() {
+            let mut file = std::fs::File::open(STATE_FILE).unwrap();
+            let mut content = String::new();
+            file.read_to_string(&mut content).unwrap();
+            toml::from_str(&content).unwrap()
+        } else {
+            Self::default()
         }
     }
-    
-    impl Drop for State {
-        // Serializes state to file
-        fn drop(&mut self) {
-            let mut file = std::fs::File::create(STATE_FILE).unwrap();
-            file.write_all(toml::to_string(self).unwrap().as_bytes())
-                .unwrap();
-        }
+
+    /// Sets the contract address
+    pub fn set_address(&mut self, address: Bech32Address) {
+        self.contract_address = Some(address);
     }
+
+    pub fn set_delegation_address(&mut self, address: Bech32Address) {
+        self.delegation_address = Some(address);
+    }
+
+    /// Returns the contract address
+    pub fn current_address(&self) -> &Bech32Address {
+        self.contract_address
+            .as_ref()
+            .expect("no known contract, deploy first")
+    }
+}
+
+impl Drop for State {
+    // Serializes state to file
+    fn drop(&mut self) {
+        let mut file = std::fs::File::create(STATE_FILE).unwrap();
+        file.write_all(toml::to_string(self).unwrap().as_bytes())
+            .unwrap();
+    }
+}
 
 pub struct ContractInteract {
     interactor: Interactor,
     wallet_address: Address,
     contract_code: BytesValue,
-    state: State
+    delegation_mock_contract_code: String,
+    state: State,
 }
 
 impl ContractInteract {
     pub async fn new() -> Self {
         let config = Config::new();
-        let mut interactor = Interactor::new(config.gateway_uri())
-            .await;
+        let mut interactor = Interactor::new(config.gateway_uri()).await;
 
         interactor.set_current_dir_from_workspace("liquid-staking");
         let wallet_address = interactor.register_wallet(test_wallets::mike()).await;
@@ -116,7 +129,7 @@ impl ContractInteract {
         // Useful in the chain simulator setting
         // generate blocks until ESDTSystemSCAddress is enabled
         // interactor.generate_blocks_until_epoch(1).await.unwrap();
-        
+
         let contract_code = BytesValue::interpret_from(
             "mxsc:../output/liquid-staking.mxsc.json",
             &InterpreterContext::default(),
@@ -126,7 +139,8 @@ impl ContractInteract {
             interactor,
             wallet_address,
             contract_code,
-            state: State::load_state()
+            delegation_mock_contract_code: DELEGATION_MOCK_CONTRACT_CODE.to_string(),
+            state: State::load_state(),
         }
     }
 
@@ -135,7 +149,7 @@ impl ContractInteract {
             .interactor
             .tx()
             .from(&self.wallet_address)
-            .gas(30_000_000u64)
+            .gas(90_000_000u64)
             .typed(proxy::LiquidStakingProxy)
             .init()
             .code(&self.contract_code)
@@ -143,8 +157,32 @@ impl ContractInteract {
             .run()
             .await;
         let new_address_bech32 = bech32::encode(&new_address);
+        self.state.set_address(Bech32Address::from_bech32_string(
+            new_address_bech32.clone(),
+        ));
+
+        println!("new address: {new_address_bech32}");
+    }
+
+    pub async fn deploy_delegation_contract(&mut self) {
+        let contract_code = MxscPath::new(&self.delegation_mock_contract_code);
+
+        let new_address = self
+            .interactor
+            .tx()
+            .from(&self.wallet_address)
+            .gas(90_000_000u64)
+            .typed(delegation_proxy::DelegationMockProxy)
+            .init()
+            .code(contract_code)
+            .returns(ReturnsNewAddress)
+            .run()
+            .await;
+        let new_address_bech32 = bech32::encode(&new_address);
         self.state
-            .set_address(Bech32Address::from_bech32_string(new_address_bech32.clone()));
+            .set_delegation_address(Bech32Address::from_bech32_string(
+                new_address_bech32.clone(),
+            ));
 
         println!("new address: {new_address_bech32}");
     }
@@ -168,14 +206,13 @@ impl ContractInteract {
     }
 
     pub async fn add_liquidity(&mut self) {
-        let egld_amount = BigUint::<StaticApi>::from(0u128);
-
+        let egld_amount = BigUint::<StaticApi>::from(1_000_000_000_000_000_001u64);
         let response = self
             .interactor
             .tx()
             .from(&self.wallet_address)
             .to(self.state.current_address())
-            .gas(30_000_000u64)
+            .gas(40_000_000u64)
             .typed(proxy::LiquidStakingProxy)
             .add_liquidity()
             .egld(egld_amount)
@@ -199,7 +236,11 @@ impl ContractInteract {
             .gas(30_000_000u64)
             .typed(proxy::LiquidStakingProxy)
             .remove_liquidity()
-            .payment((TokenIdentifier::from(token_id.as_str()), token_nonce, token_amount))
+            .payment((
+                TokenIdentifier::from(token_id.as_str()),
+                token_nonce,
+                token_amount,
+            ))
             .returns(ReturnsResultUnmanaged)
             .run()
             .await;
@@ -220,7 +261,11 @@ impl ContractInteract {
             .gas(30_000_000u64)
             .typed(proxy::LiquidStakingProxy)
             .unbond_tokens()
-            .payment((TokenIdentifier::from(token_id.as_str()), token_nonce, token_amount))
+            .payment((
+                TokenIdentifier::from(token_id.as_str()),
+                token_nonce,
+                token_amount,
+            ))
             .returns(ReturnsResultUnmanaged)
             .run()
             .await;
@@ -311,18 +356,18 @@ impl ContractInteract {
     }
 
     pub async fn register_ls_token(&mut self) {
-        let egld_amount = BigUint::<StaticApi>::from(0u128);
+        let egld_amount = BigUint::<StaticApi>::from(50_000_000_000_000_000u64);
 
-        let token_display_name = ManagedBuffer::new_from_bytes(&b""[..]);
-        let token_ticker = ManagedBuffer::new_from_bytes(&b""[..]);
-        let num_decimals = 0u32;
+        let token_display_name = ManagedBuffer::new_from_bytes(&b"LIQTEST"[..]);
+        let token_ticker = ManagedBuffer::new_from_bytes(&b"LTST"[..]);
+        let num_decimals = 18u32;
 
         let response = self
             .interactor
             .tx()
             .from(&self.wallet_address)
             .to(self.state.current_address())
-            .gas(30_000_000u64)
+            .gas(90_000_000u64)
             .typed(proxy::LiquidStakingProxy)
             .register_ls_token(token_display_name, token_ticker, num_decimals)
             .egld(egld_amount)
@@ -357,8 +402,7 @@ impl ContractInteract {
     }
 
     pub async fn state(&mut self) {
-        self
-            .interactor
+        self.interactor
             .query()
             .to(self.state.current_address())
             .typed(proxy::LiquidStakingProxy)
@@ -455,14 +499,14 @@ impl ContractInteract {
     }
 
     pub async fn whitelist_delegation_contract(&mut self) {
-        let egld_amount = BigUint::<StaticApi>::from(0u128);
+        let egld_amount = BigUint::<StaticApi>::from(1_000_000_000_000_000_000u64);
 
-        let contract_address = bech32::decode("");
-        let admin_address = bech32::decode("");
+        let contract_address = self.state.delegation_address.as_ref().unwrap();
+        let admin_address = &self.wallet_address;
         let total_staked = BigUint::<StaticApi>::from(0u128);
-        let delegation_contract_cap = BigUint::<StaticApi>::from(0u128);
+        let delegation_contract_cap = BigUint::<StaticApi>::from(5_000_000_000_000_000_000u64);
         let nr_nodes = 0u64;
-        let apy = 0u64;
+        let apy = 10_000u64;
 
         let response = self
             .interactor
@@ -471,7 +515,14 @@ impl ContractInteract {
             .to(self.state.current_address())
             .gas(30_000_000u64)
             .typed(proxy::LiquidStakingProxy)
-            .whitelist_delegation_contract(contract_address, admin_address, total_staked, delegation_contract_cap, nr_nodes, apy)
+            .whitelist_delegation_contract(
+                contract_address,
+                admin_address,
+                total_staked,
+                delegation_contract_cap,
+                nr_nodes,
+                apy,
+            )
             .egld(egld_amount)
             .returns(ReturnsResultUnmanaged)
             .run()
@@ -513,7 +564,13 @@ impl ContractInteract {
             .to(self.state.current_address())
             .gas(30_000_000u64)
             .typed(proxy::LiquidStakingProxy)
-            .change_delegation_contract_params(contract_address, total_staked, delegation_contract_cap, nr_nodes, apy)
+            .change_delegation_contract_params(
+                contract_address,
+                total_staked,
+                delegation_contract_cap,
+                nr_nodes,
+                apy,
+            )
             .returns(ReturnsResultUnmanaged)
             .run()
             .await;
@@ -522,8 +579,7 @@ impl ContractInteract {
     }
 
     pub async fn get_delegation_status(&mut self) {
-        self
-            .interactor
+        self.interactor
             .query()
             .to(self.state.current_address())
             .typed(proxy::LiquidStakingProxy)
@@ -642,8 +698,7 @@ impl ContractInteract {
     }
 
     pub async fn delegation_claim_status(&mut self) {
-        self
-            .interactor
+        self.interactor
             .query()
             .to(self.state.current_address())
             .typed(proxy::LiquidStakingProxy)
@@ -656,8 +711,7 @@ impl ContractInteract {
     pub async fn delegation_contract_data(&mut self) {
         let contract_address = bech32::decode("");
 
-        self
-            .interactor
+        self.interactor
             .query()
             .to(self.state.current_address())
             .typed(proxy::LiquidStakingProxy)
@@ -666,11 +720,20 @@ impl ContractInteract {
             .run()
             .await;
     }
-
 }
 
 #[tokio::test]
-async fn test_deploy() {
+async fn test_setup() {
     let mut interact = ContractInteract::new().await;
     interact.deploy().await;
+    interact.deploy_delegation_contract().await;
+    interact.whitelist_delegation_contract().await;
+    interact.set_state_active().await;
+    interact.register_ls_token().await;
+}
+
+#[tokio::test]
+async fn test_add_liquidity() {
+    let mut interact = ContractInteract::new().await;
+    interact.add_liquidity().await;
 }

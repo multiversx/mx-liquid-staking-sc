@@ -13,13 +13,13 @@ version = "0.10.1"
 default-features = false
 
 [dependencies.multiversx-sc]
-version = "0.54.2"
+version = "0.54.3"
 
 [dependencies.multiversx-sc-modules]
-version = "0.54.2"
+version = "0.54.3"
 
 [dependencies.delegation-mock]
 path = "../delegation-mock"
 
 [dev-dependencies.multiversx-sc-scenario]
-version = "0.54.2"
+version = "0.54.3"
