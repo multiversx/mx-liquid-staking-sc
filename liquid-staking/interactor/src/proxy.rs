@@ -457,7 +457,7 @@ where
 }
 
 #[type_abi]
-#[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, PartialEq, Eq, Clone)]
+#[derive(TopEncode, TopDecode)]
 pub struct RemoveLiquidityEvent<Api>
 where
     Api: ManagedTypeApi,
@@ -493,7 +493,7 @@ pub struct ClaimStatus {
 }
 
 #[type_abi]
-#[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, PartialEq, Eq, Clone)]
+#[derive(TopEncode, TopDecode)]
 pub struct DelegationContractData<Api>
 where
     Api: ManagedTypeApi,

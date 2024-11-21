@@ -124,7 +124,7 @@ impl ContractInteract {
         let mut interactor = Interactor::new(config.gateway_uri()).await;
 
         interactor.set_current_dir_from_workspace("liquid-staking");
-        let wallet_address = interactor.register_wallet(test_wallets::mike()).await;
+        let wallet_address = interactor.register_wallet(test_wallets::mallory()).await;
 
         // Useful in the chain simulator setting
         // generate blocks until ESDTSystemSCAddress is enabled
@@ -212,7 +212,7 @@ impl ContractInteract {
             .tx()
             .from(&self.wallet_address)
             .to(self.state.current_address())
-            .gas(40_000_000u64)
+            .gas(50_000_000u64)
             .typed(proxy::LiquidStakingProxy)
             .add_liquidity()
             .egld(egld_amount)
