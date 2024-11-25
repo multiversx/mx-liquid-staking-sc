@@ -14,7 +14,9 @@ pub const EGLD_TO_WHITELIST: u64 = 1_000_000_000_000_000_000;
 pub const MIN_BLOCKS_BEFORE_CLEAR_ONGOING_OP: u64 = 10;
 use super::liquidity_pool::State;
 
-#[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, PartialEq, Eq, TypeAbi, Clone)]
+#[type_abi]
+
+#[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, PartialEq, Eq, Clone)]
 pub enum ClaimStatusType {
     Finished,
     Delegable,
@@ -22,7 +24,9 @@ pub enum ClaimStatusType {
     Redelegated,
 }
 
-#[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, PartialEq, Eq, TypeAbi, Clone)]
+#[type_abi]
+
+#[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, PartialEq, Eq, Clone)]
 pub struct ClaimStatus {
     pub status: ClaimStatusType,
     pub last_claim_epoch: u64,
@@ -39,8 +43,10 @@ impl Default for ClaimStatus {
     }
 }
 
+#[type_abi]
+
 #[derive(
-    TopEncode, TopDecode, NestedEncode, NestedDecode, Clone, PartialEq, Eq, TypeAbi, Debug,
+    TopEncode, TopDecode, NestedEncode, NestedDecode, Clone, PartialEq, Eq, Debug,
 )]
 pub struct DelegationContractData<M: ManagedTypeApi> {
     pub admin_address: ManagedAddress<M>,

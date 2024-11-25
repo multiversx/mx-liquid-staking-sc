@@ -3,7 +3,9 @@ use super::contexts::base::StorageCache;
 multiversx_sc::imports!();
 multiversx_sc::derive_imports!();
 
-#[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, PartialEq, Eq, TypeAbi, Clone)]
+#[type_abi]
+
+#[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, PartialEq, Eq, Clone)]
 pub struct AddLiquidityEvent<M: ManagedTypeApi> {
     caller: ManagedAddress<M>,
     ls_token_id: TokenIdentifier<M>,
@@ -16,7 +18,9 @@ pub struct AddLiquidityEvent<M: ManagedTypeApi> {
     timestamp: u64,
 }
 
-#[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, PartialEq, Eq, TypeAbi, Clone)]
+#[type_abi]
+
+#[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, PartialEq, Eq, Clone)]
 pub struct RemoveLiquidityEvent<M: ManagedTypeApi> {
     caller: ManagedAddress<M>,
     ls_token_id: TokenIdentifier<M>,

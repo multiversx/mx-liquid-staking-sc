@@ -16,7 +16,8 @@ use std::{
 
 const STATE_FILE: &str = "state.toml";
 const DELEGATION_MOCK_CONTRACT_CODE: &str = "../delegation-mock/output/delegation-mock.mxsc.json";
-const LP_TOKEN_ID: &str = "LTST-4ea10a";
+const LP_TOKEN_ID: &str = "LTST-37287f";
+const UNSTAKE_TOKEN_ID: &str = "UNTST-1e3db7";
 
 pub async fn liquid_staking_cli() {
     env_logger::init();
@@ -30,7 +31,7 @@ pub async fn liquid_staking_cli() {
         "upgrade" => interact.upgrade().await,
         "addLiquidity" => interact.add_liquidity(false).await,
         "removeLiquidity" => interact.remove_liquidity(false).await,
-        "unbondTokens" => interact.unbond_tokens(false, ExpectError(4, "")).await,
+        "unbondTokens" => interact.unbond_tokens(false).await,
         "withdrawAll" => interact.withdraw_all().await,
         "claimRewards" => interact.claim_rewards().await,
         "recomputeTokenReserve" => interact.recompute_token_reserve().await,
@@ -101,6 +102,12 @@ impl State {
         self.contract_address
             .as_ref()
             .expect("no known contract, deploy first")
+    }
+
+    pub fn delegation_address(&self) -> &Bech32Address {
+        self.delegation_address
+            .as_ref()
+            .expect("no known delegation contract, deploy first")
     }
 }
 
@@ -322,8 +329,43 @@ impl ContractInteract {
         };
     }
 
-    pub async fn unbond_tokens(&mut self, is_chain_simulator: bool, error: ExpectError<'_>) {
-        let token_id = "UNTST-558095";
+    pub async fn unbond_tokens(&mut self, is_chain_simulator: bool) {
+        let token_id = UNSTAKE_TOKEN_ID;
+        let token_nonce = 1u64;
+        let token_amount = BigUint::<StaticApi>::from(1u64);
+
+        match is_chain_simulator {
+            true => {
+                self.chain_simulator
+                    .tx()
+                    .from(&self.chain_sim_wallet_address)
+                    .to(self.state.current_address())
+                    .gas(30_000_000u64)
+                    .typed(proxy::LiquidStakingProxy)
+                    .unbond_tokens()
+                    .payment((TokenIdentifier::from(token_id), token_nonce, token_amount))
+                    .returns(ReturnsResultUnmanaged)
+                    .run()
+                    .await;
+            }
+            false => {
+                self.interactor
+                    .tx()
+                    .from(&self.wallet_address)
+                    .to(self.state.current_address())
+                    .gas(30_000_000u64)
+                    .typed(proxy::LiquidStakingProxy)
+                    .unbond_tokens()
+                    .payment((TokenIdentifier::from(token_id), token_nonce, token_amount))
+                    .returns(ReturnsResultUnmanaged)
+                    .run()
+                    .await;
+            }
+        };
+    }
+
+    pub async fn unbond_tokens_error(&mut self, is_chain_simulator: bool, error: ExpectError<'_>) {
+        let token_id = "UNTST-f4f477";
         let token_nonce = 1u64;
         let token_amount = BigUint::<StaticApi>::from(1u64);
 
@@ -379,7 +421,7 @@ impl ContractInteract {
         let response = self
             .interactor
             .tx()
-            .from(&self.wallet_address)
+            .from(&self.chain_sim_wallet_address)
             .to(self.state.current_address())
             .gas(30_000_000u64)
             .typed(proxy::LiquidStakingProxy)
@@ -395,7 +437,7 @@ impl ContractInteract {
         let response = self
             .interactor
             .tx()
-            .from(&self.wallet_address)
+            .from(&self.chain_sim_wallet_address)
             .to(self.state.current_address())
             .gas(30_000_000u64)
             .typed(proxy::LiquidStakingProxy)
@@ -411,7 +453,7 @@ impl ContractInteract {
         let response = self
             .interactor
             .tx()
-            .from(&self.wallet_address)
+            .from(&self.chain_sim_wallet_address)
             .to(self.state.current_address())
             .gas(30_000_000u64)
             .typed(proxy::LiquidStakingProxy)
@@ -815,6 +857,41 @@ impl ContractInteract {
         println!("Result: {response:?}");
     }
 
+    pub async fn delegate_tokens(&mut self) {
+        let egld_amount = 1_000_000_000_000_000_000u64;
+
+        let result_value = self
+            .interactor
+            .tx()
+            .from(&self.chain_sim_wallet_address)
+            .to(self.state.delegation_address())
+            .gas(30_000_000u64)
+            .typed(delegation_proxy::DelegationMockProxy)
+            .delegate()
+            .egld(egld_amount)
+            .returns(ReturnsResultUnmanaged)
+            .run()
+            .await;
+
+        println!("Result: {result_value:?}");
+    }
+
+    pub async fn undelegate_tokens(&mut self) {
+        let result_value = self
+            .chain_simulator
+            .tx()
+            .from(&self.chain_sim_wallet_address)
+            .to(self.state.delegation_address())
+            .gas(30_000_000u64)
+            .typed(delegation_proxy::DelegationMockProxy)
+            .undelegate(1_000_000_000_000_000_000u64)
+            .returns(ReturnsResultUnmanaged)
+            .run()
+            .await;
+
+        println!("Result: {result_value:?}");
+    }
+
     pub async fn delegation_addresses_list(&mut self) {
         let result_value = self
             .interactor
@@ -902,7 +979,32 @@ async fn test_setup_chain_simulator() {
     interact.register_ls_token(true).await;
     interact.register_unstake_token(true).await;
     interact.add_liquidity(true).await;
+    interact.add_liquidity(true).await;
+    interact.add_liquidity(true).await;
+}
+
+#[tokio::test]
+#[cfg_attr(not(feature = "chain-simulator-tests"), ignore)]
+async fn test_remove_liquidity() {
+    let mut interact = ContractInteract::new().await;
+    interact.remove_liquidity(true).await;
     interact.get_account_storage().await;
+    interact.delegate_tokens().await;
+    interact.undelegate_tokens().await;
+    interact.get_delegation_contract_unbonded_amount().await;
+}
+
+#[tokio::test]
+#[cfg_attr(not(feature = "chain-simulator-tests"), ignore)]
+async fn unbound_tokens() {
+    let mut interact = ContractInteract::new().await;
+    interact
+        .interactor
+        .proxy
+        .generate_blocks_until_epoch(14)
+        .await
+        .unwrap();
+    interact.unbond_tokens(true).await;
 }
 
 #[tokio::test]
@@ -911,7 +1013,7 @@ async fn remove_liquidity_and_unbond_early() {
     let mut interact = ContractInteract::new().await;
     interact.remove_liquidity(false).await;
     interact
-        .unbond_tokens(false, ExpectError(4, "The unstake period has not passed"))
+        .unbond_tokens_error(false, ExpectError(4, "The unstake period has not passed"))
         .await;
 }
 
