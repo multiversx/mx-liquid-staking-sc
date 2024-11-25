@@ -6,7 +6,9 @@ use super::errors::*;
 
 use super::config;
 
-#[derive(TypeAbi, TopEncode, TopDecode, PartialEq, Eq, Copy, Clone, Debug)]
+#[type_abi]
+
+#[derive(TopEncode, TopDecode, PartialEq, Eq, Copy, Clone, Debug)]
 pub enum State {
     Inactive,
     Active,
