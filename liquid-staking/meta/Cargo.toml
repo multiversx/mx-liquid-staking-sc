@@ -8,5 +8,5 @@ publish = false
 [dependencies.liquid-staking]
 path = ".."
 
-[dependencies.multiversx-sc-meta]
-version = "0.50.1"
+[dependencies.multiversx-sc-meta-lib]
+version = "0.54.4"

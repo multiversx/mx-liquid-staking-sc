@@ -1,7 +1,9 @@
 [workspace]
+resolver = "2"
+
 members = [
   "liquid-staking",
   "liquid-staking/meta",
   "delegation-mock",
-  "delegation-mock/meta"
+  "delegation-mock/meta",
 ]

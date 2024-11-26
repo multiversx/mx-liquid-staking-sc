@@ -76,8 +76,6 @@ pub trait LiquidStaking<ContractReader>:
 
         let delegation_contract = self.get_delegation_contract_for_delegate(&payment);
 
-        drop(storage_cache);
-
         let gas_for_async_call = self.get_gas_for_async_call();
         self.tx()
             .to(delegation_contract.clone())
@@ -167,7 +165,6 @@ pub trait LiquidStaking<ContractReader>:
         let delegation_contract_mapper = self.delegation_contract_data(&delegation_contract);
         delegation_contract_mapper
             .update(|contract_data| contract_data.egld_in_ongoing_undelegation += &egld_to_unstake);
-        drop(storage_cache);
 
         let gas_for_async_call = self.get_gas_for_async_call();
         self.tx()
@@ -305,8 +302,6 @@ pub trait LiquidStaking<ContractReader>:
             self.is_state_active(storage_cache.contract_state),
             ERROR_NOT_ACTIVE
         );
-
-        drop(storage_cache);
 
         let gas_for_async_call = self.get_gas_for_async_call();
         self.tx()
@@ -455,8 +450,6 @@ pub trait LiquidStaking<ContractReader>:
         );
 
         let delegation_contract = self.get_delegation_contract_for_delegate(&rewards_reserve);
-
-        drop(storage_cache);
 
         let gas_for_async_call = self.get_gas_for_async_call();
         self.tx()
