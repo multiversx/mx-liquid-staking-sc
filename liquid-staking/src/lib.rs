@@ -508,7 +508,8 @@ pub trait LiquidStaking<ContractReader>:
     // views
     #[view(getLsValueForPosition)]
     fn get_ls_value_for_position(&self, ls_token_amount: BigUint) -> BigUint {
-        let storage_cache = StorageCache::new(self);
+        let mut storage_cache = StorageCache::new(self);
+        storage_cache.skip_commit = true;
         self.get_egld_amount(&ls_token_amount, &storage_cache)
     }
 }
