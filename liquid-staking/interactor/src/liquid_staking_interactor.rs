@@ -25,11 +25,11 @@ pub async fn liquid_staking_cli() {
         "upgrade" => interact.upgrade().await,
         "addLiquidity" => interact.add_liquidity().await,
         "removeLiquidity" => interact.remove_liquidity("").await,
-        "unbondTokens" => interact.unbond_tokens("").await,
+        "unbondTokens" => interact.unbond_tokens("", None).await,
         "withdrawAll" => interact.withdraw_all().await,
-        "claimRewards" => interact.claim_rewards().await,
+        "claimRewards" => interact.claim_rewards(None).await,
         "recomputeTokenReserve" => interact.recompute_token_reserve().await,
-        "delegateRewards" => interact.delegate_rewards().await,
+        "delegateRewards" => interact.delegate_rewards(None).await,
         "getLsValueForPosition" => interact.get_ls_value_for_position().await,
         "registerLsToken" => _ = interact.register_ls_token().await,
         "registerUnstakeToken" => _ = interact.register_unstake_token().await,
@@ -192,24 +192,7 @@ impl ContractInteract {
             .await
     }
 
-    pub async fn unbond_tokens(&mut self, token_id: &str) {
-        let token_nonce = 1u64;
-        let token_amount = BigUint::<StaticApi>::from(1u64);
-
-        self.interactor
-            .tx()
-            .from(&self.wallet_address)
-            .to(self.state.current_address())
-            .gas(30_000_000u64)
-            .typed(proxy::LiquidStakingProxy)
-            .unbond_tokens()
-            .payment((TokenIdentifier::from(token_id), token_nonce, token_amount))
-            .returns(ReturnsResultUnmanaged)
-            .run()
-            .await;
-    }
-
-    pub async fn unbond_tokens_error(&mut self, token_id: &str, error: Option<ExpectError<'_>>) {
+    pub async fn unbond_tokens(&mut self, token_id: &str, error: Option<ExpectError<'_>>) {
         let token_nonce = 1u64;
         let token_amount = BigUint::<StaticApi>::from(1u64);
 
@@ -219,7 +202,7 @@ impl ContractInteract {
                     .tx()
                     .from(&self.wallet_address)
                     .to(self.state.current_address())
-                    .gas(30_000_000u64)
+                    .gas(50_000_000u64)
                     .typed(proxy::LiquidStakingProxy)
                     .unbond_tokens()
                     .payment((TokenIdentifier::from(token_id), token_nonce, token_amount))
@@ -232,7 +215,7 @@ impl ContractInteract {
                     .tx()
                     .from(&self.wallet_address)
                     .to(self.state.current_address())
-                    .gas(30_000_000u64)
+                    .gas(50_000_000u64)
                     .typed(proxy::LiquidStakingProxy)
                     .unbond_tokens()
                     .payment((TokenIdentifier::from(token_id), token_nonce, token_amount))
@@ -261,20 +244,33 @@ impl ContractInteract {
         println!("Result: {response:?}");
     }
 
-    pub async fn claim_rewards(&mut self) {
-        let response = self
-            .interactor
-            .tx()
-            .from(&self.wallet_address)
-            .to(self.state.current_address())
-            .gas(30_000_000u64)
-            .typed(proxy::LiquidStakingProxy)
-            .claim_rewards()
-            .returns(ReturnsResultUnmanaged)
-            .run()
-            .await;
-
-        println!("Result: {response:?}");
+    pub async fn claim_rewards(&mut self, error: Option<ExpectError<'_>>) {
+        match error {
+            None => {
+                self.interactor
+                    .tx()
+                    .from(&self.wallet_address)
+                    .to(self.state.current_address())
+                    .gas(50_000_000u64)
+                    .typed(proxy::LiquidStakingProxy)
+                    .claim_rewards()
+                    .returns(ReturnsResultUnmanaged)
+                    .run()
+                    .await;
+            }
+            Some(expect_error) => {
+                self.interactor
+                    .tx()
+                    .from(&self.wallet_address)
+                    .to(self.state.current_address())
+                    .gas(50_000_000u64)
+                    .typed(proxy::LiquidStakingProxy)
+                    .claim_rewards()
+                    .returns(expect_error)
+                    .run()
+                    .await;
+            }
+        }
     }
 
     pub async fn recompute_token_reserve(&mut self) {
@@ -293,20 +289,33 @@ impl ContractInteract {
         println!("Result: {response:?}");
     }
 
-    pub async fn delegate_rewards(&mut self) {
-        let response = self
-            .interactor
-            .tx()
-            .from(&self.wallet_address)
-            .to(self.state.current_address())
-            .gas(30_000_000u64)
-            .typed(proxy::LiquidStakingProxy)
-            .delegate_rewards()
-            .returns(ReturnsResultUnmanaged)
-            .run()
-            .await;
-
-        println!("Result: {response:?}");
+    pub async fn delegate_rewards(&mut self, error: Option<ExpectError<'_>>) {
+        match error {
+            None => {
+                self.interactor
+                    .tx()
+                    .from(&self.wallet_address)
+                    .to(self.state.current_address())
+                    .gas(50_000_000u64)
+                    .typed(proxy::LiquidStakingProxy)
+                    .delegate_rewards()
+                    .returns(ReturnsResultUnmanaged)
+                    .run()
+                    .await;
+            }
+            Some(expect_error) => {
+                self.interactor
+                    .tx()
+                    .from(&self.wallet_address)
+                    .to(self.state.current_address())
+                    .gas(50_000_000u64)
+                    .typed(proxy::LiquidStakingProxy)
+                    .delegate_rewards()
+                    .returns(expect_error)
+                    .run()
+                    .await;
+            }
+        }
     }
 
     pub async fn get_ls_value_for_position(&mut self) {
@@ -469,8 +478,8 @@ impl ContractInteract {
         let admin_address = &self.wallet_address;
         let total_staked = BigUint::<StaticApi>::from(0u128);
         let delegation_contract_cap = BigUint::<StaticApi>::from(5_000_000_000_000_000_000u64);
-        let nr_nodes = 0u64;
-        let apy = 10_000u64;
+        let nr_nodes = 1u64;
+        let apy = 50_000u64;
 
         self.interactor
             .tx()
