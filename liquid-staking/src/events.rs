@@ -4,8 +4,7 @@ multiversx_sc::imports!();
 multiversx_sc::derive_imports!();
 
 #[type_abi]
-
-#[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, PartialEq, Eq, Clone)]
+#[derive(TopEncode)]
 pub struct AddLiquidityEvent<M: ManagedTypeApi> {
     caller: ManagedAddress<M>,
     ls_token_id: TokenIdentifier<M>,
@@ -19,8 +18,7 @@ pub struct AddLiquidityEvent<M: ManagedTypeApi> {
 }
 
 #[type_abi]
-
-#[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, PartialEq, Eq, Clone)]
+#[derive(TopEncode)]
 pub struct RemoveLiquidityEvent<M: ManagedTypeApi> {
     caller: ManagedAddress<M>,
     ls_token_id: TokenIdentifier<M>,

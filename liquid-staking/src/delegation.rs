@@ -15,7 +15,6 @@ pub const MIN_BLOCKS_BEFORE_CLEAR_ONGOING_OP: u64 = 10;
 use super::liquidity_pool::State;
 
 #[type_abi]
-
 #[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, PartialEq, Eq, Clone)]
 pub enum ClaimStatusType {
     Finished,
@@ -25,7 +24,6 @@ pub enum ClaimStatusType {
 }
 
 #[type_abi]
-
 #[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, PartialEq, Eq, Clone)]
 pub struct ClaimStatus {
     pub status: ClaimStatusType,
@@ -45,9 +43,8 @@ impl Default for ClaimStatus {
 
 #[type_abi]
 
-#[derive(
-    TopEncode, TopDecode, NestedEncode, NestedDecode, Clone, PartialEq, Eq, Debug,
-)]
+#[type_abi]
+#[derive(TopEncode, TopDecode, NestedEncode, NestedDecode, Clone, PartialEq, Eq, Debug)]
 pub struct DelegationContractData<M: ManagedTypeApi> {
     pub admin_address: ManagedAddress<M>,
     pub total_staked: BigUint<M>,
