@@ -13,6 +13,7 @@ where
     pub ls_token_id: TokenIdentifier<C::Api>,
     pub ls_token_supply: BigUint<C::Api>,
     pub virtual_egld_reserve: BigUint<C::Api>,
+    pub skip_commit: bool,
 }
 
 impl<'a, C> StorageCache<'a, C>
@@ -26,6 +27,7 @@ where
             ls_token_supply: sc_ref.ls_token_supply().get(),
             virtual_egld_reserve: sc_ref.virtual_egld_reserve().get(),
             sc_ref,
+            skip_commit: false,
         }
     }
 }
@@ -35,6 +37,9 @@ where
     C: ConfigModule,
 {
     fn drop(&mut self) {
+        if self.skip_commit {
+            return;
+        }
         // commit changes to storage for the mutable fields
         self.sc_ref.ls_token_supply().set(&self.ls_token_supply);
         self.sc_ref
