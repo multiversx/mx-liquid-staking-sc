@@ -37,12 +37,13 @@ where
     C: ConfigModule,
 {
     fn drop(&mut self) {
-        if !self.skip_commit {
-            // commit changes to storage for the mutable fields
-            self.sc_ref.ls_token_supply().set(&self.ls_token_supply);
-            self.sc_ref
-                .virtual_egld_reserve()
-                .set(&self.virtual_egld_reserve);
+        if self.skip_commit {
+            return;
         }
+        // commit changes to storage for the mutable fields
+        self.sc_ref.ls_token_supply().set(&self.ls_token_supply);
+        self.sc_ref
+            .virtual_egld_reserve()
+            .set(&self.virtual_egld_reserve);
     }
 }
