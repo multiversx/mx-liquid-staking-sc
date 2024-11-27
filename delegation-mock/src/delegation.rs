@@ -68,12 +68,7 @@ pub trait DelegationMock {
         self.address_undelegate_epoch(&caller).clear();
         self.address_undelegate_amount(&caller).clear();
 
-        self.send_raw().async_call_raw(
-            &caller,
-            &withdraw_amount,
-            &ManagedBuffer::new(),
-            &ManagedArgBuffer::new(),
-        );
+        self.send().direct_egld(&caller, &withdraw_amount);
     }
 
     #[endpoint(claimRewards)]
