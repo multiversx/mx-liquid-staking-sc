@@ -42,8 +42,6 @@ impl Default for ClaimStatus {
 }
 
 #[type_abi]
-
-#[type_abi]
 #[derive(TopEncode, TopDecode, NestedEncode, NestedDecode, Clone, PartialEq, Eq, Debug)]
 pub struct DelegationContractData<M: ManagedTypeApi> {
     pub admin_address: ManagedAddress<M>,
