@@ -4,7 +4,7 @@ use multiversx_sc_snippets::imports::*;
 
 #[tokio::test]
 #[cfg_attr(not(feature = "chain-simulator-tests"), ignore)]
-async fn test_unbound_tokens_happy_path() {
+async fn test_unbond_tokens_happy_path() {
     let mut interact = ContractInteract::new(Config::chain_simulator_config()).await;
     interact.deploy().await;
     interact.deploy_delegation_contract().await;
@@ -15,8 +15,10 @@ async fn test_unbound_tokens_happy_path() {
     interact.add_liquidity().await;
     interact.add_liquidity().await;
     interact.add_liquidity().await;
+    interact.generate_blocks_until_epoch(20).await;
     interact.remove_liquidity(&ls_token).await;
-    interact.generate_blocks_until_epoch(14).await;
+    interact.generate_blocks_until_epoch(30).await;
+    interact.withdraw_all().await;
     interact.unbond_tokens(&us_token).await;
 }
 

@@ -251,7 +251,7 @@ impl ContractInteract {
             .tx()
             .from(&self.wallet_address)
             .to(self.state.current_address())
-            .gas(30_000_000u64)
+            .gas(50_000_000u64)
             .typed(proxy::LiquidStakingProxy)
             .withdraw_all(delegation_contract)
             .returns(ReturnsResultUnmanaged)
