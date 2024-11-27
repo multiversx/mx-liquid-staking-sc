@@ -6,17 +6,9 @@ use super::liquidity_pool::State;
 pub const MAX_PERCENTAGE: u64 = 100_000;
 pub const UNBOND_PERIOD: u64 = 10;
 
+#[type_abi]
 #[derive(
-    TopEncode,
-    TopDecode,
-    NestedEncode,
-    NestedDecode,
-    TypeAbi,
-    Clone,
-    PartialEq,
-    Eq,
-    Debug,
-    ManagedVecItem,
+    TopEncode, TopDecode, NestedEncode, NestedDecode, Clone, PartialEq, Eq, Debug, ManagedVecItem,
 )]
 pub struct UnstakeTokenAttributes<M: ManagedTypeApi> {
     pub delegation_contract: ManagedAddress<M>,
