@@ -24,7 +24,6 @@ mod liquidity_pool;
 use {
     delegation::{ClaimStatus, ClaimStatusType},
     errors::*,
-    liquidity::*,
 };
 
 use config::{UnstakeTokenAttributes, UNBOND_PERIOD};
@@ -36,7 +35,7 @@ pub trait LiquidStaking:
     liquidity_pool::LiquidityPoolModule
     + config::ConfigModule
     + events::EventsModule
-    + liquidity::AddLiquidity
+    + liquidity::add_liquidity::AddLiquidity
     + delegation::DelegationModule
     + multiversx_sc_modules::default_issue_callbacks::DefaultIssueCallbacksModule
 {

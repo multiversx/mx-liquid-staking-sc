@@ -1,4 +1,2 @@
-mod add_liquidity;
-mod remove_liquidity;
-
-pub use add_liquidity::AddLiquidity;
+pub mod add_liquidity;
+pub mod remove_liquidity;
