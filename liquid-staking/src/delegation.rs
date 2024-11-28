@@ -1,6 +1,6 @@
 use crate::{delegation_proxy, ERROR_BAD_WHITELIST_FEE};
 
-use super::errors::{
+use crate::errors::{
     ERROR_ALREADY_WHITELISTED, ERROR_BAD_DELEGATION_ADDRESS, ERROR_CLAIM_EPOCH,
     ERROR_CLAIM_IN_PROGRESS, ERROR_DELEGATION_CAP, ERROR_FIRST_DELEGATION_NODE,
     ERROR_NOT_WHITELISTED, ERROR_NO_DELEGATION_CONTRACTS, ERROR_OLD_CLAIM_START,
@@ -12,7 +12,7 @@ multiversx_sc::derive_imports!();
 pub const MAX_DELEGATION_ADDRESSES: usize = 20;
 pub const EGLD_TO_WHITELIST: u64 = 1_000_000_000_000_000_000;
 pub const MIN_BLOCKS_BEFORE_CLEAR_ONGOING_OP: u64 = 10;
-use super::liquidity_pool::State;
+use crate::liquidity_pool::State;
 
 #[type_abi]
 #[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, PartialEq, Eq, Clone)]
@@ -57,7 +57,7 @@ pub struct DelegationContractData<M: ManagedTypeApi> {
 
 #[multiversx_sc::module]
 pub trait DelegationModule:
-    super::config::ConfigModule
+    crate::config::ConfigModule
     + multiversx_sc_modules::default_issue_callbacks::DefaultIssueCallbacksModule
 {
     #[only_owner]
@@ -132,14 +132,12 @@ pub trait DelegationModule:
             .typed(delegation_proxy::DelegationMockProxy)
             .delegate()
             .egld(payment.clone())
-            .callback(
-                DelegationModule::callbacks(self).whitelist_contract_callback(
-                    caller,
-                    contract_address,
-                    contract_data,
-                    apy,
-                ),
-            )
+            .callback(self.callbacks().whitelist_contract_callback(
+                caller,
+                contract_address,
+                contract_data,
+                apy,
+            ))
             .async_call_and_exit();
     }
 

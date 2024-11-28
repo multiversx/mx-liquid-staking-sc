@@ -1,10 +1,10 @@
 multiversx_sc::imports!();
 multiversx_sc::derive_imports!();
 
-use super::contexts::base::StorageCache;
-use super::errors::*;
+use crate::contexts::base::StorageCache;
+use crate::errors::*;
 
-use super::config;
+use crate::config;
 
 #[type_abi]
 #[derive(TopEncode, TopDecode, PartialEq, Eq, Copy, Clone, Debug)]

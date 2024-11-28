@@ -1,4 +1,4 @@
-use super::contexts::base::StorageCache;
+use crate::contexts::base::StorageCache;
 
 multiversx_sc::imports!();
 multiversx_sc::derive_imports!();
@@ -35,7 +35,7 @@ pub struct RemoveLiquidityEvent<M: ManagedTypeApi> {
 
 #[multiversx_sc::module]
 pub trait EventsModule:
-    super::config::ConfigModule
+    crate::config::ConfigModule
     + multiversx_sc_modules::default_issue_callbacks::DefaultIssueCallbacksModule
 {
     fn emit_add_liquidity_event(
