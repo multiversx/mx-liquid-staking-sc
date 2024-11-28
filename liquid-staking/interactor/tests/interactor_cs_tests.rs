@@ -18,32 +18,29 @@ async fn test_unbond_tokens_happy_path() {
     interact.generate_blocks_until_epoch(20).await;
     interact.remove_liquidity(&ls_token).await;
     interact.generate_blocks_until_epoch(30).await;
-    interact.withdraw_all().await;
-    interact.unbond_tokens(&us_token, None).await;
+    interact.withdraw_all(None).await;
+    interact.unbond_tokens(&us_token).await;
 }
 
 #[tokio::test]
 #[cfg_attr(not(feature = "chain-simulator-tests"), ignore)]
-async fn remove_liquidity_and_unbond_early() {
+async fn remove_liquidity_and_withdraw_early() {
     let mut interact = ContractInteract::new(Config::chain_simulator_config()).await;
     interact.deploy().await;
     interact.deploy_delegation_contract().await;
     interact.whitelist_delegation_contract().await;
     interact.set_state_active().await;
     let ls_token = interact.register_ls_token().await;
-    let us_token = interact.register_unstake_token().await;
+    let _ = interact.register_unstake_token().await;
     interact.add_liquidity().await;
     interact.add_liquidity().await;
     interact.add_liquidity().await;
     interact.remove_liquidity(&ls_token).await;
-    interact.withdraw_all().await;
     interact
-        .unbond_tokens(
-            &us_token,
-            Some(ExpectError(4, "The unstake period has not passed")),
-        )
+        .withdraw_all(Some(ExpectError(4, "Cannot withdraw yet")))
         .await;
 }
+
 #[tokio::test]
 #[cfg_attr(not(feature = "chain-simulator-tests"), ignore)]
 async fn test_claim_rewards_happy_path() {
@@ -110,7 +107,7 @@ async fn test_claim_rewards_multiple_times_no_redelegation() {
 
 #[tokio::test]
 #[cfg_attr(not(feature = "chain-simulator-tests"), ignore)]
-async fn test_multiple_claim_rewards(){
+async fn test_multiple_claim_rewards() {
     let mut interact = ContractInteract::new(Config::chain_simulator_config()).await;
     interact.deploy().await;
     interact.deploy_delegation_contract().await;
@@ -151,5 +148,10 @@ async fn test_delegate_not_enough_egld() {
     interact.generate_blocks_until_epoch(10).await;
     interact.recompute_token_reserve().await;
     interact.rewards_reserve().await;
-    interact.delegate_rewards(Some(ExpectError(4, "Old claimed rewards must be greater than 1 EGLD"))).await;
+    interact
+        .delegate_rewards(Some(ExpectError(
+            4,
+            "Old claimed rewards must be greater than 1 EGLD",
+        )))
+        .await;
 }
