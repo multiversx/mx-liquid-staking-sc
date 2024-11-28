@@ -1,7 +1,7 @@
-use crate::contexts::base::StorageCache;
-
 multiversx_sc::imports!();
 multiversx_sc::derive_imports!();
+
+use crate::contexts::base::StorageCache;
 
 #[type_abi]
 #[derive(TopEncode)]

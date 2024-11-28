@@ -1,15 +1,21 @@
 multiversx_sc::imports!();
-multiversx_sc::derive_imports!();
 
-use crate::{config, delegation_proxy, errors::*, StorageCache};
-
-pub const MIN_EGLD_TO_DELEGATE: u64 = 1_000_000_000_000_000_000;
-pub const MIN_GAS_FOR_CALLBACK: u64 = 12_000_000;
-pub const MINIMUM_LIQUIDITY: u64 = 1_000;
+use crate::{
+    basics,
+    basics::constants::{MINIMUM_LIQUIDITY, MIN_EGLD_TO_DELEGATE, MIN_GAS_FOR_CALLBACK},
+    basics::errors::{
+        ERROR_BAD_PAYMENT_AMOUNT, ERROR_DELEGATION_CONTRACT_NOT_INITIALIZED, ERROR_NOT_ACTIVE,
+    },
+    config, delegation, delegation_proxy, liquidity_pool, StorageCache,
+};
 
 #[multiversx_sc::module]
-pub trait AddLiquidity:
-    config::ConfigModule + multiversx_sc_modules::default_issue_callbacks::DefaultIssueCallbacksModule
+pub trait AddLiquidityModule:
+    config::ConfigModule
+    + multiversx_sc_modules::default_issue_callbacks::DefaultIssueCallbacksModule
+    + delegation::DelegationModule
+    + liquidity_pool::LiquidityPoolModule
+    + basics::events::EventsModule
 {
     #[payable("EGLD")]
     #[endpoint(addLiquidity)]
@@ -40,10 +46,11 @@ pub trait AddLiquidity:
             .delegate()
             .egld(payment.clone())
             .gas(gas_for_async_call)
-            .callback(
-                self.callbacks()
-                    .add_liquidity_callback(caller, delegation_contract, payment),
-            )
+            .callback(AddLiquidityModule::callbacks(self).add_liquidity_callback(
+                caller,
+                delegation_contract,
+                payment,
+            ))
             .gas_for_callback(MIN_GAS_FOR_CALLBACK)
             .register_promise();
     }

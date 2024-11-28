@@ -21,13 +21,6 @@ multiversx_sc_wasm_adapter::endpoints! {
     (
         init => init
         upgrade => upgrade
-        addLiquidity => add_liquidity
-        removeLiquidity => remove_liquidity
-        unbondTokens => unbond_tokens
-        withdrawAll => withdraw_all
-        claimRewards => claim_rewards
-        recomputeTokenReserve => recompute_token_reserve
-        delegateRewards => delegate_rewards
         getLsValueForPosition => get_ls_value_for_position
         registerLsToken => register_ls_token
         registerUnstakeToken => register_unstake_token
@@ -51,11 +44,18 @@ multiversx_sc_wasm_adapter::endpoints! {
         getAddressesToClaim => addresses_to_claim
         getDelegationClaimStatus => delegation_claim_status
         getDelegationContractData => delegation_contract_data
-        add_liquidity_callback => add_liquidity_callback
-        remove_liquidity_callback => remove_liquidity_callback
-        withdraw_tokens_callback => withdraw_tokens_callback
+        claimRewards => claim_rewards
+        delegateRewards => delegate_rewards
+        recomputeTokenReserve => recompute_token_reserve
+        unbondTokens => unbond_tokens
+        withdrawAll => withdraw_all
+        addLiquidity => add_liquidity
+        removeLiquidity => remove_liquidity
         claim_rewards_callback => claim_rewards_callback
         delegate_rewards_callback => delegate_rewards_callback
+        withdraw_tokens_callback => withdraw_tokens_callback
+        add_liquidity_callback => add_liquidity_callback
+        remove_liquidity_callback => remove_liquidity_callback
     )
 }
 

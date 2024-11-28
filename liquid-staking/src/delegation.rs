@@ -1,13 +1,18 @@
-use crate::{delegation_proxy, ERROR_BAD_WHITELIST_FEE};
+multiversx_sc::imports!();
+multiversx_sc::derive_imports!();
 
-use crate::errors::{
+use crate::basics::constants::{MIN_GAS_FINISH_EXEC, MIN_GAS_FOR_ASYNC_CALL, MIN_GAS_FOR_CALLBACK};
+use crate::{
+    basics::errors::{ERROR_BAD_WHITELIST_FEE, ERROR_INSUFFICIENT_GAS},
+    delegation_proxy,
+};
+
+use crate::basics::errors::{
     ERROR_ALREADY_WHITELISTED, ERROR_BAD_DELEGATION_ADDRESS, ERROR_CLAIM_EPOCH,
     ERROR_CLAIM_IN_PROGRESS, ERROR_DELEGATION_CAP, ERROR_FIRST_DELEGATION_NODE,
     ERROR_NOT_WHITELISTED, ERROR_NO_DELEGATION_CONTRACTS, ERROR_OLD_CLAIM_START,
     ERROR_ONLY_DELEGATION_ADMIN,
 };
-multiversx_sc::imports!();
-multiversx_sc::derive_imports!();
 
 pub const MAX_DELEGATION_ADDRESSES: usize = 20;
 pub const EGLD_TO_WHITELIST: u64 = 1_000_000_000_000_000_000;
@@ -132,12 +137,14 @@ pub trait DelegationModule:
             .typed(delegation_proxy::DelegationMockProxy)
             .delegate()
             .egld(payment.clone())
-            .callback(DelegationModule::callbacks(self).whitelist_contract_callback(
-                caller,
-                contract_address,
-                contract_data,
-                apy,
-            ))
+            .callback(
+                DelegationModule::callbacks(self).whitelist_contract_callback(
+                    caller,
+                    contract_address,
+                    contract_data,
+                    apy,
+                ),
+            )
             .async_call_and_exit();
     }
 
@@ -258,6 +265,14 @@ pub trait DelegationModule:
         }
     }
 
+    fn get_gas_for_async_call(&self) -> u64 {
+        let gas_left = self.blockchain().get_gas_left();
+        require!(
+            gas_left > MIN_GAS_FOR_ASYNC_CALL + MIN_GAS_FOR_CALLBACK + MIN_GAS_FINISH_EXEC,
+            ERROR_INSUFFICIENT_GAS
+        );
+        gas_left - MIN_GAS_FOR_CALLBACK - MIN_GAS_FINISH_EXEC
+    }
     fn move_delegation_contract_to_back(&self, delegation_contract: ManagedAddress) {
         self.remove_delegation_address_from_list(&delegation_contract);
         self.delegation_addresses_list()

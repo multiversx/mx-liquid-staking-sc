@@ -1,8 +1,8 @@
 multiversx_sc::imports!();
 multiversx_sc::derive_imports!();
 
+use crate::basics::errors::{ERROR_INSUFFICIENT_LIQUIDITY, ERROR_INSUFFICIENT_LIQ_BURNED};
 use crate::contexts::base::StorageCache;
-use crate::errors::*;
 
 use crate::config;
 
