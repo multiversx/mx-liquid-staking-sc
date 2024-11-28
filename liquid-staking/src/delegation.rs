@@ -132,7 +132,7 @@ pub trait DelegationModule:
             .typed(delegation_proxy::DelegationMockProxy)
             .delegate()
             .egld(payment.clone())
-            .callback(self.callbacks().whitelist_contract_callback(
+            .callback(DelegationModule::callbacks(self).whitelist_contract_callback(
                 caller,
                 contract_address,
                 contract_data,
