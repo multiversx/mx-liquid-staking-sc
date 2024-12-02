@@ -81,70 +81,6 @@ where
     To: TxTo<Env>,
     Gas: TxGas<Env>,
 {
-    pub fn add_liquidity(
-        self,
-    ) -> TxTypedCall<Env, From, To, (), Gas, ()> {
-        self.wrapped_tx
-            .raw_call("addLiquidity")
-            .original_result()
-    }
-
-    pub fn remove_liquidity(
-        self,
-    ) -> TxTypedCall<Env, From, To, (), Gas, ()> {
-        self.wrapped_tx
-            .raw_call("removeLiquidity")
-            .original_result()
-    }
-
-    pub fn unbond_tokens(
-        self,
-    ) -> TxTypedCall<Env, From, To, (), Gas, ()> {
-        self.wrapped_tx
-            .raw_call("unbondTokens")
-            .original_result()
-    }
-
-    pub fn withdraw_all<
-        Arg0: ProxyArg<ManagedAddress<Env::Api>>,
-    >(
-        self,
-        delegation_contract: Arg0,
-    ) -> TxTypedCall<Env, From, To, NotPayable, Gas, ()> {
-        self.wrapped_tx
-            .payment(NotPayable)
-            .raw_call("withdrawAll")
-            .argument(&delegation_contract)
-            .original_result()
-    }
-
-    pub fn claim_rewards(
-        self,
-    ) -> TxTypedCall<Env, From, To, NotPayable, Gas, ()> {
-        self.wrapped_tx
-            .payment(NotPayable)
-            .raw_call("claimRewards")
-            .original_result()
-    }
-
-    pub fn recompute_token_reserve(
-        self,
-    ) -> TxTypedCall<Env, From, To, NotPayable, Gas, ()> {
-        self.wrapped_tx
-            .payment(NotPayable)
-            .raw_call("recomputeTokenReserve")
-            .original_result()
-    }
-
-    pub fn delegate_rewards(
-        self,
-    ) -> TxTypedCall<Env, From, To, NotPayable, Gas, ()> {
-        self.wrapped_tx
-            .payment(NotPayable)
-            .raw_call("delegateRewards")
-            .original_result()
-    }
-
     pub fn get_ls_value_for_position<
         Arg0: ProxyArg<BigUint<Env::Api>>,
     >(
@@ -430,17 +366,74 @@ where
             .argument(&contract_address)
             .original_result()
     }
+
+    pub fn claim_rewards(
+        self,
+    ) -> TxTypedCall<Env, From, To, NotPayable, Gas, ()> {
+        self.wrapped_tx
+            .payment(NotPayable)
+            .raw_call("claimRewards")
+            .original_result()
+    }
+
+    pub fn delegate_rewards(
+        self,
+    ) -> TxTypedCall<Env, From, To, NotPayable, Gas, ()> {
+        self.wrapped_tx
+            .payment(NotPayable)
+            .raw_call("delegateRewards")
+            .original_result()
+    }
+
+    pub fn recompute_token_reserve(
+        self,
+    ) -> TxTypedCall<Env, From, To, NotPayable, Gas, ()> {
+        self.wrapped_tx
+            .payment(NotPayable)
+            .raw_call("recomputeTokenReserve")
+            .original_result()
+    }
+
+    pub fn unbond_tokens(
+        self,
+    ) -> TxTypedCall<Env, From, To, (), Gas, ()> {
+        self.wrapped_tx
+            .raw_call("unbondTokens")
+            .original_result()
+    }
+
+    pub fn withdraw_all<
+        Arg0: ProxyArg<ManagedAddress<Env::Api>>,
+    >(
+        self,
+        delegation_contract: Arg0,
+    ) -> TxTypedCall<Env, From, To, NotPayable, Gas, ()> {
+        self.wrapped_tx
+            .payment(NotPayable)
+            .raw_call("withdrawAll")
+            .argument(&delegation_contract)
+            .original_result()
+    }
+
+    pub fn add_liquidity(
+        self,
+    ) -> TxTypedCall<Env, From, To, (), Gas, ()> {
+        self.wrapped_tx
+            .raw_call("addLiquidity")
+            .original_result()
+    }
+
+    pub fn remove_liquidity(
+        self,
+    ) -> TxTypedCall<Env, From, To, (), Gas, ()> {
+        self.wrapped_tx
+            .raw_call("removeLiquidity")
+            .original_result()
+    }
 }
 
 #[type_abi]
-#[derive(TopEncode, TopDecode, PartialEq, Eq, Copy, Clone, Debug)]
-pub enum State {
-    Inactive,
-    Active,
-}
-
-#[type_abi]
-#[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, PartialEq, Eq, Clone)]
+#[derive(TopEncode)]
 pub struct AddLiquidityEvent<Api>
 where
     Api: ManagedTypeApi,
@@ -457,7 +450,7 @@ where
 }
 
 #[type_abi]
-#[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, PartialEq, Eq, Clone)]
+#[derive(TopEncode)]
 pub struct RemoveLiquidityEvent<Api>
 where
     Api: ManagedTypeApi,
@@ -473,6 +466,13 @@ where
     pub block: u64,
     pub epoch: u64,
     pub timestamp: u64,
+}
+
+#[type_abi]
+#[derive(TopEncode, TopDecode, PartialEq, Eq, Copy, Clone, Debug)]
+pub enum State {
+    Inactive,
+    Active,
 }
 
 #[type_abi]

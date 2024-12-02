@@ -382,7 +382,6 @@ dependencies = [
 name = "delegation-mock"
 version = "0.0.0"
 dependencies = [
- "itertools 0.10.5",
  "multiversx-sc",
  "multiversx-sc-scenario",
 ]
@@ -988,15 +987,6 @@ checksum = "7943c866cc5cd64cbc25b2e01621d07fa8eb2a1a23160ee81ce38704e97b8ecf"
 
 [[package]]
 name = "itertools"
-version = "0.10.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b0fd2260e829bddf4cb6ea802289de2f86d6a7a690192fbe91b3f46e0f2c8473"
-dependencies = [
- "either",
-]
-
-[[package]]
-name = "itertools"
 version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "413ee7dfc52ee1a4949ceeb7dbc8a33f2d6c088194d9f922fb8318faf1f01186"
@@ -1057,18 +1047,9 @@ name = "liquid-staking"
 version = "0.0.0"
 dependencies = [
  "delegation-mock",
- "itertools 0.10.5",
  "multiversx-sc",
  "multiversx-sc-modules",
  "multiversx-sc-scenario",
-]
-
-[[package]]
-name = "liquid-staking-abi"
-version = "0.0.0"
-dependencies = [
- "liquid-staking",
- "multiversx-sc-meta-lib",
 ]
 
 [[package]]
@@ -1081,6 +1062,14 @@ dependencies = [
  "multiversx-sc-snippets",
  "serde",
  "toml",
+]
+
+[[package]]
+name = "liquid-staking-meta"
+version = "0.0.0"
+dependencies = [
+ "liquid-staking",
+ "multiversx-sc-meta-lib",
 ]
 
 [[package]]
@@ -1174,7 +1163,7 @@ dependencies = [
  "ed25519-dalek",
  "hex",
  "hex-literal",
- "itertools 0.13.0",
+ "itertools",
  "multiversx-chain-core",
  "multiversx-chain-vm-executor",
  "num-bigint",
@@ -1284,7 +1273,7 @@ dependencies = [
  "bech32",
  "colored",
  "hex",
- "itertools 0.13.0",
+ "itertools",
  "log",
  "multiversx-chain-scenario-format",
  "multiversx-chain-vm",
@@ -1333,7 +1322,7 @@ dependencies = [
  "ctr",
  "hex",
  "hmac",
- "itertools 0.13.0",
+ "itertools",
  "log",
  "multiversx-chain-core",
  "pbkdf2",
@@ -1357,7 +1346,7 @@ checksum = "08809666d2cfdf3c57e487a1749a18464898ade2cbab73c02e3ea7bbc55026f8"
 dependencies = [
  "anyhow",
  "hex",
- "itertools 0.13.0",
+ "itertools",
  "log",
  "multiversx-sdk",
  "reqwest",

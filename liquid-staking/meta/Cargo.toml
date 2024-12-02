@@ -1,5 +1,5 @@
 [package]
-name = "liquid-staking-abi"
+name = "liquid-staking-meta"
 version = "0.0.0"
 authors = ["Sorin Petreasca <sorin.petreasca@multiversx.com>"]
 edition = "2021"
