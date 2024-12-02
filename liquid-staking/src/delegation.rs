@@ -265,7 +265,7 @@ pub trait DelegationModule:
         }
     }
 
-    fn get_gas_for_async_call(&self) -> u64 {
+    fn get_gas_for_async_call(&self) -> GasLimit {
         let gas_left = self.blockchain().get_gas_left();
         require!(
             gas_left > MIN_GAS_FOR_ASYNC_CALL + MIN_GAS_FOR_CALLBACK + MIN_GAS_FINISH_EXEC,
