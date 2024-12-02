@@ -65,12 +65,12 @@ pub trait AddLiquidityModule:
     ) {
         match result {
             ManagedAsyncCallResult::Ok(()) => {
-                let mut storage_cache = StorageCache::new(self);
                 self.delegation_contract_data(&delegation_contract)
                     .update(|contract_data| {
                         contract_data.total_staked_from_ls_contract += &staked_tokens;
                     });
 
+                let mut storage_cache = StorageCache::new(self);
                 let mut ls_token_amount_before_add = BigUint::zero();
                 if storage_cache.ls_token_supply == 0 {
                     ls_token_amount_before_add += MINIMUM_LIQUIDITY;
