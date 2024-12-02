@@ -43,9 +43,11 @@ pub trait WithdrawModule:
         match result {
             ManagedAsyncCallResult::Ok(()) => {
                 let withdraw_amount = self.call_value().egld_value().clone_value();
-                let delegation_contract_mapper = self.delegation_contract_data(&provider);
-                if withdraw_amount > 0u64 {
-                    delegation_contract_mapper.update(|contract_data| {
+                if withdraw_amount == 0u64 {
+                     return;
+                }
+                
+                    self.delegation_contract_data(&provider);.update(|contract_data| {
                         contract_data.total_unbonded_from_ls_contract += &withdraw_amount
                     });
                 }
