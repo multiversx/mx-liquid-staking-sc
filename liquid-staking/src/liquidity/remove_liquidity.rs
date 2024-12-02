@@ -84,10 +84,6 @@ pub trait RemoveLiquidityModule:
         let mut storage_cache = StorageCache::new(self);
         let delegation_contract_mapper = self.delegation_contract_data(&delegation_contract);
 
-        delegation_contract_mapper.update(|contract_data| {
-            contract_data.egld_in_ongoing_undelegation -= &egld_to_unstake;
-        });
-
         match result {
             ManagedAsyncCallResult::Ok(()) => {
                 let current_epoch = self.blockchain().get_block_epoch();
@@ -121,10 +117,10 @@ pub trait RemoveLiquidityModule:
                 );
             }
             ManagedAsyncCallResult::Err(_) => {
-                 delegation_contract_mapper.update(|contract_data| {
-            contract_data.egld_in_ongoing_undelegation -= &egld_to_unstake;
-        });
-            
+                delegation_contract_mapper.update(|contract_data| {
+                    contract_data.egld_in_ongoing_undelegation -= &egld_to_unstake;
+                });
+
                 let ls_token_amount = self.pool_add_liquidity(&egld_to_unstake, &mut storage_cache);
                 let user_payment = self.mint_ls_token(ls_token_amount);
                 self.send().direct_esdt(
