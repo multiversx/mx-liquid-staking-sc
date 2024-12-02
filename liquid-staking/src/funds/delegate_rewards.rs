@@ -29,8 +29,7 @@ pub trait DelegateRewardsModule:
             ERROR_CLAIM_REDELEGATE
         );
 
-        let rewards_reserve = self.rewards_reserve().get();
-        self.rewards_reserve().set(BigUint::zero());
+        let rewards_reserve = self.rewards_reserve().take();
 
         require!(
             rewards_reserve >= MIN_EGLD_TO_DELEGATE,
