@@ -30,7 +30,7 @@ where
     }
 }
 
-impl<'a, C> Drop for StorageCache<'a, C>
+impl<C> Drop for StorageCache<'_, C>
 where
     C: ConfigModule,
 {
