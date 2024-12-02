@@ -44,13 +44,13 @@ pub trait WithdrawModule:
             ManagedAsyncCallResult::Ok(()) => {
                 let withdraw_amount = self.call_value().egld_value().clone_value();
                 if withdraw_amount == 0u64 {
-                     return;
+                    return;
                 }
-                
-                    self.delegation_contract_data(&provider);.update(|contract_data| {
+
+                self.delegation_contract_data(&provider)
+                    .update(|contract_data| {
                         contract_data.total_unbonded_from_ls_contract += &withdraw_amount
                     });
-                }
             }
             ManagedAsyncCallResult::Err(_) => {}
         }
