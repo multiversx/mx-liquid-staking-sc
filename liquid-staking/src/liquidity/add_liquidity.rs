@@ -75,6 +75,7 @@ pub trait AddLiquidityModule:
                 if storage_cache.ls_token_supply == 0 {
                     ls_token_amount_before_add += MINIMUM_LIQUIDITY;
                 }
+                
                 let ls_token_amount = self.pool_add_liquidity(&staked_tokens, &mut storage_cache)
                     - ls_token_amount_before_add;
                 let user_payment = self.mint_ls_token(ls_token_amount);
