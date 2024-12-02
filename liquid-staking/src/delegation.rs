@@ -1,7 +1,10 @@
 multiversx_sc::imports!();
 multiversx_sc::derive_imports!();
 
-use crate::basics::constants::{MIN_GAS_FINISH_EXEC, MIN_GAS_FOR_ASYNC_CALL, MIN_GAS_FOR_CALLBACK};
+use crate::basics::constants::{
+    GasLimit, EGLD_TO_WHITELIST, MAX_DELEGATION_ADDRESSES, MIN_BLOCKS_BEFORE_CLEAR_ONGOING_OP,
+    MIN_GAS_FINISH_EXEC, MIN_GAS_FOR_ASYNC_CALL, MIN_GAS_FOR_CALLBACK,
+};
 use crate::{
     basics::errors::{ERROR_BAD_WHITELIST_FEE, ERROR_INSUFFICIENT_GAS},
     delegation_proxy,
@@ -14,9 +17,6 @@ use crate::basics::errors::{
     ERROR_ONLY_DELEGATION_ADMIN,
 };
 
-pub const MAX_DELEGATION_ADDRESSES: usize = 20;
-pub const EGLD_TO_WHITELIST: u64 = 1_000_000_000_000_000_000;
-pub const MIN_BLOCKS_BEFORE_CLEAR_ONGOING_OP: u64 = 10;
 use crate::liquidity_pool::State;
 
 #[type_abi]
