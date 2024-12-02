@@ -1,8 +1,11 @@
 multiversx_sc::imports!();
 
 use crate::{
-    basics::constants::{DEFAULT_GAS_TO_CLAIM_REWARDS, DEFAULT_MIN_GAS_TO_SAVE_PROGRESS},
-    basics::errors::{ERROR_NOT_ACTIVE, ERROR_NO_DELEGATION_CONTRACTS},
+    basics::{
+        constants::{DEFAULT_GAS_TO_CLAIM_REWARDS, DEFAULT_MIN_GAS_TO_SAVE_PROGRESS},
+        errors::{ERROR_NOT_ACTIVE, ERROR_NO_DELEGATION_CONTRACTS},
+        events,
+    },
     config::{self},
     delegation::{self, ClaimStatusType},
     delegation_proxy, StorageCache,
@@ -13,6 +16,7 @@ pub trait ClaimModule:
     config::ConfigModule
     + multiversx_sc_modules::default_issue_callbacks::DefaultIssueCallbacksModule
     + delegation::DelegationModule
+    + events::EventsModule
 {
     #[endpoint(claimRewards)]
     fn claim_rewards(&self) {
@@ -48,11 +52,11 @@ pub trait ClaimModule:
             let address = current_node.clone().into_value();
 
             self.tx()
-                .to(&address)
+                .to(address.clone())
                 .typed(delegation_proxy::DelegationMockProxy)
                 .claim_rewards()
                 .gas(DEFAULT_GAS_TO_CLAIM_REWARDS)
-                .callback(ClaimModule::callbacks(self).claim_rewards_callback())
+                .callback(ClaimModule::callbacks(self).claim_rewards_callback(address))
                 .register_promise();
 
             delegation_addresses.remove_node(&current_node);
@@ -68,13 +72,20 @@ pub trait ClaimModule:
     }
 
     #[promises_callback]
-    fn claim_rewards_callback(&self, #[call_result] result: ManagedAsyncCallResult<()>) {
+    fn claim_rewards_callback(
+        &self,
+        delegation_address: ManagedAddress,
+        #[call_result] result: ManagedAsyncCallResult<()>,
+    ) {
         match result {
             ManagedAsyncCallResult::Ok(_) => {
                 let payment = self.call_value().egld_value().clone_value();
-                self.rewards_reserve().update(|value| *value += payment);
+                self.rewards_reserve().update(|value| *value += &payment);
+                self.successful_claim_event(payment, &delegation_address);
             }
-            ManagedAsyncCallResult::Err(_) => {}
+            ManagedAsyncCallResult::Err(_) => {
+                self.failed_claim_event(&delegation_address);
+            }
         }
     }
 }

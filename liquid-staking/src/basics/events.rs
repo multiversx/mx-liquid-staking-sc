@@ -108,4 +108,14 @@ pub trait EventsModule:
         #[indexed] epoch: u64,
         remove_liquidity_event: &RemoveLiquidityEvent<Self::Api>,
     );
+
+    #[event("successful_claim")]
+    fn successful_claim_event(
+        &self,
+        amount_available_to_claim: BigUint,
+        #[indexed] caller: &ManagedAddress,
+    );
+
+    #[event("failed_claim")]
+    fn failed_claim_event(&self, #[indexed] caller: &ManagedAddress);
 }

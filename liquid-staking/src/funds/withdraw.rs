@@ -22,16 +22,7 @@ pub trait WithdrawModule:
             self.is_state_active(storage_cache.contract_state),
             ERROR_NOT_ACTIVE
         );
-
-        let gas_for_async_call = self.get_gas_for_async_call();
-        self.tx()
-            .to(delegation_contract.clone())
-            .typed(delegation_proxy::DelegationMockProxy)
-            .withdraw()
-            .gas(gas_for_async_call)
-            .callback(WithdrawModule::callbacks(self).withdraw_tokens_callback(delegation_contract))
-            .gas_for_callback(MIN_GAS_FOR_CALLBACK)
-            .register_promise();
+        self.call_withdraw(delegation_contract);
     }
 
     #[promises_callback]
@@ -54,5 +45,17 @@ pub trait WithdrawModule:
             }
             ManagedAsyncCallResult::Err(_) => {}
         }
+    }
+
+    fn call_withdraw(&self, delegation_contract: ManagedAddress) {
+        let gas_for_async_call = self.get_gas_for_async_call();
+        self.tx()
+            .to(delegation_contract.clone())
+            .typed(delegation_proxy::DelegationMockProxy)
+            .withdraw()
+            .gas(gas_for_async_call)
+            .callback(WithdrawModule::callbacks(self).withdraw_tokens_callback(delegation_contract))
+            .gas_for_callback(MIN_GAS_FOR_CALLBACK)
+            .register_promise();
     }
 }

@@ -35,22 +35,7 @@ pub trait DelegateRewardsModule:
             rewards_reserve >= MIN_EGLD_TO_DELEGATE,
             ERROR_BAD_DELEGATION_AMOUNT
         );
-
-        let delegation_contract = self.get_delegation_contract_for_delegate(&rewards_reserve);
-
-        let gas_for_async_call = self.get_gas_for_async_call();
-        self.tx()
-            .to(delegation_contract.clone())
-            .typed(delegation_proxy::DelegationMockProxy)
-            .delegate()
-            .egld(rewards_reserve.clone())
-            .gas(gas_for_async_call)
-            .callback(
-                DelegateRewardsModule::callbacks(self)
-                    .delegate_rewards_callback(delegation_contract, rewards_reserve),
-            )
-            .gas_for_callback(MIN_GAS_FOR_CALLBACK)
-            .register_promise();
+        self.call_delegate(rewards_reserve);
     }
 
     #[promises_callback]
@@ -82,5 +67,23 @@ pub trait DelegateRewardsModule:
                     .update(|value| *value += staked_tokens)
             }
         }
+    }
+
+    fn call_delegate(&self, rewards_reserve: BigUint) {
+        let delegation_contract = self.get_delegation_contract_for_delegate(&rewards_reserve);
+
+        let gas_for_async_call = self.get_gas_for_async_call();
+        self.tx()
+            .to(delegation_contract.clone())
+            .typed(delegation_proxy::DelegationMockProxy)
+            .delegate()
+            .egld(rewards_reserve.clone())
+            .gas(gas_for_async_call)
+            .callback(
+                DelegateRewardsModule::callbacks(self)
+                    .delegate_rewards_callback(delegation_contract, rewards_reserve),
+            )
+            .gas_for_callback(MIN_GAS_FOR_CALLBACK)
+            .register_promise();
     }
 }

@@ -48,28 +48,7 @@ pub trait RemoveLiquidityModule:
         );
         self.burn_ls_token(&payment.amount);
 
-        let delegation_contract = self.get_delegation_contract_for_undelegate(&egld_to_unstake);
-
-        let delegation_contract_mapper = self.delegation_contract_data(&delegation_contract);
-        delegation_contract_mapper
-            .update(|contract_data| contract_data.egld_in_ongoing_undelegation += &egld_to_unstake);
-
-        let gas_for_async_call = self.get_gas_for_async_call();
-        self.tx()
-            .to(delegation_contract.clone())
-            .typed(delegation_proxy::DelegationMockProxy)
-            .undelegate(egld_to_unstake.clone())
-            .gas(gas_for_async_call)
-            .callback(
-                RemoveLiquidityModule::callbacks(self).remove_liquidity_callback(
-                    caller,
-                    delegation_contract,
-                    egld_to_unstake,
-                    payment.amount,
-                ),
-            )
-            .gas_for_callback(MIN_GAS_FOR_CALLBACK)
-            .register_promise();
+        self.call_undelegate(egld_to_unstake, caller, payment.amount);
     }
 
     #[promises_callback]
@@ -132,5 +111,35 @@ pub trait RemoveLiquidityModule:
                 self.move_delegation_contract_to_back(delegation_contract);
             }
         }
+    }
+
+    fn call_undelegate(
+        &self,
+        egld_to_unstake: BigUint,
+        caller: ManagedAddress,
+        ls_tokens_to_be_burned: BigUint,
+    ) {
+        let delegation_contract = self.get_delegation_contract_for_undelegate(&egld_to_unstake);
+
+        let delegation_contract_mapper = self.delegation_contract_data(&delegation_contract);
+        delegation_contract_mapper
+            .update(|contract_data| contract_data.egld_in_ongoing_undelegation += &egld_to_unstake);
+
+        let gas_for_async_call = self.get_gas_for_async_call();
+        self.tx()
+            .to(delegation_contract.clone())
+            .typed(delegation_proxy::DelegationMockProxy)
+            .undelegate(egld_to_unstake.clone())
+            .gas(gas_for_async_call)
+            .callback(
+                RemoveLiquidityModule::callbacks(self).remove_liquidity_callback(
+                    caller,
+                    delegation_contract,
+                    egld_to_unstake,
+                    ls_tokens_to_be_burned,
+                ),
+            )
+            .gas_for_callback(MIN_GAS_FOR_CALLBACK)
+            .register_promise();
     }
 }

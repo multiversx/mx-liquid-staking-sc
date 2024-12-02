@@ -37,22 +37,7 @@ pub trait AddLiquidityModule:
         }
         require!(payment > MIN_EGLD_TO_DELEGATE, ERROR_BAD_PAYMENT_AMOUNT);
 
-        let delegation_contract = self.get_delegation_contract_for_delegate(&payment);
-
-        let gas_for_async_call = self.get_gas_for_async_call();
-        self.tx()
-            .to(delegation_contract.clone())
-            .typed(delegation_proxy::DelegationMockProxy)
-            .delegate()
-            .egld(payment.clone())
-            .gas(gas_for_async_call)
-            .callback(AddLiquidityModule::callbacks(self).add_liquidity_callback(
-                caller,
-                delegation_contract,
-                payment,
-            ))
-            .gas_for_callback(MIN_GAS_FOR_CALLBACK)
-            .register_promise();
+        self.call_delegate(caller, payment);
     }
 
     #[promises_callback]
@@ -75,7 +60,7 @@ pub trait AddLiquidityModule:
                 if storage_cache.ls_token_supply == 0 {
                     ls_token_amount_before_add += MINIMUM_LIQUIDITY;
                 }
-                
+
                 let ls_token_amount = self.pool_add_liquidity(&staked_tokens, &mut storage_cache)
                     - ls_token_amount_before_add;
                 let user_payment = self.mint_ls_token(ls_token_amount);
@@ -93,5 +78,24 @@ pub trait AddLiquidityModule:
                 self.move_delegation_contract_to_back(delegation_contract);
             }
         }
+    }
+
+    fn call_delegate(&self, caller: ManagedAddress, payment: BigUint) {
+        let delegation_contract = self.get_delegation_contract_for_delegate(&payment);
+
+        let gas_for_async_call = self.get_gas_for_async_call();
+        self.tx()
+            .to(delegation_contract.clone())
+            .typed(delegation_proxy::DelegationMockProxy)
+            .delegate()
+            .egld(payment.clone())
+            .gas(gas_for_async_call)
+            .callback(AddLiquidityModule::callbacks(self).add_liquidity_callback(
+                caller,
+                delegation_contract,
+                payment,
+            ))
+            .gas_for_callback(MIN_GAS_FOR_CALLBACK)
+            .register_promise();
     }
 }
