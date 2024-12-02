@@ -60,7 +60,6 @@ pub trait DelegateRewardsModule:
         staked_tokens: BigUint,
         #[call_result] result: ManagedAsyncCallResult<()>,
     ) {
-        let mut storage_cache = StorageCache::new(self);
         match result {
             ManagedAsyncCallResult::Ok(()) => {
                 self.delegation_contract_data(&delegation_contract)
@@ -71,8 +70,10 @@ pub trait DelegateRewardsModule:
                 self.delegation_claim_status()
                     .update(|claim_status| claim_status.status = ClaimStatusType::Redelegated);
 
+                let mut storage_cache = StorageCache::new(self);
                 storage_cache.virtual_egld_reserve += &staked_tokens;
                 let sc_address = self.blockchain().get_sc_address();
+                
                 self.emit_add_liquidity_event(&storage_cache, &sc_address, BigUint::zero());
             }
             ManagedAsyncCallResult::Err(_) => {
