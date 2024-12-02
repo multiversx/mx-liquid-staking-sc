@@ -96,6 +96,7 @@ pub trait RemoveLiquidityModule:
                 delegation_contract_mapper.update(|contract_data| {
                     contract_data.total_staked_from_ls_contract -= &egld_to_unstake;
                     contract_data.total_unstaked_from_ls_contract += &egld_to_unstake;
+                    contract_data.egld_in_ongoing_undelegation -= &egld_to_unstake;
                 });
 
                 let virtual_position = UnstakeTokenAttributes {
@@ -120,6 +121,10 @@ pub trait RemoveLiquidityModule:
                 );
             }
             ManagedAsyncCallResult::Err(_) => {
+                 delegation_contract_mapper.update(|contract_data| {
+            contract_data.egld_in_ongoing_undelegation -= &egld_to_unstake;
+        });
+            
                 let ls_token_amount = self.pool_add_liquidity(&egld_to_unstake, &mut storage_cache);
                 let user_payment = self.mint_ls_token(ls_token_amount);
                 self.send().direct_esdt(
