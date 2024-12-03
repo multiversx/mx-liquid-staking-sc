@@ -1,18 +1,23 @@
-use crate::{delegation_proxy, ERROR_BAD_WHITELIST_FEE};
+multiversx_sc::imports!();
+multiversx_sc::derive_imports!();
 
-use super::errors::{
+use crate::basics::constants::{
+    GasLimit, EGLD_TO_WHITELIST, MAX_DELEGATION_ADDRESSES, MIN_BLOCKS_BEFORE_CLEAR_ONGOING_OP,
+    MIN_GAS_FINISH_EXEC, MIN_GAS_FOR_ASYNC_CALL, MIN_GAS_FOR_CALLBACK,
+};
+use crate::{
+    basics::errors::{ERROR_BAD_WHITELIST_FEE, ERROR_INSUFFICIENT_GAS},
+    delegation_proxy,
+};
+
+use crate::basics::errors::{
     ERROR_ALREADY_WHITELISTED, ERROR_BAD_DELEGATION_ADDRESS, ERROR_CLAIM_EPOCH,
     ERROR_CLAIM_IN_PROGRESS, ERROR_DELEGATION_CAP, ERROR_FIRST_DELEGATION_NODE,
     ERROR_NOT_WHITELISTED, ERROR_NO_DELEGATION_CONTRACTS, ERROR_OLD_CLAIM_START,
     ERROR_ONLY_DELEGATION_ADMIN,
 };
-multiversx_sc::imports!();
-multiversx_sc::derive_imports!();
 
-pub const MAX_DELEGATION_ADDRESSES: usize = 20;
-pub const EGLD_TO_WHITELIST: u64 = 1_000_000_000_000_000_000;
-pub const MIN_BLOCKS_BEFORE_CLEAR_ONGOING_OP: u64 = 10;
-use super::liquidity_pool::State;
+use crate::liquidity_pool::State;
 
 #[type_abi]
 #[derive(NestedEncode, NestedDecode, TopEncode, TopDecode, PartialEq, Eq, Clone)]
@@ -57,7 +62,7 @@ pub struct DelegationContractData<M: ManagedTypeApi> {
 
 #[multiversx_sc::module]
 pub trait DelegationModule:
-    super::config::ConfigModule
+    crate::config::ConfigModule
     + multiversx_sc_modules::default_issue_callbacks::DefaultIssueCallbacksModule
 {
     #[only_owner]
@@ -260,6 +265,14 @@ pub trait DelegationModule:
         }
     }
 
+    fn get_gas_for_async_call(&self) -> GasLimit {
+        let gas_left = self.blockchain().get_gas_left();
+        require!(
+            gas_left > MIN_GAS_FOR_ASYNC_CALL + MIN_GAS_FOR_CALLBACK + MIN_GAS_FINISH_EXEC,
+            ERROR_INSUFFICIENT_GAS
+        );
+        gas_left - MIN_GAS_FOR_CALLBACK - MIN_GAS_FINISH_EXEC
+    }
     fn move_delegation_contract_to_back(&self, delegation_contract: ManagedAddress) {
         self.remove_delegation_address_from_list(&delegation_contract);
         self.delegation_addresses_list()

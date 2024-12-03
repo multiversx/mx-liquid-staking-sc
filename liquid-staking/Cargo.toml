@@ -8,10 +8,6 @@ publish = false
 [lib]
 path = "src/lib.rs"
 
-[dependencies.itertools]
-version = "0.10.1"
-default-features = false
-
 [dependencies.multiversx-sc]
 version = "0.54.4"
 

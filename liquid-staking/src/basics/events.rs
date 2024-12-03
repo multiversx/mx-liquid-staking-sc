@@ -1,7 +1,7 @@
-use super::contexts::base::StorageCache;
-
 multiversx_sc::imports!();
 multiversx_sc::derive_imports!();
+
+use crate::contexts::base::StorageCache;
 
 #[type_abi]
 #[derive(TopEncode)]
@@ -35,7 +35,7 @@ pub struct RemoveLiquidityEvent<M: ManagedTypeApi> {
 
 #[multiversx_sc::module]
 pub trait EventsModule:
-    super::config::ConfigModule
+    crate::config::ConfigModule
     + multiversx_sc_modules::default_issue_callbacks::DefaultIssueCallbacksModule
 {
     fn emit_add_liquidity_event(
@@ -108,4 +108,14 @@ pub trait EventsModule:
         #[indexed] epoch: u64,
         remove_liquidity_event: &RemoveLiquidityEvent<Self::Api>,
     );
+
+    #[event("successful_claim")]
+    fn successful_claim_event(
+        &self,
+        amount_available_to_claim: BigUint,
+        #[indexed] caller: &ManagedAddress,
+    );
+
+    #[event("failed_claim")]
+    fn failed_claim_event(&self, #[indexed] caller: &ManagedAddress);
 }
