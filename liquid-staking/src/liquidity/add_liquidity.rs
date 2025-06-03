@@ -24,7 +24,7 @@ pub trait AddLiquidityModule:
         let storage_cache = StorageCache::new(self);
         let caller = self.blockchain().get_caller();
 
-        let payment = self.call_value().egld_value().clone_value();
+        let payment = self.call_value().egld().clone_value();
         require!(
             self.is_state_active(storage_cache.contract_state),
             ERROR_NOT_ACTIVE

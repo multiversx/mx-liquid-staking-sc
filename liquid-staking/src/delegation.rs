@@ -95,7 +95,7 @@ pub trait DelegationModule:
     ) {
         let caller = self.blockchain().get_caller();
 
-        let payment = self.call_value().egld_value().clone_value();
+        let payment = self.call_value().egld().clone_value();
         require!(payment == EGLD_TO_WHITELIST, ERROR_BAD_WHITELIST_FEE);
         require!(
             self.delegation_contract_data(&contract_address).is_empty(),

@@ -79,7 +79,7 @@ pub trait ClaimModule:
     ) {
         match result {
             ManagedAsyncCallResult::Ok(_) => {
-                let payment = self.call_value().egld_value().clone_value();
+                let payment = self.call_value().egld().clone_value();
                 self.rewards_reserve().update(|value| *value += &payment);
                 self.successful_claim_event(payment, &delegation_address);
             }
