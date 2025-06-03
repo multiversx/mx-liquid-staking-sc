@@ -33,7 +33,7 @@ pub trait WithdrawModule:
     ) {
         match result {
             ManagedAsyncCallResult::Ok(()) => {
-                let withdraw_amount = self.call_value().egld_value().clone_value();
+                let withdraw_amount = self.call_value().egld().clone_value();
                 if withdraw_amount == 0u64 {
                     return;
                 }

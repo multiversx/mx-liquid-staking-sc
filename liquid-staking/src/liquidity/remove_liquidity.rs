@@ -48,7 +48,7 @@ pub trait RemoveLiquidityModule:
         );
         self.burn_ls_token(&payment.amount);
 
-        self.call_undelegate(egld_to_unstake, caller, payment.amount);
+        self.call_undelegate(egld_to_unstake, caller, payment.amount.clone());
     }
 
     #[promises_callback]
