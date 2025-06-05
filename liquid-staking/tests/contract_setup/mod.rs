@@ -1,6 +1,6 @@
 use std::ops::Mul;
 
-use liquid_staking::{config::ConfigModule, LiquidStaking};
+use liquid_staking::{setup::config::ConfigModule, LiquidStaking};
 use multiversx_sc::types::{Address, BigUint, EsdtLocalRole};
 
 use multiversx_sc_scenario::{
