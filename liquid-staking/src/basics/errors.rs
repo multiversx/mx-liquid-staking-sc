@@ -19,7 +19,6 @@ pub static ERROR_BAD_WHITELIST_FEE: &[u8] = b"Whitelisting contracts costs 1 EGL
 pub static ERROR_INSUFFICIENT_UNSTAKE_AMOUNT: &[u8] = b"Insufficient unstake amount";
 pub static ERROR_INSUFFICIENT_LIQUIDITY: &[u8] = b"Insufficient liquidity minted";
 pub static ERROR_INSUFFICIENT_LIQ_BURNED: &[u8] = b"Insufficient liquidity burned";
-pub static ERROR_INSUFFICIENT_STAKED_AMOUNT: &[u8] = b"Insufficient staked amount";
 
 pub static ERROR_BAD_DELEGATION_ADDRESS: &[u8] = b"No delegation contract available";
 pub static ERROR_BAD_DELEGATION_AMOUNT: &[u8] = b"Delegation amount must be at least 1 EGLD";

@@ -43,12 +43,16 @@ where
     From: TxFrom<Env>,
     Gas: TxGas<Env>,
 {
-    pub fn init(
+    pub fn init<
+        Arg0: ProxyArg<ManagedAddress<Env::Api>>,
+    >(
         self,
+        ls_contract: Arg0,
     ) -> TxTypedDeploy<Env, From, NotPayable, Gas, ()> {
         self.wrapped_tx
             .payment(NotPayable)
             .raw_deploy()
+            .argument(&ls_contract)
             .original_result()
     }
 }
@@ -62,6 +66,25 @@ where
     To: TxTo<Env>,
     Gas: TxGas<Env>,
 {
+    pub fn propose<
+        Arg0: ProxyArg<ManagedBuffer<Env::Api>>,
+        Arg1: ProxyArg<u64>,
+        Arg2: ProxyArg<u64>,
+    >(
+        self,
+        name: Arg0,
+        start_vote_epoch: Arg1,
+        end_vote_epoch: Arg2,
+    ) -> TxTypedCall<Env, From, To, NotPayable, Gas, ()> {
+        self.wrapped_tx
+            .payment(NotPayable)
+            .raw_call("propose")
+            .argument(&name)
+            .argument(&start_vote_epoch)
+            .argument(&end_vote_epoch)
+            .original_result()
+    }
+
     pub fn delegate_vote<
         Arg0: ProxyArg<usize>,
         Arg1: ProxyArg<VoteType>,
@@ -69,18 +92,18 @@ where
         Arg3: ProxyArg<BigUint<Env::Api>>,
     >(
         self,
-        proposal: Arg0,
+        proposal_id: Arg0,
         vote_type: Arg1,
         delegate_to: Arg2,
-        amount: Arg3,
+        power: Arg3,
     ) -> TxTypedCall<Env, From, To, NotPayable, Gas, ()> {
         self.wrapped_tx
             .payment(NotPayable)
             .raw_call("delegationVote")
-            .argument(&proposal)
+            .argument(&proposal_id)
             .argument(&vote_type)
             .argument(&delegate_to)
-            .argument(&amount)
+            .argument(&power)
             .original_result()
     }
 }

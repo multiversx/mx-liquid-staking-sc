@@ -61,6 +61,7 @@ dependencies = [
  "delegation-mock",
  "multiversx-sc",
  "multiversx-sc-modules",
+ "vote-mock",
 ]
 
 [[package]]
@@ -232,3 +233,10 @@ name = "unwrap-infallible"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "151ac09978d3c2862c4e39b557f4eceee2cc72150bc4cb4f16abf061b6e381fb"
+
+[[package]]
+name = "vote-mock"
+version = "0.0.0"
+dependencies = [
+ "multiversx-sc",
+]

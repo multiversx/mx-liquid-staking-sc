@@ -271,6 +271,34 @@ fn liquid_staking_multiple_withdraw_test() {
     sc_setup.check_contract_storage(170, 170, 0); // 20 + 20 (second_user + third_user)
 }
 
+#[test]
+fn liquid_staking_delegate_vote_test() {
+    DebugApi::dummy();
+    let mut sc_setup = LiquidStakingContractSetup::new(liquid_staking::contract_obj);
+
+    sc_setup.set_vote_sc();
+    sc_setup.deploy_staking_contract(&sc_setup.owner_address.clone(), 1000, 1000, 1500, 0, 0);
+
+    let first_user = sc_setup.setup_new_user(100u64);
+    sc_setup.add_liquidity(&sc_setup.owner_address.clone(), FIRST_ADD_LIQUIDITY_AMOUNT);
+    sc_setup.add_liquidity(&first_user, 100u64);
+    sc_setup.check_contract_storage(200, 200, 0);
+    sc_setup.check_user_balance(&first_user, LS_TOKEN_ID, 100u64);
+
+    sc_setup.delegate_vote(
+        &first_user,
+        LS_TOKEN_ID,
+        20u64,
+        liquid_staking::proxies::vote_proxy::VoteType::Yes,
+    );
+    sc_setup.delegate_vote(
+        &first_user,
+        LS_TOKEN_ID,
+        20u64,
+        liquid_staking::proxies::vote_proxy::VoteType::Yes,
+    );
+}
+
 pub fn exp9(value: u64) -> num_bigint::BigUint {
     value.mul(rust_biguint!(10).pow(9))
 }

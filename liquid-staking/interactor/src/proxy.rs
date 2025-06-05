@@ -397,18 +397,15 @@ where
     pub fn delegate_vote<
         Arg0: ProxyArg<usize>,
         Arg1: ProxyArg<VoteType>,
-        Arg2: ProxyArg<BigUint<Env::Api>>,
     >(
         self,
         proposal: Arg0,
         vote_type: Arg1,
-        balance_to_vote: Arg2,
     ) -> TxTypedCall<Env, From, To, (), Gas, ()> {
         self.wrapped_tx
             .raw_call("delegateVote")
             .argument(&proposal)
             .argument(&vote_type)
-            .argument(&balance_to_vote)
             .original_result()
     }
 

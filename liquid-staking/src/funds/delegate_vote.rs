@@ -2,8 +2,7 @@ multiversx_sc::imports!();
 
 use crate::{
     basics::errors::{
-        ERROR_BAD_PAYMENT_AMOUNT, ERROR_BAD_PAYMENT_TOKEN, ERROR_INSUFFICIENT_STAKED_AMOUNT,
-        ERROR_LS_TOKEN_NOT_ISSUED,
+        ERROR_BAD_PAYMENT_AMOUNT, ERROR_BAD_PAYMENT_TOKEN, ERROR_LS_TOKEN_NOT_ISSUED,
     },
     contexts::base::StorageCache,
     proxies::vote_proxy::{self, VoteType},
@@ -18,7 +17,7 @@ pub trait DelegateVoteModule:
 {
     #[payable("*")]
     #[endpoint(delegateVote)]
-    fn delegate_vote(&self, proposal: usize, vote_type: VoteType, balance_to_vote: BigUint) {
+    fn delegate_vote(&self, proposal: usize, vote_type: VoteType) {
         self.blockchain().check_caller_is_user_account();
         let storage_cache = StorageCache::new(self);
         let caller = self.blockchain().get_caller();
@@ -34,13 +33,8 @@ pub trait DelegateVoteModule:
         );
         require!(payment.amount > 0, ERROR_BAD_PAYMENT_AMOUNT);
 
-        let egld_amount = payment.amount.clone() * &storage_cache.virtual_egld_reserve
+        let balance_to_vote = payment.amount.clone() * &storage_cache.virtual_egld_reserve
             / &storage_cache.ls_token_supply;
-
-        require!(
-            balance_to_vote < egld_amount,
-            ERROR_INSUFFICIENT_STAKED_AMOUNT
-        );
 
         self.call_delegate_vote(proposal, vote_type, &caller, balance_to_vote);
 
