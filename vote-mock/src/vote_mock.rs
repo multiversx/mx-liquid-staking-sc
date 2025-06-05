@@ -39,8 +39,12 @@ pub trait VoteMock {
     fn propose(&self, name: ManagedBuffer, start_vote_epoch: Epoch, end_vote_epoch: Epoch) {
         let current_epoch = self.blockchain().get_block_epoch();
         require!(
-            start_vote_epoch >= current_epoch && end_vote_epoch > start_vote_epoch,
-            "Invalid voting period"
+            start_vote_epoch >= current_epoch,
+            "Starting period cannot be in the past"
+        );
+        require!(
+            end_vote_epoch > start_vote_epoch,
+            "Ending voting period has to be after the starting one"
         );
         let new_proposal = Proposal {
             name,

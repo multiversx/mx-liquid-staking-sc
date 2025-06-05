@@ -5,11 +5,18 @@ mod liquid_staking_config;
 mod liquid_staking_state;
 mod proxy;
 
+use liquid_staking::proxies::vote_proxy;
 pub use liquid_staking_config::Config;
 use liquid_staking_state::State;
 use multiversx_sc_snippets::imports::*;
+use multiversx_sc_snippets::sdk::gateway::NetworkStatusRequest;
+
+pub const CHAIN_SIMULATOR_GATEWAY: &str = "http://localhost:8085";
+
+use crate::proxy::VoteType;
 
 const DELEGATION_MOCK_CONTRACT_CODE: &str = "../delegation-mock/output/delegation-mock.mxsc.json";
+const VOTE_MOCK_CONTRACT_CODE: &str = "../vote-mock/output/vote-mock.mxsc.json";
 
 pub async fn liquid_staking_cli() {
     env_logger::init();
@@ -69,6 +76,7 @@ pub struct ContractInteract {
     contract_code: BytesValue,
     delegation_mock_contract_code: String,
     state: State,
+    vote_sc_code: String,
 }
 
 impl ContractInteract {
@@ -93,6 +101,7 @@ impl ContractInteract {
             contract_code,
             delegation_mock_contract_code: DELEGATION_MOCK_CONTRACT_CODE.to_string(),
             state: State::load_state(),
+            vote_sc_code: VOTE_MOCK_CONTRACT_CODE.to_string(),
         }
     }
 
@@ -689,5 +698,79 @@ impl ContractInteract {
             .generate_blocks_until_epoch(epoch)
             .await
             .unwrap();
+    }
+
+    pub async fn delegate_vote(&mut self, token_id: &str) {
+        let token_nonce = 0u64;
+        let token_amount = BigUint::<StaticApi>::from(1_000_000_000_000u64);
+
+        self.interactor
+            .tx()
+            .from(&self.wallet_address)
+            .to(self.state.current_address())
+            .gas(50_000_000u64)
+            .typed(proxy::LiquidStakingProxy)
+            .delegate_vote(1usize, VoteType::Yes)
+            .payment((TokenIdentifier::from(token_id), token_nonce, token_amount))
+            .returns(ReturnsResultUnmanaged)
+            .run()
+            .await;
+    }
+
+    pub async fn deploy_and_setup_vote_sc(&mut self) {
+        let contract_code = MxscPath::new(&self.vote_sc_code);
+
+        let vote_address = self
+            .interactor
+            .tx()
+            .from(&self.wallet_address)
+            .gas(90_000_000u64)
+            .typed(vote_proxy::VoteMockProxy)
+            .init(self.state.current_address())
+            .code(contract_code)
+            .returns(ReturnsNewAddress)
+            .run()
+            .await;
+
+        let new_address_bech32 = bech32::encode(&vote_address);
+        let vote_sc_address = Bech32Address::from_bech32_string(new_address_bech32.clone());
+
+        self.interactor
+            .tx()
+            .from(&self.wallet_address)
+            .to(self.state.current_address())
+            .typed(proxy::LiquidStakingProxy)
+            .set_vote_contract(&vote_sc_address)
+            .returns(ReturnsResultUnmanaged)
+            .run()
+            .await;
+
+        let current_epoch = Self::get_current_epoch().await;
+        self.interactor
+            .tx()
+            .from(&self.wallet_address)
+            .to(vote_sc_address)
+            .typed(vote_proxy::VoteMockProxy)
+            .propose(b"play chess", current_epoch, current_epoch + 5)
+            .returns(ReturnsResultUnmanaged)
+            .run()
+            .await;
+
+        self.interactor
+            .generate_blocks_until_epoch(5)
+            .await
+            .unwrap();
+
+        println!("vote sc new address: {new_address_bech32}");
+    }
+
+    async fn get_current_epoch() -> u64 {
+        let blockchain = GatewayHttpProxy::new(CHAIN_SIMULATOR_GATEWAY.to_string());
+
+        let network_config = blockchain
+            .http_request(NetworkStatusRequest::default())
+            .await
+            .unwrap();
+        network_config.epoch_number
     }
 }
