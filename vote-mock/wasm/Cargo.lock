@@ -21,13 +21,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1b8e56985ec62d17e9c1001dc89c88ecd7dc08e47eba5ec7c29c7b5eeecde967"
 
 [[package]]
-name = "delegation-mock"
-version = "0.0.0"
-dependencies = [
- "multiversx-sc",
-]
-
-[[package]]
 name = "endian-type"
 version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -53,24 +46,6 @@ name = "hex-literal"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bcaaec4551594c969335c98c903c1397853d4198408ea609190f420500f6be71"
-
-[[package]]
-name = "liquid-staking"
-version = "0.0.0"
-dependencies = [
- "delegation-mock",
- "multiversx-sc",
- "multiversx-sc-modules",
- "vote-mock",
-]
-
-[[package]]
-name = "liquid-staking-wasm"
-version = "0.0.0"
-dependencies = [
- "liquid-staking",
- "multiversx-sc-wasm-adapter",
-]
 
 [[package]]
 name = "multiversx-chain-core"
@@ -133,15 +108,6 @@ dependencies = [
  "quote",
  "radix_trie",
  "syn",
-]
-
-[[package]]
-name = "multiversx-sc-modules"
-version = "0.58.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "989abf1c261eb0e069035fbad362ad873bdb5cac7de1137695d07f4f9e5e036b"
-dependencies = [
- "multiversx-sc",
 ]
 
 [[package]]
@@ -239,4 +205,12 @@ name = "vote-mock"
 version = "0.0.0"
 dependencies = [
  "multiversx-sc",
+]
+
+[[package]]
+name = "vote-mock-wasm"
+version = "0.0.0"
+dependencies = [
+ "multiversx-sc-wasm-adapter",
+ "vote-mock",
 ]

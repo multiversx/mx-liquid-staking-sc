@@ -1,0 +1,2 @@
+[[proxy]]
+path = "../liquid-staking/src/proxies/vote_proxy.rs"

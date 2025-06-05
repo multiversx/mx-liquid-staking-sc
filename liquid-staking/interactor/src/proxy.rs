@@ -367,6 +367,15 @@ where
             .original_result()
     }
 
+    pub fn vote_contract(
+        self,
+    ) -> TxTypedCall<Env, From, To, NotPayable, Gas, ManagedAddress<Env::Api>> {
+        self.wrapped_tx
+            .payment(NotPayable)
+            .raw_call("getVoteContract")
+            .original_result()
+    }
+
     pub fn claim_rewards(
         self,
     ) -> TxTypedCall<Env, From, To, NotPayable, Gas, ()> {
@@ -382,6 +391,21 @@ where
         self.wrapped_tx
             .payment(NotPayable)
             .raw_call("delegateRewards")
+            .original_result()
+    }
+
+    pub fn delegate_vote<
+        Arg0: ProxyArg<usize>,
+        Arg1: ProxyArg<VoteType>,
+    >(
+        self,
+        proposal: Arg0,
+        vote_type: Arg1,
+    ) -> TxTypedCall<Env, From, To, (), Gas, ()> {
+        self.wrapped_tx
+            .raw_call("delegateVote")
+            .argument(&proposal)
+            .argument(&vote_type)
             .original_result()
     }
 
@@ -428,6 +452,19 @@ where
     ) -> TxTypedCall<Env, From, To, (), Gas, ()> {
         self.wrapped_tx
             .raw_call("removeLiquidity")
+            .original_result()
+    }
+
+    pub fn set_vote_contract<
+        Arg0: ProxyArg<ManagedAddress<Env::Api>>,
+    >(
+        self,
+        sc_address: Arg0,
+    ) -> TxTypedCall<Env, From, To, NotPayable, Gas, ()> {
+        self.wrapped_tx
+            .payment(NotPayable)
+            .raw_call("set_vote_contract")
+            .argument(&sc_address)
             .original_result()
     }
 }
@@ -507,4 +544,13 @@ where
     pub total_unstaked_from_ls_contract: BigUint<Api>,
     pub total_unbonded_from_ls_contract: BigUint<Api>,
     pub egld_in_ongoing_undelegation: BigUint<Api>,
+}
+
+#[type_abi]
+#[derive(TopEncode, TopDecode, PartialEq, Eq, Copy, Clone, Debug)]
+pub enum VoteType {
+    Yes,
+    No,
+    Veto,
+    Abstain,
 }

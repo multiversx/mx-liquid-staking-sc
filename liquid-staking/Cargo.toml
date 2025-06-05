@@ -17,5 +17,8 @@ version = "0.58.0"
 [dependencies.delegation-mock]
 path = "../delegation-mock"
 
+[dependencies.vote-mock]
+path = "../vote-mock"
+
 [dev-dependencies.multiversx-sc-scenario]
 version = "0.58.0"

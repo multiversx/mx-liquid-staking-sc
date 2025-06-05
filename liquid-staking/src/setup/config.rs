@@ -1,7 +1,13 @@
 multiversx_sc::imports!();
 multiversx_sc::derive_imports!();
 
-use crate::liquidity_pool::State;
+use crate::{
+    basics::{
+        constants::{GasLimit, MIN_GAS_FINISH_EXEC, MIN_GAS_FOR_ASYNC_CALL, MIN_GAS_FOR_CALLBACK},
+        errors::ERROR_INSUFFICIENT_GAS,
+    },
+    liquidity_pool::State,
+};
 
 pub const MAX_PERCENTAGE: u64 = 100_000;
 pub const UNBOND_PERIOD: u64 = 10;
@@ -58,6 +64,15 @@ pub trait ConfigModule:
             num_decimals,
             None,
         );
+    }
+
+    fn get_gas_for_async_call(&self) -> GasLimit {
+        let gas_left = self.blockchain().get_gas_left();
+        require!(
+            gas_left > MIN_GAS_FOR_ASYNC_CALL + MIN_GAS_FOR_CALLBACK + MIN_GAS_FINISH_EXEC,
+            ERROR_INSUFFICIENT_GAS
+        );
+        gas_left - MIN_GAS_FOR_CALLBACK - MIN_GAS_FINISH_EXEC
     }
 
     #[view(getState)]

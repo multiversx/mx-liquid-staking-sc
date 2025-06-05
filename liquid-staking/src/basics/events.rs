@@ -35,7 +35,7 @@ pub struct RemoveLiquidityEvent<M: ManagedTypeApi> {
 
 #[multiversx_sc::module]
 pub trait EventsModule:
-    crate::config::ConfigModule
+    crate::setup::config::ConfigModule
     + multiversx_sc_modules::default_issue_callbacks::DefaultIssueCallbacksModule
 {
     fn emit_add_liquidity_event(
