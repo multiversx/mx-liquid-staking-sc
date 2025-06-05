@@ -60,14 +60,12 @@ pub trait DelegateVoteModule:
         delegate_to: &ManagedAddress,
         rewards_reserve: BigUint,
     ) {
-        let delegation_contract = self.get_vote_sc();
+        let vote_contract = self.get_vote_sc();
 
-        let gas_for_async_call = self.get_gas_for_async_call();
         self.tx()
-            .to(delegation_contract.clone())
+            .to(vote_contract.clone())
             .typed(vote_proxy::VoteMockProxy)
             .delegate_vote(proposal, vote_type, delegate_to, rewards_reserve)
-            .gas(gas_for_async_call)
-            .register_promise();
+            .call_and_exit();
     }
 }
