@@ -10,7 +10,9 @@ use liquid_staking::funds::delegate_vote::DelegateVoteModule;
 use liquid_staking::setup::vote::VoteModule;
 use liquid_staking::*;
 use liquidity::{add_liquidity::AddLiquidityModule, remove_liquidity::RemoveLiquidityModule};
+use multiversx_sc::contract_base::ContractBase;
 use multiversx_sc::types::Address;
+use multiversx_sc_scenario::imports::ReturnCode;
 use multiversx_sc_scenario::{managed_address, managed_buffer, num_bigint, rust_biguint, DebugApi};
 use setup::config::{ConfigModule, UnstakeTokenAttributes};
 use setup::delegation::DelegationModule;
@@ -130,7 +132,12 @@ where
 
         self.b_mock
             .execute_tx(&self.owner_address, &vote_wrapper, &Self::exp18(0), |sc| {
-                sc.propose(managed_buffer!(b"play chess"), 5, 10);
+                let curent_epoch = sc.blockchain().get_block_epoch();
+                sc.propose(
+                    managed_buffer!(b"play chess"),
+                    curent_epoch,
+                    curent_epoch + 5,
+                );
             })
             .assert_ok();
 
@@ -272,19 +279,23 @@ where
         payment_token: &[u8],
         payment_amount: u64,
         vote_type: proxies::vote_proxy::VoteType,
+        expected_error: &str,
     ) {
-        self.b_mock
-            .execute_esdt_transfer(
-                caller,
-                &self.sc_wrapper,
-                payment_token,
-                0,
-                &Self::exp18(payment_amount),
-                |sc| {
-                    sc.delegate_vote(1, vote_type);
-                },
-            )
-            .assert_ok();
+        let tx_result = self.b_mock.execute_esdt_transfer(
+            caller,
+            &self.sc_wrapper,
+            payment_token,
+            0,
+            &Self::exp18(payment_amount),
+            |sc| {
+                sc.delegate_vote(1, vote_type);
+            },
+        );
+        if expected_error.is_empty() {
+            assert!(tx_result.result_status == ReturnCode::Success);
+        } else {
+            assert!(tx_result.result_message == expected_error);
+        }
     }
 
     pub fn check_user_egld_balance(&self, address: &Address, token_balance: u64) {

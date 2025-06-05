@@ -39,7 +39,7 @@ pub trait VoteMock {
     fn propose(&self, name: ManagedBuffer, start_vote_epoch: Epoch, end_vote_epoch: Epoch) {
         let current_epoch = self.blockchain().get_block_epoch();
         require!(
-            start_vote_epoch > current_epoch && end_vote_epoch > start_vote_epoch,
+            start_vote_epoch >= current_epoch && end_vote_epoch > start_vote_epoch,
             "Invalid voting period"
         );
         let new_proposal = Proposal {
@@ -47,7 +47,14 @@ pub trait VoteMock {
             start_vote_epoch,
             end_vote_epoch,
         };
-        self.proposals().push(&new_proposal);
+        let proposal_id = self.proposals().push(&new_proposal);
+
+        self.votes(proposal_id).set(PoweredVotes {
+            yes: BigUint::zero(),
+            no: BigUint::zero(),
+            veto: BigUint::zero(),
+            abstain: BigUint::zero(),
+        });
     }
 
     #[endpoint(delegationVote)]
@@ -83,7 +90,7 @@ pub trait VoteMock {
         let proposal = self.proposals().get(proposal_id);
         let current_epoch = self.blockchain().get_block_epoch();
         require!(
-            current_epoch > proposal.start_vote_epoch && current_epoch < proposal.end_vote_epoch,
+            current_epoch >= proposal.start_vote_epoch && current_epoch < proposal.end_vote_epoch,
             "proposal is not active"
         )
     }
