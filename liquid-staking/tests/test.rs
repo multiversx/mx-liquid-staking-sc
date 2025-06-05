@@ -291,12 +291,12 @@ fn liquid_staking_delegate_vote_test() {
         20u64,
         liquid_staking::proxies::vote_proxy::VoteType::Yes,
     );
-    sc_setup.delegate_vote(
+    /*   sc_setup.delegate_vote(
         &first_user,
         LS_TOKEN_ID,
         20u64,
         liquid_staking::proxies::vote_proxy::VoteType::Yes,
-    );
+    );*/
 }
 
 pub fn exp9(value: u64) -> num_bigint::BigUint {

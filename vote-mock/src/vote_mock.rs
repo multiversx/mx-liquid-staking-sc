@@ -64,6 +64,7 @@ pub trait VoteMock {
             !self.user_votes(&delegate_to).contains(&proposal_id),
             "Already voted for proposal"
         );
+        self.user_votes(&delegate_to).insert(proposal_id);
         self.votes(proposal_id).update(|votes| match vote_type {
             VoteType::Yes => votes.yes += power,
             VoteType::No => votes.no += power,

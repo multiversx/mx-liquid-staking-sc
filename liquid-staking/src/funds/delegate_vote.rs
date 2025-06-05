@@ -60,6 +60,6 @@ pub trait DelegateVoteModule:
             .to(vote_contract.clone())
             .typed(vote_proxy::VoteMockProxy)
             .delegate_vote(proposal, vote_type, delegate_to, rewards_reserve)
-            .call_and_exit();
+            .sync_call();
     }
 }
