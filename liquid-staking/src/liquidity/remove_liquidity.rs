@@ -7,7 +7,8 @@ use crate::{
         ERROR_BAD_PAYMENT_AMOUNT, ERROR_BAD_PAYMENT_TOKEN, ERROR_INSUFFICIENT_UNSTAKE_AMOUNT,
         ERROR_LS_TOKEN_NOT_ISSUED, ERROR_NOT_ACTIVE,
     },
-    delegation_proxy, liquidity_pool,
+    liquidity_pool,
+    proxies::delegation_proxy,
     setup::{
         self,
         config::{UnstakeTokenAttributes, UNBOND_PERIOD},

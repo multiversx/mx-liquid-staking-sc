@@ -6,7 +6,7 @@ use crate::{
         errors::{ERROR_NOT_ACTIVE, ERROR_NO_DELEGATION_CONTRACTS},
         events,
     },
-    delegation_proxy,
+    proxies::delegation_proxy,
     setup::{self, delegation::ClaimStatusType},
     StorageCache,
 };

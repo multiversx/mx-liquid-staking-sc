@@ -5,12 +5,11 @@ multiversx_sc::derive_imports!();
 
 pub mod basics;
 pub mod contexts;
-pub mod delegation_proxy;
 pub mod funds;
 pub mod liquidity;
 pub mod liquidity_pool;
+pub mod proxies;
 pub mod setup;
-pub mod vote_proxy;
 
 use setup::delegation::{ClaimStatus, ClaimStatusType};
 

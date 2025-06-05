@@ -1,6 +1,6 @@
 multiversx_sc::imports!();
 
-use crate::{basics::errors::ERROR_INSUFFICIENT_LIQ_BURNED, liquidity_pool};
+use crate::{basics::errors::ERROR_INSUFFICIENT_LIQ_BURNED, liquidity_pool, setup};
 
 #[multiversx_sc::module]
 pub trait ViewsModule:

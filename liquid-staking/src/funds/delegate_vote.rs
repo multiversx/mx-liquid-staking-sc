@@ -6,8 +6,8 @@ use crate::{
         ERROR_LS_TOKEN_NOT_ISSUED,
     },
     contexts::base::StorageCache,
+    proxies::vote_proxy::{self, VoteType},
     setup,
-    vote_proxy::{self, VoteType},
 };
 
 #[multiversx_sc::module]

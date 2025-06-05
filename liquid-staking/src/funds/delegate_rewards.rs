@@ -4,7 +4,7 @@ use crate::{
     basics,
     basics::constants::{MIN_EGLD_TO_DELEGATE, MIN_GAS_FOR_CALLBACK},
     basics::errors::{ERROR_BAD_DELEGATION_AMOUNT, ERROR_CLAIM_REDELEGATE, ERROR_NOT_ACTIVE},
-    delegation_proxy,
+    proxies::delegation_proxy,
     setup::{self, delegation::ClaimStatusType},
     StorageCache,
 };

@@ -6,7 +6,9 @@ use crate::{
     basics::errors::{
         ERROR_BAD_PAYMENT_AMOUNT, ERROR_DELEGATION_CONTRACT_NOT_INITIALIZED, ERROR_NOT_ACTIVE,
     },
-    delegation_proxy, liquidity_pool, setup, StorageCache,
+    liquidity_pool,
+    proxies::delegation_proxy,
+    setup, StorageCache,
 };
 
 #[multiversx_sc::module]

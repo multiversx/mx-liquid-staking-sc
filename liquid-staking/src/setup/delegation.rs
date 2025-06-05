@@ -4,7 +4,7 @@ multiversx_sc::derive_imports!();
 use crate::basics::constants::{
     EGLD_TO_WHITELIST, MAX_DELEGATION_ADDRESSES, MIN_BLOCKS_BEFORE_CLEAR_ONGOING_OP,
 };
-use crate::{basics::errors::ERROR_BAD_WHITELIST_FEE, delegation_proxy};
+use crate::{basics::errors::ERROR_BAD_WHITELIST_FEE, proxies::delegation_proxy};
 
 use crate::basics::errors::{
     ERROR_ALREADY_WHITELISTED, ERROR_BAD_DELEGATION_ADDRESS, ERROR_CLAIM_EPOCH,

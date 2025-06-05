@@ -1,8 +1,8 @@
 multiversx_sc::imports!();
 
 use crate::{
-    basics::constants::MIN_GAS_FOR_CALLBACK, basics::errors::ERROR_NOT_ACTIVE, delegation_proxy,
-    setup, StorageCache,
+    basics::constants::MIN_GAS_FOR_CALLBACK, basics::errors::ERROR_NOT_ACTIVE,
+    proxies::delegation_proxy, setup, StorageCache,
 };
 
 #[multiversx_sc::module]
