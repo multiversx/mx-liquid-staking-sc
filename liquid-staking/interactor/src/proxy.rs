@@ -385,6 +385,25 @@ where
             .original_result()
     }
 
+    pub fn delegate_vote<
+        Arg0: ProxyArg<ManagedBuffer<Env::Api>>,
+        Arg1: ProxyArg<VoteType>,
+        Arg2: ProxyArg<ManagedAddress<Env::Api>>,
+    >(
+        self,
+        proposal: Arg0,
+        vote_type: Arg1,
+        delegate_to: Arg2,
+    ) -> TxTypedCall<Env, From, To, NotPayable, Gas, ()> {
+        self.wrapped_tx
+            .payment(NotPayable)
+            .raw_call("delegateVote")
+            .argument(&proposal)
+            .argument(&vote_type)
+            .argument(&delegate_to)
+            .original_result()
+    }
+
     pub fn recompute_token_reserve(
         self,
     ) -> TxTypedCall<Env, From, To, NotPayable, Gas, ()> {
@@ -507,4 +526,13 @@ where
     pub total_unstaked_from_ls_contract: BigUint<Api>,
     pub total_unbonded_from_ls_contract: BigUint<Api>,
     pub egld_in_ongoing_undelegation: BigUint<Api>,
+}
+
+#[type_abi]
+#[derive(TopEncode, TopDecode, PartialEq, Eq, Copy, Clone, Debug)]
+pub enum VoteType {
+    Yes,
+    No,
+    Veto,
+    Abstain,
 }

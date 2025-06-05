@@ -2,13 +2,9 @@ multiversx_sc::imports!();
 multiversx_sc::derive_imports!();
 
 use crate::basics::constants::{
-    GasLimit, EGLD_TO_WHITELIST, MAX_DELEGATION_ADDRESSES, MIN_BLOCKS_BEFORE_CLEAR_ONGOING_OP,
-    MIN_GAS_FINISH_EXEC, MIN_GAS_FOR_ASYNC_CALL, MIN_GAS_FOR_CALLBACK,
+    EGLD_TO_WHITELIST, MAX_DELEGATION_ADDRESSES, MIN_BLOCKS_BEFORE_CLEAR_ONGOING_OP,
 };
-use crate::{
-    basics::errors::{ERROR_BAD_WHITELIST_FEE, ERROR_INSUFFICIENT_GAS},
-    delegation_proxy,
-};
+use crate::{basics::errors::ERROR_BAD_WHITELIST_FEE, delegation_proxy};
 
 use crate::basics::errors::{
     ERROR_ALREADY_WHITELISTED, ERROR_BAD_DELEGATION_ADDRESS, ERROR_CLAIM_EPOCH,
@@ -62,7 +58,7 @@ pub struct DelegationContractData<M: ManagedTypeApi> {
 
 #[multiversx_sc::module]
 pub trait DelegationModule:
-    crate::config::ConfigModule
+    crate::setup::config::ConfigModule
     + multiversx_sc_modules::default_issue_callbacks::DefaultIssueCallbacksModule
 {
     #[only_owner]
@@ -265,14 +261,6 @@ pub trait DelegationModule:
         }
     }
 
-    fn get_gas_for_async_call(&self) -> GasLimit {
-        let gas_left = self.blockchain().get_gas_left();
-        require!(
-            gas_left > MIN_GAS_FOR_ASYNC_CALL + MIN_GAS_FOR_CALLBACK + MIN_GAS_FINISH_EXEC,
-            ERROR_INSUFFICIENT_GAS
-        );
-        gas_left - MIN_GAS_FOR_CALLBACK - MIN_GAS_FINISH_EXEC
-    }
     fn move_delegation_contract_to_back(&self, delegation_contract: ManagedAddress) {
         self.remove_delegation_address_from_list(&delegation_contract);
         self.delegation_addresses_list()
@@ -434,6 +422,10 @@ pub trait DelegationModule:
         &self,
         contract_address: &ManagedAddress,
     ) -> SingleValueMapper<DelegationContractData<Self::Api>>;
+
+    #[view(getVoteContract)]
+    #[storage_mapper("voteContract")]
+    fn vote_contract(&self) -> SingleValueMapper<ManagedAddress>;
 
     #[storage_mapper("whitelistingDelegationOngoing")]
     fn last_whitelisting_delegation_nonce(&self) -> SingleValueMapper<u64>;

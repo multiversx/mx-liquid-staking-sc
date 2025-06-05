@@ -6,14 +6,14 @@ use crate::{
     basics::errors::{
         ERROR_BAD_PAYMENT_AMOUNT, ERROR_DELEGATION_CONTRACT_NOT_INITIALIZED, ERROR_NOT_ACTIVE,
     },
-    config, delegation, delegation_proxy, liquidity_pool, StorageCache,
+    delegation_proxy, liquidity_pool, setup, StorageCache,
 };
 
 #[multiversx_sc::module]
 pub trait AddLiquidityModule:
-    config::ConfigModule
+    setup::config::ConfigModule
     + multiversx_sc_modules::default_issue_callbacks::DefaultIssueCallbacksModule
-    + delegation::DelegationModule
+    + setup::delegation::DelegationModule
     + liquidity_pool::LiquidityPoolModule
     + basics::events::EventsModule
 {

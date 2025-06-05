@@ -1,17 +1,15 @@
 multiversx_sc::imports!();
 
 use crate::{
-    basics::constants::MIN_GAS_FOR_CALLBACK,
-    basics::errors::ERROR_NOT_ACTIVE,
-    config::{self},
-    delegation, delegation_proxy, StorageCache,
+    basics::constants::MIN_GAS_FOR_CALLBACK, basics::errors::ERROR_NOT_ACTIVE, delegation_proxy,
+    setup, StorageCache,
 };
 
 #[multiversx_sc::module]
 pub trait WithdrawModule:
-    config::ConfigModule
+    setup::config::ConfigModule
     + multiversx_sc_modules::default_issue_callbacks::DefaultIssueCallbacksModule
-    + delegation::DelegationModule
+    + setup::delegation::DelegationModule
 {
     #[endpoint(withdrawAll)]
     fn withdraw_all(&self, delegation_contract: ManagedAddress) {

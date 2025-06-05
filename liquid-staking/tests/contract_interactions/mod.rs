@@ -1,7 +1,5 @@
 use crate::contract_setup::LiquidStakingContractSetup;
 use basics::views::ViewsModule;
-use config::{ConfigModule, UnstakeTokenAttributes};
-use delegation::DelegationModule;
 use delegation_mock::DelegationMock;
 use funds::{
     claim::ClaimModule, delegate_rewards::DelegateRewardsModule,
@@ -12,6 +10,8 @@ use liquid_staking::*;
 use liquidity::{add_liquidity::AddLiquidityModule, remove_liquidity::RemoveLiquidityModule};
 use multiversx_sc::types::Address;
 use multiversx_sc_scenario::{managed_address, num_bigint, rust_biguint, DebugApi};
+use proxies::delegation::DelegationModule;
+use setup::config::{ConfigModule, UnstakeTokenAttributes};
 
 pub const EGLD_TO_WHITELIST: u64 = 1;
 pub const FIRST_ADD_LIQUIDITY_AMOUNT: u64 = 100;

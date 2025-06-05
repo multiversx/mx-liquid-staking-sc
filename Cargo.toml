@@ -7,4 +7,6 @@ members = [
   "liquid-staking/interactor",
   "delegation-mock",
   "delegation-mock/meta",
+  "vote-mock",
+  "vote-mock/meta",
 ]

@@ -6,16 +6,16 @@ use crate::{
         errors::{ERROR_NOT_ACTIVE, ERROR_NO_DELEGATION_CONTRACTS},
         events,
     },
-    config::{self},
-    delegation::{self, ClaimStatusType},
-    delegation_proxy, StorageCache,
+    delegation_proxy,
+    setup::{self, delegation::ClaimStatusType},
+    StorageCache,
 };
 
 #[multiversx_sc::module]
 pub trait ClaimModule:
-    config::ConfigModule
+    setup::config::ConfigModule
     + multiversx_sc_modules::default_issue_callbacks::DefaultIssueCallbacksModule
-    + delegation::DelegationModule
+    + setup::delegation::DelegationModule
     + events::EventsModule
 {
     #[endpoint(claimRewards)]

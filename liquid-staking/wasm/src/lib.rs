@@ -6,10 +6,10 @@
 
 // Init:                                 1
 // Upgrade:                              1
-// Endpoints:                           30
+// Endpoints:                           31
 // Async Callback:                       1
-// Promise callbacks:                    5
-// Total number of exported functions:  38
+// Promise callbacks:                    6
+// Total number of exported functions:  40
 
 #![no_std]
 
@@ -46,6 +46,7 @@ multiversx_sc_wasm_adapter::endpoints! {
         getDelegationContractData => delegation_contract_data
         claimRewards => claim_rewards
         delegateRewards => delegate_rewards
+        delegateVote => delegate_vote
         recomputeTokenReserve => recompute_token_reserve
         unbondTokens => unbond_tokens
         withdrawAll => withdraw_all
@@ -53,6 +54,7 @@ multiversx_sc_wasm_adapter::endpoints! {
         removeLiquidity => remove_liquidity
         claim_rewards_callback => claim_rewards_callback
         delegate_rewards_callback => delegate_rewards_callback
+        delegate_vote_callback => delegate_vote_callback
         withdraw_tokens_callback => withdraw_tokens_callback
         add_liquidity_callback => add_liquidity_callback
         remove_liquidity_callback => remove_liquidity_callback

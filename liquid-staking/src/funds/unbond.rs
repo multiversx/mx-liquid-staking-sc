@@ -5,14 +5,15 @@ use crate::{
         ERROR_BAD_PAYMENT_AMOUNT, ERROR_BAD_PAYMENT_TOKEN, ERROR_NOT_ACTIVE,
         ERROR_UNSTAKE_PERIOD_NOT_PASSED,
     },
-    config::{self, UnstakeTokenAttributes},
-    delegation, liquidity_pool, StorageCache,
+    liquidity_pool,
+    setup::{self, config::UnstakeTokenAttributes},
+    StorageCache,
 };
 
 #[multiversx_sc::module]
 pub trait UnbondModule:
-    config::ConfigModule
-    + delegation::DelegationModule
+    setup::config::ConfigModule
+    + setup::delegation::DelegationModule
     + multiversx_sc_modules::default_issue_callbacks::DefaultIssueCallbacksModule
     + liquidity_pool::LiquidityPoolModule
 {

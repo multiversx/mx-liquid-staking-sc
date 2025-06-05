@@ -19,6 +19,7 @@ pub static ERROR_BAD_WHITELIST_FEE: &[u8] = b"Whitelisting contracts costs 1 EGL
 pub static ERROR_INSUFFICIENT_UNSTAKE_AMOUNT: &[u8] = b"Insufficient unstake amount";
 pub static ERROR_INSUFFICIENT_LIQUIDITY: &[u8] = b"Insufficient liquidity minted";
 pub static ERROR_INSUFFICIENT_LIQ_BURNED: &[u8] = b"Insufficient liquidity burned";
+pub static ERROR_INSUFFICIENT_STAKED_AMOUNT: &[u8] = b"Insufficient staked amount";
 
 pub static ERROR_BAD_DELEGATION_ADDRESS: &[u8] = b"No delegation contract available";
 pub static ERROR_BAD_DELEGATION_AMOUNT: &[u8] = b"Delegation amount must be at least 1 EGLD";
@@ -26,6 +27,7 @@ pub static ERROR_NO_DELEGATION_CONTRACTS: &[u8] = b"There are no delegation cont
 pub static ERROR_FIRST_DELEGATION_NODE: &[u8] = b"The first delegation node is incorrect";
 pub static ERROR_ALREADY_WHITELISTED: &[u8] = b"Delegation contract already whitelisted";
 pub static ERROR_NOT_WHITELISTED: &[u8] = b"Delegation contract is not whitelisted";
+pub static ERROR_VOTE_SC_NOT_SET: &[u8] = b"Vote contract is not set";
 pub static ERROR_DELEGATION_CAP: &[u8] =
     b"Delegation cap must be higher than the total staked amount";
 pub static ERROR_ONLY_DELEGATION_ADMIN: &[u8] =

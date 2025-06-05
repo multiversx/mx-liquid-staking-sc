@@ -4,7 +4,7 @@ use crate::{basics::errors::ERROR_INSUFFICIENT_LIQ_BURNED, liquidity_pool};
 
 #[multiversx_sc::module]
 pub trait ViewsModule:
-    crate::config::ConfigModule
+    setup::config::ConfigModule
     + multiversx_sc_modules::default_issue_callbacks::DefaultIssueCallbacksModule
     + liquidity_pool::LiquidityPoolModule
 {

@@ -4,7 +4,7 @@ multiversx_sc::derive_imports!();
 use crate::basics::errors::{ERROR_INSUFFICIENT_LIQUIDITY, ERROR_INSUFFICIENT_LIQ_BURNED};
 use crate::contexts::base::StorageCache;
 
-use crate::config;
+use crate::setup::config;
 
 #[type_abi]
 #[derive(TopEncode, TopDecode, PartialEq, Eq, Copy, Clone, Debug)]

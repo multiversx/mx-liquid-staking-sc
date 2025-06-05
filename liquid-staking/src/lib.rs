@@ -4,15 +4,15 @@ multiversx_sc::imports!();
 multiversx_sc::derive_imports!();
 
 pub mod basics;
-pub mod config;
 pub mod contexts;
-pub mod delegation;
 pub mod delegation_proxy;
 pub mod funds;
 pub mod liquidity;
 pub mod liquidity_pool;
+pub mod setup;
+pub mod vote_proxy;
 
-use delegation::{ClaimStatus, ClaimStatusType};
+use setup::delegation::{ClaimStatus, ClaimStatusType};
 
 use contexts::base::*;
 use liquidity_pool::State;
@@ -21,10 +21,11 @@ use liquidity_pool::State;
 pub trait LiquidStaking:
     basics::events::EventsModule
     + basics::views::ViewsModule
-    + config::ConfigModule
-    + delegation::DelegationModule
+    + setup::config::ConfigModule
+    + setup::delegation::DelegationModule
     + funds::claim::ClaimModule
     + funds::delegate_rewards::DelegateRewardsModule
+    + funds::delegate_vote::DelegateVoteModule
     + funds::recompute_token_reserve::RecomputeTokenReserveModule
     + funds::unbond::UnbondModule
     + funds::withdraw::WithdrawModule
@@ -32,6 +33,7 @@ pub trait LiquidStaking:
     + liquidity::remove_liquidity::RemoveLiquidityModule
     + liquidity_pool::LiquidityPoolModule
     + multiversx_sc_modules::default_issue_callbacks::DefaultIssueCallbacksModule
+    + setup::vote::VoteModule
 {
     #[init]
     fn init(&self) {

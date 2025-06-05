@@ -1,7 +1,7 @@
 multiversx_sc::imports!();
 multiversx_sc::derive_imports!();
 
-use crate::config::ConfigModule;
+use crate::setup::config::ConfigModule;
 use crate::State;
 
 pub struct StorageCache<'a, C>
