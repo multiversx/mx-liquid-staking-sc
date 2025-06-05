@@ -5,6 +5,7 @@ use crate::{
         ERROR_BAD_PAYMENT_AMOUNT, ERROR_BAD_PAYMENT_TOKEN, ERROR_LS_TOKEN_NOT_ISSUED,
     },
     contexts::base::StorageCache,
+    liquidity_pool,
     proxies::vote_proxy::{self, VoteType},
     setup,
 };
@@ -13,6 +14,7 @@ use crate::{
 pub trait DelegateVoteModule:
     setup::config::ConfigModule
     + multiversx_sc_modules::default_issue_callbacks::DefaultIssueCallbacksModule
+    + liquidity_pool::LiquidityPoolModule
     + setup::vote::VoteModule
 {
     #[payable("*")]
@@ -33,8 +35,7 @@ pub trait DelegateVoteModule:
         );
         require!(payment.amount > 0, ERROR_BAD_PAYMENT_AMOUNT);
 
-        let balance_to_vote = payment.amount.clone() * &storage_cache.virtual_egld_reserve
-            / &storage_cache.ls_token_supply;
+        let balance_to_vote = self.get_egld_amount(&payment.amount, &storage_cache);
 
         self.call_delegate_vote(proposal, vote_type, &caller, balance_to_vote);
 
