@@ -1,17 +1,22 @@
 use crate::contract_setup::LiquidStakingContractSetup;
 use basics::views::ViewsModule;
-use config::{ConfigModule, UnstakeTokenAttributes};
-use delegation::DelegationModule;
 use delegation_mock::DelegationMock;
 use funds::{
     claim::ClaimModule, delegate_rewards::DelegateRewardsModule,
     recompute_token_reserve::RecomputeTokenReserveModule, unbond::UnbondModule,
     withdraw::WithdrawModule,
 };
+use liquid_staking::funds::delegate_vote::DelegateVoteModule;
+use liquid_staking::setup::vote::VoteModule;
 use liquid_staking::*;
 use liquidity::{add_liquidity::AddLiquidityModule, remove_liquidity::RemoveLiquidityModule};
+use multiversx_sc::contract_base::ContractBase;
 use multiversx_sc::types::Address;
-use multiversx_sc_scenario::{managed_address, num_bigint, rust_biguint, DebugApi};
+use multiversx_sc_scenario::imports::ReturnCode;
+use multiversx_sc_scenario::{managed_address, managed_buffer, num_bigint, rust_biguint, DebugApi};
+use setup::config::{ConfigModule, UnstakeTokenAttributes};
+use setup::delegation::DelegationModule;
+use vote_mock::VoteMock;
 
 pub const EGLD_TO_WHITELIST: u64 = 1;
 pub const FIRST_ADD_LIQUIDITY_AMOUNT: u64 = 100;
@@ -107,6 +112,44 @@ where
                     apy,
                 );
             })
+            .assert_ok();
+    }
+
+    pub fn set_vote_sc(&mut self) {
+        let rust_zero = rust_biguint!(0u64);
+        let vote_wrapper = self.b_mock.create_sc_account(
+            &rust_zero,
+            Some(&self.owner_address),
+            vote_mock::contract_obj,
+            "vote-mock.wasm",
+        );
+
+        self.b_mock
+            .execute_tx(&self.owner_address, &vote_wrapper, &rust_zero, |sc| {
+                sc.init(managed_address!(&self.sc_wrapper.address_ref().clone()));
+            })
+            .assert_ok();
+
+        self.b_mock
+            .execute_tx(&self.owner_address, &vote_wrapper, &Self::exp18(0), |sc| {
+                let curent_epoch = sc.blockchain().get_block_epoch();
+                sc.propose(
+                    managed_buffer!(b"play chess"),
+                    curent_epoch,
+                    curent_epoch + 5,
+                );
+            })
+            .assert_ok();
+
+        self.b_mock
+            .execute_tx(
+                &self.owner_address,
+                &self.sc_wrapper,
+                &Self::exp18(0),
+                |sc| {
+                    sc.set_vote_contract(managed_address!(vote_wrapper.address_ref()));
+                },
+            )
             .assert_ok();
     }
 
@@ -228,6 +271,31 @@ where
             token_id,
             &num_bigint::BigUint::from(token_balance),
         );
+    }
+
+    pub fn delegate_vote(
+        &mut self,
+        caller: &Address,
+        payment_token: &[u8],
+        payment_amount: u64,
+        vote_type: proxies::vote_proxy::VoteType,
+        expected_error: &str,
+    ) {
+        let tx_result = self.b_mock.execute_esdt_transfer(
+            caller,
+            &self.sc_wrapper,
+            payment_token,
+            0,
+            &Self::exp18(payment_amount),
+            |sc| {
+                sc.delegate_vote(1, vote_type);
+            },
+        );
+        if expected_error.is_empty() {
+            assert!(tx_result.result_status == ReturnCode::Success);
+        } else {
+            assert!(tx_result.result_message == expected_error);
+        }
     }
 
     pub fn check_user_egld_balance(&self, address: &Address, token_balance: u64) {

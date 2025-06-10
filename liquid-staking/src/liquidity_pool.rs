@@ -4,7 +4,7 @@ multiversx_sc::derive_imports!();
 use crate::basics::errors::{ERROR_INSUFFICIENT_LIQUIDITY, ERROR_INSUFFICIENT_LIQ_BURNED};
 use crate::contexts::base::StorageCache;
 
-use crate::config;
+use crate::setup::config;
 
 #[type_abi]
 #[derive(TopEncode, TopDecode, PartialEq, Eq, Copy, Clone, Debug)]
@@ -43,6 +43,8 @@ pub trait LiquidityPoolModule:
         storage_cache: &mut StorageCache<Self>,
     ) -> BigUint {
         let egld_amount = self.get_egld_amount(token_amount, storage_cache);
+
+        require!(egld_amount > 0u64, ERROR_INSUFFICIENT_LIQ_BURNED);
         storage_cache.ls_token_supply -= token_amount;
         storage_cache.virtual_egld_reserve -= &egld_amount;
 
@@ -56,7 +58,6 @@ pub trait LiquidityPoolModule:
     ) -> BigUint {
         let egld_amount =
             ls_token_amount * &storage_cache.virtual_egld_reserve / &storage_cache.ls_token_supply;
-        require!(egld_amount > 0u64, ERROR_INSUFFICIENT_LIQ_BURNED);
 
         egld_amount
     }
