@@ -114,15 +114,17 @@ impl ContractInteract {
             .run()
             .await;
 
-        let new_address_bech32 = bech32::encode(&new_address);
+        /* let new_address_bech32 = bech32::encode(&new_address);
         self.state.set_address(Bech32Address::from_bech32_string(
             new_address_bech32.clone(),
         ));
 
         println!("new address: {new_address_bech32}");
+        */
     }
 
     pub async fn deploy_delegation_contract(&mut self) {
+        /*
         let contract_code = MxscPath::new(&self.delegation_mock_contract_code);
 
         let new_address = self
@@ -144,6 +146,7 @@ impl ContractInteract {
             ));
 
         println!("new address: {new_address_bech32}");
+        */
     }
 
     pub async fn upgrade(&mut self) {
@@ -715,50 +718,51 @@ impl ContractInteract {
     }
 
     pub async fn deploy_and_setup_governance_sc(&mut self) {
-        let contract_code = MxscPath::new(&self.governance_sc_code);
+        /*     let contract_code = MxscPath::new(&self.governance_sc_code);
 
-        let vote_address = self
-            .interactor
-            .tx()
-            .from(&self.wallet_address)
-            .gas(90_000_000u64)
-            .typed(GovernanceSCProxy)
-            .init(self.state.current_address())
-            .code(contract_code)
-            .returns(ReturnsNewAddress)
-            .run()
-            .await;
+            let vote_address = self
+                .interactor
+                .tx()
+                .from(&self.wallet_address)
+                .gas(90_000_000u64)
+                .typed(GovernanceSCProxy)
+                .init(self.state.current_address())
+                .code(contract_code)
+                .returns(ReturnsNewAddress)
+                .run()
+                .await;
 
-        let new_address_bech32 = bech32::encode(&vote_address);
-        let governance_sc_address = Bech32Address::from_bech32_string(new_address_bech32.clone());
+            let new_address_bech32 = bech32::encode(&vote_address);
+            let governance_sc_address = Bech32Address::from_bech32_string(new_address_bech32.clone());
 
-        self.interactor
-            .tx()
-            .from(&self.wallet_address)
-            .to(self.state.current_address())
-            .typed(proxy::LiquidStakingProxy)
-            .set_governance_contract(&governance_sc_address)
-            .returns(ReturnsResultUnmanaged)
-            .run()
-            .await;
+            self.interactor
+                .tx()
+                .from(&self.wallet_address)
+                .to(self.state.current_address())
+                .typed(proxy::LiquidStakingProxy)
+                .set_governance_contract(&governance_sc_address)
+                .returns(ReturnsResultUnmanaged)
+                .run()
+                .await;
 
-        let current_epoch = Self::get_current_epoch().await;
-        self.interactor
-            .tx()
-            .from(&self.wallet_address)
-            .to(governance_sc_address)
-            .typed(GovernanceSCProxy)
-            .proposal(b"play chess", current_epoch, current_epoch + 5)
-            .returns(ReturnsResultUnmanaged)
-            .run()
-            .await;
+            let current_epoch = Self::get_current_epoch().await;
+            self.interactor
+                .tx()
+                .from(&self.wallet_address)
+                .to(governance_sc_address)
+                .typed(GovernanceSCProxy)
+                .proposal(b"play chess", current_epoch, current_epoch + 5)
+                .returns(ReturnsResultUnmanaged)
+                .run()
+                .await;
 
-        self.interactor
-            .generate_blocks_until_epoch(5)
-            .await
-            .unwrap();
+            self.interactor
+                .generate_blocks_until_epoch(5)
+                .await
+                .unwrap();
 
-        println!("vote sc new address: {new_address_bech32}");
+            println!("vote sc new address: {new_address_bech32}");
+        */
     }
 
     async fn get_current_epoch() -> u64 {
