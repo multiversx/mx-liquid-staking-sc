@@ -4,15 +4,12 @@ mod liquid_staking_config;
 mod liquid_staking_state;
 mod proxy;
 
-use liquid_staking::proxies::vote_proxy;
 pub use liquid_staking_config::Config;
 use liquid_staking_state::State;
 use multiversx_sc_snippets::imports::*;
 use multiversx_sc_snippets::sdk::gateway::NetworkStatusRequest;
 
 pub const CHAIN_SIMULATOR_GATEWAY: &str = "http://localhost:8085";
-
-use crate::proxy::VoteType;
 
 const DELEGATION_MOCK_CONTRACT_CODE: &str = "../delegation-mock/output/delegation-mock.mxsc.json";
 const VOTE_MOCK_CONTRACT_CODE: &str = "../vote-mock/output/vote-mock.mxsc.json";
@@ -506,7 +503,7 @@ impl ContractInteract {
     }
 
     pub async fn change_delegation_contract_admin(&mut self) {
-        let contract_address = self.state.delegation_address();
+        /*   let contract_address = self.state.delegation_address();
         let admin_address = bech32::decode("");
 
         let response = self
@@ -522,6 +519,7 @@ impl ContractInteract {
             .await;
 
         println!("Result: {response:?}");
+        */
     }
 
     pub async fn change_delegation_contract_params(&mut self) {
@@ -709,7 +707,7 @@ impl ContractInteract {
             .to(self.state.current_address())
             .gas(50_000_000u64)
             .typed(proxy::LiquidStakingProxy)
-            .delegate_vote(1usize, VoteType::Yes)
+            .delegate_vote("1", "yes")
             .payment((TokenIdentifier::from(token_id), token_nonce, token_amount))
             .returns(ReturnsResultUnmanaged)
             .run()
@@ -724,7 +722,7 @@ impl ContractInteract {
             .tx()
             .from(&self.wallet_address)
             .gas(90_000_000u64)
-            .typed(vote_proxy::VoteMockProxy)
+            .typed(GovernanceSCProxy)
             .init(self.state.current_address())
             .code(contract_code)
             .returns(ReturnsNewAddress)
@@ -749,8 +747,8 @@ impl ContractInteract {
             .tx()
             .from(&self.wallet_address)
             .to(governance_sc_address)
-            .typed(vote_proxy::VoteMockProxy)
-            .propose(b"play chess", current_epoch, current_epoch + 5)
+            .typed(GovernanceSCProxy)
+            .proposal(b"play chess", current_epoch, current_epoch + 5)
             .returns(ReturnsResultUnmanaged)
             .run()
             .await;
