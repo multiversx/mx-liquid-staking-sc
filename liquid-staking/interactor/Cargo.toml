@@ -19,10 +19,10 @@ toml = "0.8.6"
 path = ".."
 
 [dependencies.multiversx-sc-snippets]
-version = "0.58.0"
+version = "0.59.0"
 
 [dependencies.multiversx-sc]
-version = "0.58.0"
+version = "0.59.0"
 
 [dependencies.clap]
 version = "4.4.7"

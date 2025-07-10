@@ -4,7 +4,7 @@ multiversx_sc::derive_imports!();
 use crate::basics::constants::{
     EGLD_TO_WHITELIST, MAX_DELEGATION_ADDRESSES, MIN_BLOCKS_BEFORE_CLEAR_ONGOING_OP,
 };
-use crate::{basics::errors::ERROR_BAD_WHITELIST_FEE, proxies::delegation_proxy};
+use crate::basics::errors::ERROR_BAD_WHITELIST_FEE;
 
 use crate::basics::errors::{
     ERROR_ALREADY_WHITELISTED, ERROR_BAD_DELEGATION_ADDRESS, ERROR_CLAIM_EPOCH,
@@ -130,9 +130,8 @@ pub trait DelegationModule:
 
         self.tx()
             .to(contract_address.clone())
-            .typed(delegation_proxy::DelegationMockProxy)
-            .delegate()
-            .egld(payment.clone())
+            .typed(DelegationSCProxy)
+            .delegate(payment.clone())
             .callback(
                 DelegationModule::callbacks(self).whitelist_contract_callback(
                     caller,
@@ -425,7 +424,7 @@ pub trait DelegationModule:
 
     #[view(getVoteContract)]
     #[storage_mapper("voteContract")]
-    fn vote_contract(&self) -> SingleValueMapper<ManagedAddress>;
+    fn governance_contract(&self) -> SingleValueMapper<ManagedAddress>;
 
     #[storage_mapper("whitelistingDelegationOngoing")]
     fn last_whitelisting_delegation_nonce(&self) -> SingleValueMapper<u64>;

@@ -44,7 +44,7 @@ multiversx_sc_wasm_adapter::endpoints! {
         getAddressesToClaim => addresses_to_claim
         getDelegationClaimStatus => delegation_claim_status
         getDelegationContractData => delegation_contract_data
-        getVoteContract => vote_contract
+        getVoteContract => governance_contract
         claimRewards => claim_rewards
         delegateRewards => delegate_rewards
         delegateVote => delegate_vote
@@ -53,7 +53,7 @@ multiversx_sc_wasm_adapter::endpoints! {
         withdrawAll => withdraw_all
         addLiquidity => add_liquidity
         removeLiquidity => remove_liquidity
-        set_vote_contract => set_vote_contract
+        set_governance_contract => set_governance_contract
         claim_rewards_callback => claim_rewards_callback
         delegate_rewards_callback => delegate_rewards_callback
         withdraw_tokens_callback => withdraw_tokens_callback

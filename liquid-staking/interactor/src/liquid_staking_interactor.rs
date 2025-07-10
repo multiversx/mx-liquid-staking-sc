@@ -1,6 +1,5 @@
 #![allow(non_snake_case)]
 
-mod delegation_proxy;
 mod liquid_staking_config;
 mod liquid_staking_state;
 mod proxy;
@@ -76,7 +75,7 @@ pub struct ContractInteract {
     contract_code: BytesValue,
     delegation_mock_contract_code: String,
     state: State,
-    vote_sc_code: String,
+    governance_sc_code: String,
 }
 
 impl ContractInteract {
@@ -101,7 +100,7 @@ impl ContractInteract {
             contract_code,
             delegation_mock_contract_code: DELEGATION_MOCK_CONTRACT_CODE.to_string(),
             state: State::load_state(),
-            vote_sc_code: VOTE_MOCK_CONTRACT_CODE.to_string(),
+            governance_sc_code: VOTE_MOCK_CONTRACT_CODE.to_string(),
         }
     }
 
@@ -134,7 +133,7 @@ impl ContractInteract {
             .tx()
             .from(&self.wallet_address)
             .gas(90_000_000u64)
-            .typed(delegation_proxy::DelegationMockProxy)
+            .typed(DelegationSCProxy)
             .init()
             .code(contract_code)
             .returns(ReturnsNewAddress)
@@ -717,8 +716,8 @@ impl ContractInteract {
             .await;
     }
 
-    pub async fn deploy_and_setup_vote_sc(&mut self) {
-        let contract_code = MxscPath::new(&self.vote_sc_code);
+    pub async fn deploy_and_setup_governance_sc(&mut self) {
+        let contract_code = MxscPath::new(&self.governance_sc_code);
 
         let vote_address = self
             .interactor
@@ -733,14 +732,14 @@ impl ContractInteract {
             .await;
 
         let new_address_bech32 = bech32::encode(&vote_address);
-        let vote_sc_address = Bech32Address::from_bech32_string(new_address_bech32.clone());
+        let governance_sc_address = Bech32Address::from_bech32_string(new_address_bech32.clone());
 
         self.interactor
             .tx()
             .from(&self.wallet_address)
             .to(self.state.current_address())
             .typed(proxy::LiquidStakingProxy)
-            .set_vote_contract(&vote_sc_address)
+            .set_governance_contract(&governance_sc_address)
             .returns(ReturnsResultUnmanaged)
             .run()
             .await;
@@ -749,7 +748,7 @@ impl ContractInteract {
         self.interactor
             .tx()
             .from(&self.wallet_address)
-            .to(vote_sc_address)
+            .to(governance_sc_address)
             .typed(vote_proxy::VoteMockProxy)
             .propose(b"play chess", current_epoch, current_epoch + 5)
             .returns(ReturnsResultUnmanaged)

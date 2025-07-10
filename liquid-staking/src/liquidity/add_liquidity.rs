@@ -6,9 +6,7 @@ use crate::{
     basics::errors::{
         ERROR_BAD_PAYMENT_AMOUNT, ERROR_DELEGATION_CONTRACT_NOT_INITIALIZED, ERROR_NOT_ACTIVE,
     },
-    liquidity_pool,
-    proxies::delegation_proxy,
-    setup, StorageCache,
+    liquidity_pool, setup, StorageCache,
 };
 
 #[multiversx_sc::module]
@@ -88,9 +86,8 @@ pub trait AddLiquidityModule:
         let gas_for_async_call = self.get_gas_for_async_call();
         self.tx()
             .to(delegation_contract.clone())
-            .typed(delegation_proxy::DelegationMockProxy)
-            .delegate()
-            .egld(payment.clone())
+            .typed(DelegationSCProxy)
+            .delegate(payment.clone())
             .gas(gas_for_async_call)
             .callback(AddLiquidityModule::callbacks(self).add_liquidity_callback(
                 caller,

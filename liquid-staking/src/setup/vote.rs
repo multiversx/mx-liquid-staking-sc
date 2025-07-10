@@ -1,4 +1,4 @@
-use crate::basics::errors::{ERROR_INVALID_SC_ADDRESS, ERROR_VOTE_SC_NOT_SET};
+use crate::basics::errors::{ERROR_GOVERNANCE_SC_NOT_SET, ERROR_INVALID_SC_ADDRESS};
 
 multiversx_sc::imports!();
 
@@ -6,13 +6,16 @@ multiversx_sc::imports!();
 pub trait VoteModule {
     #[only_owner]
     #[endpoint]
-    fn set_vote_contract(&self, sc_address: ManagedAddress) {
-        self.vote_contract().set(sc_address);
+    fn set_governance_contract(&self, sc_address: ManagedAddress) {
+        self.governance_contract().set(sc_address);
     }
 
-    fn get_vote_sc(&self) -> ManagedAddress {
-        require!(!self.vote_contract().is_empty(), ERROR_VOTE_SC_NOT_SET);
-        let address = self.vote_contract().get();
+    fn get_governance_sc(&self) -> ManagedAddress {
+        require!(
+            !self.governance_contract().is_empty(),
+            ERROR_GOVERNANCE_SC_NOT_SET
+        );
+        let address = self.governance_contract().get();
         self.require_sc_address(&address);
         address
     }
@@ -25,5 +28,5 @@ pub trait VoteModule {
     }
 
     #[storage_mapper("voteContract")]
-    fn vote_contract(&self) -> SingleValueMapper<ManagedAddress>;
+    fn governance_contract(&self) -> SingleValueMapper<ManagedAddress>;
 }

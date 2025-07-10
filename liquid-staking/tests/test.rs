@@ -276,7 +276,7 @@ fn liquid_staking_delegate_vote_test() {
     DebugApi::dummy();
     let mut sc_setup = LiquidStakingContractSetup::new(liquid_staking::contract_obj);
 
-    sc_setup.set_vote_sc();
+    sc_setup.set_governance_sc();
     sc_setup.deploy_staking_contract(&sc_setup.owner_address.clone(), 1000, 1000, 1500, 0, 0);
 
     let first_user = sc_setup.setup_new_user(100u64);

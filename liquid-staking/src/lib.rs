@@ -8,7 +8,6 @@ pub mod contexts;
 pub mod funds;
 pub mod liquidity;
 pub mod liquidity_pool;
-pub mod proxies;
 pub mod setup;
 
 use setup::delegation::{ClaimStatus, ClaimStatusType};

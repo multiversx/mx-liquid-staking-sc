@@ -5,9 +5,7 @@ use crate::{
         ERROR_BAD_PAYMENT_AMOUNT, ERROR_BAD_PAYMENT_TOKEN, ERROR_LS_TOKEN_NOT_ISSUED,
     },
     contexts::base::StorageCache,
-    liquidity_pool,
-    proxies::vote_proxy::{self, VoteType},
-    setup,
+    liquidity_pool, setup,
 };
 
 #[multiversx_sc::module]
@@ -19,7 +17,7 @@ pub trait DelegateVoteModule:
 {
     #[payable("*")]
     #[endpoint(delegateVote)]
-    fn delegate_vote(&self, proposal: usize, vote_type: VoteType) {
+    fn delegate_vote(&self, proposal: ManagedBuffer, vote_type: ManagedBuffer) {
         self.blockchain().check_caller_is_user_account();
         let storage_cache = StorageCache::new(self);
         let caller = self.blockchain().get_caller();
@@ -50,16 +48,16 @@ pub trait DelegateVoteModule:
 
     fn call_delegate_vote(
         &self,
-        proposal: usize,
-        vote_type: VoteType,
+        proposal: ManagedBuffer,
+        vote_type: ManagedBuffer,
         delegate_to: &ManagedAddress,
         rewards_reserve: BigUint,
     ) {
-        let vote_contract = self.get_vote_sc();
+        let governance_contract = self.get_governance_sc();
 
         self.tx()
-            .to(vote_contract.clone())
-            .typed(vote_proxy::VoteMockProxy)
+            .to(governance_contract.clone())
+            .typed(GovernanceSCProxy)
             .delegate_vote(proposal, vote_type, delegate_to, rewards_reserve)
             .sync_call();
     }

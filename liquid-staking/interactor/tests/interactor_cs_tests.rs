@@ -169,6 +169,6 @@ async fn delegate_vote() {
     interact.add_liquidity().await;
     interact.add_liquidity().await;
     interact.add_liquidity().await;
-    interact.deploy_and_setup_vote_sc().await;
+    interact.deploy_and_setup_governance_sc().await;
     interact.delegate_vote(&ls_token).await;
 }

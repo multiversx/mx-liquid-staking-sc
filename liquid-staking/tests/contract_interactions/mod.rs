@@ -1,6 +1,5 @@
 use crate::contract_setup::LiquidStakingContractSetup;
 use basics::views::ViewsModule;
-use delegation_mock::DelegationMock;
 use funds::{
     claim::ClaimModule, delegate_rewards::DelegateRewardsModule,
     recompute_token_reserve::RecomputeTokenReserveModule, unbond::UnbondModule,
@@ -16,7 +15,6 @@ use multiversx_sc_scenario::imports::ReturnCode;
 use multiversx_sc_scenario::{managed_address, managed_buffer, num_bigint, rust_biguint, DebugApi};
 use setup::config::{ConfigModule, UnstakeTokenAttributes};
 use setup::delegation::DelegationModule;
-use vote_mock::VoteMock;
 
 pub const EGLD_TO_WHITELIST: u64 = 1;
 pub const FIRST_ADD_LIQUIDITY_AMOUNT: u64 = 100;
@@ -115,7 +113,7 @@ where
             .assert_ok();
     }
 
-    pub fn set_vote_sc(&mut self) {
+    pub fn set_governance_sc(&mut self) {
         let rust_zero = rust_biguint!(0u64);
         let vote_wrapper = self.b_mock.create_sc_account(
             &rust_zero,
@@ -147,7 +145,7 @@ where
                 &self.sc_wrapper,
                 &Self::exp18(0),
                 |sc| {
-                    sc.set_vote_contract(managed_address!(vote_wrapper.address_ref()));
+                    sc.set_governance_contract(managed_address!(vote_wrapper.address_ref()));
                 },
             )
             .assert_ok();

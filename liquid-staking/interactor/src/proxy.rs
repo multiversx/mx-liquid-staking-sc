@@ -367,7 +367,7 @@ where
             .original_result()
     }
 
-    pub fn vote_contract(
+    pub fn governance_contract(
         self,
     ) -> TxTypedCall<Env, From, To, NotPayable, Gas, ManagedAddress<Env::Api>> {
         self.wrapped_tx
@@ -395,8 +395,8 @@ where
     }
 
     pub fn delegate_vote<
-        Arg0: ProxyArg<usize>,
-        Arg1: ProxyArg<VoteType>,
+        Arg0: ProxyArg<ManagedBuffer<Env::Api>>,
+        Arg1: ProxyArg<ManagedBuffer<Env::Api>>,
     >(
         self,
         proposal: Arg0,
@@ -455,7 +455,7 @@ where
             .original_result()
     }
 
-    pub fn set_vote_contract<
+    pub fn set_governance_contract<
         Arg0: ProxyArg<ManagedAddress<Env::Api>>,
     >(
         self,
@@ -463,7 +463,7 @@ where
     ) -> TxTypedCall<Env, From, To, NotPayable, Gas, ()> {
         self.wrapped_tx
             .payment(NotPayable)
-            .raw_call("set_vote_contract")
+            .raw_call("set_governance_contract")
             .argument(&sc_address)
             .original_result()
     }
@@ -544,13 +544,4 @@ where
     pub total_unstaked_from_ls_contract: BigUint<Api>,
     pub total_unbonded_from_ls_contract: BigUint<Api>,
     pub egld_in_ongoing_undelegation: BigUint<Api>,
-}
-
-#[type_abi]
-#[derive(TopEncode, TopDecode, PartialEq, Eq, Copy, Clone, Debug)]
-pub enum VoteType {
-    Yes,
-    No,
-    Veto,
-    Abstain,
 }

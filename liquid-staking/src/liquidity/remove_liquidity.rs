@@ -8,7 +8,6 @@ use crate::{
         ERROR_LS_TOKEN_NOT_ISSUED, ERROR_NOT_ACTIVE,
     },
     liquidity_pool,
-    proxies::delegation_proxy,
     setup::{
         self,
         config::{UnstakeTokenAttributes, UNBOND_PERIOD},
@@ -133,7 +132,7 @@ pub trait RemoveLiquidityModule:
         let gas_for_async_call = self.get_gas_for_async_call();
         self.tx()
             .to(delegation_contract.clone())
-            .typed(delegation_proxy::DelegationMockProxy)
+            .typed(DelegationSCProxy)
             .undelegate(egld_to_unstake.clone())
             .gas(gas_for_async_call)
             .callback(

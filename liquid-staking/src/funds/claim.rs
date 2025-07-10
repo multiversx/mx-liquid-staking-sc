@@ -6,7 +6,6 @@ use crate::{
         errors::{ERROR_NOT_ACTIVE, ERROR_NO_DELEGATION_CONTRACTS},
         events,
     },
-    proxies::delegation_proxy,
     setup::{self, delegation::ClaimStatusType},
     StorageCache,
 };
@@ -53,7 +52,7 @@ pub trait ClaimModule:
 
             self.tx()
                 .to(address.clone())
-                .typed(delegation_proxy::DelegationMockProxy)
+                .typed(DelegationSCProxy)
                 .claim_rewards()
                 .gas(DEFAULT_GAS_TO_CLAIM_REWARDS)
                 .callback(ClaimModule::callbacks(self).claim_rewards_callback(address))

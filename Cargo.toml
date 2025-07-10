@@ -1,12 +1,4 @@
 [workspace]
 resolver = "2"
 
-members = [
-  "liquid-staking",
-  "liquid-staking/meta",
-  "liquid-staking/interactor",
-  "delegation-mock",
-  "delegation-mock/meta",
-  "vote-mock",
-  "vote-mock/meta",
-]
+members = ["liquid-staking", "liquid-staking/meta", "liquid-staking/interactor"]
