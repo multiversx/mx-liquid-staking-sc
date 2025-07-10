@@ -1,2 +1,0 @@
-[[proxy]]
-path = "../liquid-staking/src/proxies/delegation_proxy.rs"
