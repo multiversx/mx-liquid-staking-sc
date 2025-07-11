@@ -15,6 +15,8 @@ use setup::delegation::{ClaimStatus, ClaimStatusType};
 use contexts::base::*;
 use liquidity_pool::State;
 
+use crate::basics::constants::TEN_DAYS;
+
 #[multiversx_sc::contract]
 pub trait LiquidStaking:
     basics::events::EventsModule
@@ -27,6 +29,7 @@ pub trait LiquidStaking:
     + funds::recompute_token_reserve::RecomputeTokenReserveModule
     + funds::unbond::UnbondModule
     + funds::withdraw::WithdrawModule
+    + funds::claim_back::ClaimBackModule
     + liquidity::add_liquidity::AddLiquidityModule
     + liquidity::remove_liquidity::RemoveLiquidityModule
     + liquidity_pool::LiquidityPoolModule
@@ -43,7 +46,7 @@ pub trait LiquidStaking:
             last_claim_epoch: current_epoch,
             last_claim_block: current_round,
         };
-
+        self.vote_lock_period().set(TEN_DAYS);
         self.delegation_claim_status().set_if_empty(claim_status);
     }
 
