@@ -1,3 +1,4 @@
+use delegation_sc_interact::DelegateCallsInteract;
 use liquid_staking_interactor::Config;
 use liquid_staking_interactor::ContractInteract;
 use multiversx_sc_snippets::imports::*;

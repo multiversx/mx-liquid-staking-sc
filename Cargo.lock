@@ -366,6 +366,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "delegation-sc-interact"
+version = "0.0.0"
+dependencies = [
+ "clap",
+ "multiversx-sc-snippets",
+ "serde",
+ "tokio",
+ "toml 0.8.19",
+]
+
+[[package]]
 name = "der"
 version = "0.7.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
