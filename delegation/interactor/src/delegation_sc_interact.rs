@@ -218,7 +218,8 @@ impl DelegateCallsInteract {
 
         println!("All delegation contract addresses:");
         for address in addresses.iter() {
-            println!("{}", Bech32Address::from(address).to_bech32_expr());
+            let address = Bech32Address::from(address).to_bech32_expr();
+            println!("{address}");
         }
 
         addresses.iter().map(Bech32Address::from).collect()
@@ -312,7 +313,7 @@ impl DelegateCallsInteract {
             .run()
             .await;
 
-        println!("Node states: {}", node_states);
+        println!("Node states: {node_states}");
         node_states.to_string()
     }
 
@@ -355,7 +356,7 @@ impl DelegateCallsInteract {
             .run()
             .await;
 
-        println!("Total active stake: {}", total_stake);
+        println!("Total active stake: {total_stake}");
         total_stake
     }
 
@@ -372,7 +373,7 @@ impl DelegateCallsInteract {
             .run()
             .await;
 
-        println!("User active stake: {}", active_stake);
+        println!("User active stake: {active_stake}");
         active_stake
     }
 
@@ -512,6 +513,6 @@ impl DelegateCallsInteract {
             .run()
             .await;
 
-        println!("Set check cap on redelegate rewards to: {}", state);
+        println!("Set check cap on redelegate rewards to: {state}");
     }
 }

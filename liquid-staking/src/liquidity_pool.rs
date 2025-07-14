@@ -56,10 +56,7 @@ pub trait LiquidityPoolModule:
         ls_token_amount: &BigUint,
         storage_cache: &StorageCache<Self>,
     ) -> BigUint {
-        let egld_amount =
-            ls_token_amount * &storage_cache.virtual_egld_reserve / &storage_cache.ls_token_supply;
-
-        egld_amount
+        ls_token_amount * &storage_cache.virtual_egld_reserve / &storage_cache.ls_token_supply
     }
 
     fn mint_ls_token(&self, amount: BigUint) -> EsdtTokenPayment<Self::Api> {
