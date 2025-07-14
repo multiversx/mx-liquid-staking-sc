@@ -114,12 +114,12 @@ impl ContractInteract {
             .run()
             .await;
 
-        let new_address_bech32 = bech32::encode(&new_address);
-        self.state.set_address(Bech32Address::from_bech32_string(
-            new_address_bech32.clone(),
-        ));
+        let new_address_bech32 = Bech32Address::from(&new_address);
+        self.state.set_address(new_address_bech32.clone());
 
-        println!("new address: {new_address_bech32}");
+        let new_address_string = new_address_bech32.to_string();
+
+        println!("new address: {new_address_string}");
     }
 
     pub async fn deploy_delegation_contract(&mut self) {
@@ -156,13 +156,12 @@ impl ContractInteract {
 
         let addresses = interactor.get_all_contract_addresses().await;
 
-        let new_address_bech32 = bech32::encode(&addresses[0]);
+        let new_address_bech32 = Bech32Address::from(&addresses[0]);
         self.state
-            .set_delegation_address(Bech32Address::from_bech32_string(
-                new_address_bech32.clone(),
-            ));
+            .set_delegation_address(new_address_bech32.clone());
 
-        println!("new delegation address: {new_address_bech32}");
+        let new_address_string = new_address_bech32.to_string();
+        println!("new delegation address: {new_address_string}");
     }
 
     pub async fn upgrade(&mut self) {
