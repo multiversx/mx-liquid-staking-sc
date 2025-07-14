@@ -4,7 +4,10 @@ use crate::{
     basics::{
         self,
         constants::TEN_DAYS,
-        errors::{ERROR_BAD_PAYMENT_TOKEN, ERROR_LS_TOKEN_NOT_ISSUED},
+        errors::{
+            ERROR_ALREADY_VOTED, ERROR_BAD_PAYMENT_TOKEN, ERROR_LS_TOKEN_NOT_ISSUED,
+            ERROR_MISSING_VOTING_POWER,
+        },
     },
     contexts::base::StorageCache,
     liquidity_pool,
@@ -26,7 +29,7 @@ pub trait DelegateVoteModule:
         let caller = self.blockchain().get_caller();
         require!(
             !self.voted_proposals(&caller).contains(&proposal),
-            "already voted for this proposal"
+            ERROR_ALREADY_VOTED
         );
 
         let balance_to_vote = self.handle_balance_to_vote(&caller);
@@ -47,7 +50,7 @@ pub trait DelegateVoteModule:
         require!(
             payments.len() == 1     // user comes with new payment
                 || (payments.is_empty() && !self.locked_vote_balance(caller).is_empty()), // user already has locked LS tokens from a previous proposal vote
-            "invalid payment or missing voting power"
+            ERROR_MISSING_VOTING_POWER
         );
 
         // the require above ensures us that at least in 1 place from below to_be_locked_balance will be increased

@@ -11,6 +11,7 @@ const STATE_FILE: &str = "state.toml";
 pub struct State {
     contract_address: Option<Bech32Address>,
     delegation_address: Option<Bech32Address>,
+    governance_contract: Option<Bech32Address>,
 }
 
 impl State {
@@ -33,6 +34,9 @@ impl State {
 
     pub fn set_delegation_address(&mut self, address: Bech32Address) {
         self.delegation_address = Some(address);
+    }
+    pub fn set_governance_address(&mut self, address: Bech32Address) {
+        self.governance_contract = Some(address);
     }
 
     /// Returns the contract address

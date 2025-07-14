@@ -1,6 +1,9 @@
 multiversx_sc::imports!();
 
-use crate::{liquidity_pool, setup};
+use crate::{
+    basics::errors::{ERROR_CANNOT_CLAIM_YET, ERROR_NOTHING_TO_CLAIM},
+    liquidity_pool, setup,
+};
 
 #[multiversx_sc::module]
 pub trait ClaimBackModule:
@@ -15,7 +18,7 @@ pub trait ClaimBackModule:
         let caller = self.blockchain().get_caller();
         require!(
             self.locked_vote_balance(&caller).is_empty(),
-            "nothing to claim"
+            ERROR_NOTHING_TO_CLAIM
         );
         let locked_balance = self.locked_vote_balance(&caller).take();
 
@@ -29,7 +32,7 @@ pub trait ClaimBackModule:
 
         require!(
             claim_back_early || (current_epoch >= locked_balance.claim_back),
-            "cannot claim yet"
+            ERROR_CANNOT_CLAIM_YET
         );
 
         self.voted_proposals(&caller).clear();

@@ -100,7 +100,7 @@ impl ContractInteract {
             .interactor
             .tx()
             .from(&self.wallet_address)
-            .gas(90_000_000u64)
+            .gas(100_000_000u64)
             .typed(proxy::LiquidStakingProxy)
             .init()
             .code(&self.contract_code)
@@ -117,39 +117,43 @@ impl ContractInteract {
     }
 
     pub async fn deploy_delegation_contract(&mut self) {
-        let mut interactor =
+        let mut delegation_interactor =
             DelegateCallsInteract::new(DelegationConfig::chain_simulator_config()).await;
         let validator_1 =
-            Validator::from_pem_file("./validatorKey1.pem").expect("unable to load validator key");
+            Validator::from_pem_file("./../../delegation/interactor/validatorKey1.pem")
+                .expect("unable to load validator key");
         let validator_2 =
-            Validator::from_pem_file("./validatorKey2.pem").expect("unable to load validator key");
+            Validator::from_pem_file("./../../delegation/interactor/validatorKey2.pem")
+                .expect("unable to load validator key");
 
-        let _ = interactor
+        let _ = delegation_interactor
             .interactor
             .add_key(validator_1.private_key.clone())
             .await
             .unwrap();
-        let _ = interactor
+        let _ = delegation_interactor
             .interactor
             .add_key(validator_2.private_key.clone())
             .await
             .unwrap();
 
-        interactor
-            .set_state(&interactor.wallet_address.to_address())
+        delegation_interactor
+            .set_state(&delegation_interactor.wallet_address.to_address())
             .await;
-        interactor
-            .set_state(&interactor.delegator1.to_address())
+        delegation_interactor
+            .set_state(&delegation_interactor.delegator1.to_address())
             .await;
-        interactor
-            .set_state(&interactor.delegator2.to_address())
+        delegation_interactor
+            .set_state(&delegation_interactor.delegator2.to_address())
             .await;
-        interactor
+        delegation_interactor
             .create_new_delegation_contract(51_000_000_000_000_000_000_000_u128, 3745u64)
             .await;
-        interactor.set_check_cap_on_redelegate_rewards(false).await;
+        delegation_interactor
+            .set_check_cap_on_redelegate_rewards(false)
+            .await;
 
-        let addresses = interactor.get_all_contract_addresses().await;
+        let addresses = delegation_interactor.get_all_contract_addresses().await;
 
         let new_address_bech32 = &addresses[0];
         self.state
@@ -516,8 +520,8 @@ impl ContractInteract {
     }
 
     pub async fn change_delegation_contract_admin(&mut self) {
-        /*   let contract_address = self.state.delegation_address();
-        let admin_address = bech32::decode("");
+        let contract_address = self.state.delegation_address();
+        let admin_address = Bech32Address::from_bech32_string("".to_string());
 
         let response = self
             .interactor
@@ -532,7 +536,6 @@ impl ContractInteract {
             .await;
 
         println!("Result: {response:?}");
-        */
     }
 
     pub async fn change_delegation_contract_params(&mut self) {
@@ -727,52 +730,38 @@ impl ContractInteract {
             .await;
     }
 
-    pub async fn deploy_and_setup_governance_sc(&mut self) {
-        /*     let contract_code = MxscPath::new(&self.governance_sc_code);
+    pub async fn deploy_governance_contract(&mut self) {
+        // let mut governance_interactor =
+        //     GovernanceCallsInteract::new(Config::chain_simulator_config()).await;
 
-            let vote_address = self
-                .interactor
-                .tx()
-                .from(&self.wallet_address)
-                .gas(90_000_000u64)
-                .typed(GovernanceSCProxy)
-                .init(self.state.current_address())
-                .code(contract_code)
-                .returns(ReturnsNewAddress)
-                .run()
-                .await;
+        // governance_interactor
+        //     .set_state(&governance_interactor.owner.to_address())
+        //     .await;
 
-            let new_address_bech32 = bech32::encode(&vote_address);
-            let governance_sc_address = Bech32Address::from_bech32_string(new_address_bech32.clone());
+        // governance_interactor
+        //     .proposal("6db132d759482f9f3515fe3ca8f72a8d6dc61244", 9, 11)
+        //     .await;
 
-            self.interactor
-                .tx()
-                .from(&self.wallet_address)
-                .to(self.state.current_address())
-                .typed(proxy::LiquidStakingProxy)
-                .set_governance_contract(&governance_sc_address)
-                .returns(ReturnsResultUnmanaged)
-                .run()
-                .await;
+        // let current_epoch = Self::get_current_epoch().await;
+        // self.interactor
+        //     .tx()
+        //     .from(&self.wallet_address)
+        //     .to(governance_sc_address)
+        //     .typed(GovernanceSCProxy)
+        //     .proposal(b"play chess", current_epoch, current_epoch + 5)
+        //     .returns(ReturnsResultUnmanaged)
+        //     .run()
+        //     .await;
 
-            let current_epoch = Self::get_current_epoch().await;
-            self.interactor
-                .tx()
-                .from(&self.wallet_address)
-                .to(governance_sc_address)
-                .typed(GovernanceSCProxy)
-                .proposal(b"play chess", current_epoch, current_epoch + 5)
-                .returns(ReturnsResultUnmanaged)
-                .run()
-                .await;
+        // self.interactor
+        //     .generate_blocks_until_epoch(5)
+        //     .await
+        //     .unwrap();
 
-            self.interactor
-                .generate_blocks_until_epoch(5)
-                .await
-                .unwrap();
+        // self.state
+        //     .set_governance_address(new_address_bech32.clone());
 
-            println!("vote sc new address: {new_address_bech32}");
-        */
+        // println!("vote sc new address: {new_address_bech32}");
     }
 
     #[allow(dead_code)]

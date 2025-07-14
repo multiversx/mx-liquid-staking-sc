@@ -4,7 +4,10 @@ multiversx_sc::derive_imports!();
 use crate::basics::constants::{
     EGLD_TO_WHITELIST, MAX_DELEGATION_ADDRESSES, MIN_BLOCKS_BEFORE_CLEAR_ONGOING_OP,
 };
-use crate::basics::errors::ERROR_BAD_WHITELIST_FEE;
+use crate::basics::errors::{
+    ERROR_ANOTHER_WHITELIST_ONGOING, ERROR_BAD_WHITELIST_FEE, ERROR_CLEAR_WHITELIST,
+    ERROR_MAX_DELEGATION_ADDRESSES,
+};
 
 use crate::basics::errors::{
     ERROR_ALREADY_WHITELISTED, ERROR_BAD_DELEGATION_ADDRESS, ERROR_CLAIM_EPOCH,
@@ -71,7 +74,7 @@ pub trait DelegationModule:
                 && self.last_whitelisting_delegation_nonce().get()
                     + MIN_BLOCKS_BEFORE_CLEAR_ONGOING_OP
                     < current_nonce,
-            "Whitelist operation cannot be cleared now"
+            ERROR_CLEAR_WHITELIST
         );
 
         self.last_whitelisting_delegation_nonce().clear();
@@ -100,7 +103,7 @@ pub trait DelegationModule:
 
         require!(
             self.last_whitelisting_delegation_nonce().is_empty(),
-            "Another whitelisting is currently ongoing"
+            ERROR_ANOTHER_WHITELIST_ONGOING
         );
 
         require!(
@@ -110,7 +113,7 @@ pub trait DelegationModule:
 
         require!(
             self.delegation_addresses_list().len() <= MAX_DELEGATION_ADDRESSES,
-            "Maximum number of delegation addresses reached"
+            ERROR_MAX_DELEGATION_ADDRESSES
         );
 
         let contract_data = DelegationContractData {
