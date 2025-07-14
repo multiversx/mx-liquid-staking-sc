@@ -2,6 +2,7 @@ multiversx_sc::imports!();
 
 use crate::{
     basics::{
+        self,
         constants::TEN_DAYS,
         errors::{ERROR_BAD_PAYMENT_TOKEN, ERROR_LS_TOKEN_NOT_ISSUED},
     },
@@ -16,6 +17,7 @@ pub trait DelegateVoteModule:
     + multiversx_sc_modules::default_issue_callbacks::DefaultIssueCallbacksModule
     + liquidity_pool::LiquidityPoolModule
     + setup::vote::VoteModule
+    + basics::events::EventsModule
 {
     #[payable("*")]
     #[endpoint(delegateVote)]
@@ -72,6 +74,7 @@ pub trait DelegateVoteModule:
 
         let egld_amount = self.get_egld_amount(&to_be_locked_balance.funds.amount, &storage_cache);
         self.locked_vote_balance(caller).set(to_be_locked_balance);
+        self.tokens_locked_for_delegate_vote_event(&caller, &egld_amount, claim_back);
         egld_amount
     }
 

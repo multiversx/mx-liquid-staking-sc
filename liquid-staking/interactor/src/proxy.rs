@@ -476,20 +476,7 @@ where
             .original_result()
     }
 
-    pub fn set_lock_vote_period<
-        Arg0: ProxyArg<ManagedAddress<Env::Api>>,
-    >(
-        self,
-        sc_address: Arg0,
-    ) -> TxTypedCall<Env, From, To, NotPayable, Gas, ()> {
-        self.wrapped_tx
-            .payment(NotPayable)
-            .raw_call("set_lock_vote_period")
-            .argument(&sc_address)
-            .original_result()
-    }
-
-    pub fn set_porposal_end_period<
+    pub fn set_proposal_end_period<
         Arg0: ProxyArg<ManagedBuffer<Env::Api>>,
         Arg1: ProxyArg<u64>,
     >(
@@ -499,7 +486,7 @@ where
     ) -> TxTypedCall<Env, From, To, NotPayable, Gas, ()> {
         self.wrapped_tx
             .payment(NotPayable)
-            .raw_call("set_porposal_end_period")
+            .raw_call("set_proposal_end_period")
             .argument(&proposal)
             .argument(&end_period)
             .original_result()
