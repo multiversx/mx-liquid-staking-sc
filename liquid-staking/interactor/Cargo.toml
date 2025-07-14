@@ -1,7 +1,6 @@
 [package]
 name = "liquid-staking-interactor"
 version = "0.0.0"
-authors = ["you"]
 edition = "2021"
 publish = false
 
@@ -17,6 +16,9 @@ toml = "0.8.6"
 
 [dependencies.liquid-staking]
 path = ".."
+
+[dependencies.delegation-sc-interact]
+path = "../../delegation/interactor"
 
 [dependencies.multiversx-sc-snippets]
 version = "0.59.0"

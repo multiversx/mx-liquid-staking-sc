@@ -4,15 +4,13 @@ mod liquid_staking_config;
 mod liquid_staking_state;
 mod proxy;
 
+use delegation_sc_interact::{DelegateCallsInteract, DelegationConfig};
 pub use liquid_staking_config::Config;
 use liquid_staking_state::State;
 use multiversx_sc_snippets::imports::*;
 use multiversx_sc_snippets::sdk::gateway::NetworkStatusRequest;
 
 pub const CHAIN_SIMULATOR_GATEWAY: &str = "http://localhost:8085";
-
-const DELEGATION_MOCK_CONTRACT_CODE: &str = "../delegation-mock/output/delegation-mock.mxsc.json";
-const VOTE_MOCK_CONTRACT_CODE: &str = "../vote-mock/output/vote-mock.mxsc.json";
 
 pub async fn liquid_staking_cli() {
     env_logger::init();
@@ -70,9 +68,7 @@ pub struct ContractInteract {
     interactor: Interactor,
     wallet_address: Address,
     contract_code: BytesValue,
-    delegation_mock_contract_code: String,
     state: State,
-    governance_sc_code: String,
 }
 
 impl ContractInteract {
@@ -95,9 +91,7 @@ impl ContractInteract {
             interactor,
             wallet_address,
             contract_code,
-            delegation_mock_contract_code: DELEGATION_MOCK_CONTRACT_CODE.to_string(),
             state: State::load_state(),
-            governance_sc_code: VOTE_MOCK_CONTRACT_CODE.to_string(),
         }
     }
 
@@ -123,7 +117,8 @@ impl ContractInteract {
     }
 
     pub async fn deploy_delegation_contract(&mut self) {
-        let mut interactor = DelegateCallsInteract::new(Config::chain_simulator_config()).await;
+        let mut interactor =
+            DelegateCallsInteract::new(DelegationConfig::chain_simulator_config()).await;
         let validator_1 =
             Validator::from_pem_file("./validatorKey1.pem").expect("unable to load validator key");
         let validator_2 =
@@ -156,7 +151,7 @@ impl ContractInteract {
 
         let addresses = interactor.get_all_contract_addresses().await;
 
-        let new_address_bech32 = Bech32Address::from(&addresses[0]);
+        let new_address_bech32 = &addresses[0];
         self.state
             .set_delegation_address(new_address_bech32.clone());
 
@@ -780,6 +775,7 @@ impl ContractInteract {
         */
     }
 
+    #[allow(dead_code)]
     async fn get_current_epoch() -> u64 {
         let blockchain = GatewayHttpProxy::new(CHAIN_SIMULATOR_GATEWAY.to_string());
 

@@ -1047,6 +1047,7 @@ name = "liquid-staking-interactor"
 version = "0.0.0"
 dependencies = [
  "clap",
+ "delegation-sc-interact",
  "liquid-staking",
  "multiversx-sc",
  "multiversx-sc-snippets",
