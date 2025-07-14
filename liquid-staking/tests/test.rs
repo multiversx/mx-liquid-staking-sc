@@ -12,6 +12,7 @@ fn init_test() {
     LiquidStakingContractSetup::new(liquid_staking::contract_obj);
 }
 
+#[ignore = "delegation setup impossible on blackbox currently"]
 #[test]
 fn liquid_staking_add_liquidity_test() {
     DebugApi::dummy();
@@ -27,6 +28,7 @@ fn liquid_staking_add_liquidity_test() {
     sc_setup.check_user_balance(&first_user, LS_TOKEN_ID, 100u64);
 }
 
+#[ignore = "delegation setup impossible on blackbox currently"]
 #[test]
 fn liquid_staking_remove_liquidity_test() {
     DebugApi::dummy();
@@ -44,6 +46,7 @@ fn liquid_staking_remove_liquidity_test() {
     sc_setup.check_user_egld_balance(&first_user, 0u64);
 }
 
+#[ignore = "delegation setup impossible on blackbox currently"]
 #[test]
 fn liquid_staking_claim_rewards_and_withdraw_test() {
     DebugApi::dummy();
@@ -72,6 +75,7 @@ fn liquid_staking_claim_rewards_and_withdraw_test() {
     sc_setup.check_user_egld_balance_denominated(&first_user, 91239041095890410958u128);
 }
 
+#[ignore = "delegation setup impossible on blackbox currently"]
 #[test]
 fn liquid_staking_multiple_operations() {
     DebugApi::dummy();
@@ -238,6 +242,7 @@ fn liquid_staking_multiple_operations() {
     );
 }
 
+#[ignore = "delegation setup impossible on blackbox currently"]
 #[test]
 fn liquid_staking_multiple_withdraw_test() {
     DebugApi::dummy();
@@ -272,6 +277,7 @@ fn liquid_staking_multiple_withdraw_test() {
     sc_setup.check_contract_storage(170, 170, 0); // 20 + 20 (second_user + third_user)
 }
 
+#[ignore = "delegation setup impossible on blackbox currently"]
 #[test]
 fn liquid_staking_delegate_vote_test() {
     DebugApi::dummy();

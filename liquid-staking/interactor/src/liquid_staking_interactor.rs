@@ -114,39 +114,55 @@ impl ContractInteract {
             .run()
             .await;
 
-        /* let new_address_bech32 = bech32::encode(&new_address);
+        let new_address_bech32 = bech32::encode(&new_address);
         self.state.set_address(Bech32Address::from_bech32_string(
             new_address_bech32.clone(),
         ));
 
         println!("new address: {new_address_bech32}");
-        */
     }
 
     pub async fn deploy_delegation_contract(&mut self) {
-        /*
-        let contract_code = MxscPath::new(&self.delegation_mock_contract_code);
+        let mut interactor = DelegateCallsInteract::new(Config::chain_simulator_config()).await;
+        let validator_1 =
+            Validator::from_pem_file("./validatorKey1.pem").expect("unable to load validator key");
+        let validator_2 =
+            Validator::from_pem_file("./validatorKey2.pem").expect("unable to load validator key");
 
-        let new_address = self
+        let _ = interactor
             .interactor
-            .tx()
-            .from(&self.wallet_address)
-            .gas(90_000_000u64)
-            .typed(DelegationSCProxy)
-            .init()
-            .code(contract_code)
-            .returns(ReturnsNewAddress)
-            .run()
-            .await;
+            .add_key(validator_1.private_key.clone())
+            .await
+            .unwrap();
+        let _ = interactor
+            .interactor
+            .add_key(validator_2.private_key.clone())
+            .await
+            .unwrap();
 
-        let new_address_bech32 = bech32::encode(&new_address);
+        interactor
+            .set_state(&interactor.wallet_address.to_address())
+            .await;
+        interactor
+            .set_state(&interactor.delegator1.to_address())
+            .await;
+        interactor
+            .set_state(&interactor.delegator2.to_address())
+            .await;
+        interactor
+            .create_new_delegation_contract(51_000_000_000_000_000_000_000_u128, 3745u64)
+            .await;
+        interactor.set_check_cap_on_redelegate_rewards(false).await;
+
+        let addresses = interactor.get_all_contract_addresses().await;
+
+        let new_address_bech32 = bech32::encode(&addresses[0]);
         self.state
             .set_delegation_address(Bech32Address::from_bech32_string(
                 new_address_bech32.clone(),
             ));
 
-        println!("new address: {new_address_bech32}");
-        */
+        println!("new delegation address: {new_address_bech32}");
     }
 
     pub async fn upgrade(&mut self) {

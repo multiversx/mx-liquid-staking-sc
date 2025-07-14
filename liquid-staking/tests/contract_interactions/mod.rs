@@ -6,17 +6,15 @@ use funds::{
     withdraw::WithdrawModule,
 };
 use liquid_staking::funds::delegate_vote::DelegateVoteModule;
-use liquid_staking::setup::vote::VoteModule;
 use liquid_staking::*;
 use liquidity::{add_liquidity::AddLiquidityModule, remove_liquidity::RemoveLiquidityModule};
-use multiversx_sc::contract_base::ContractBase;
 use multiversx_sc::types::Address;
 use multiversx_sc_scenario::imports::ReturnCode;
 use multiversx_sc_scenario::{managed_address, managed_buffer, num_bigint, rust_biguint, DebugApi};
 use setup::config::{ConfigModule, UnstakeTokenAttributes};
 use setup::delegation::DelegationModule;
 
-pub const EGLD_TO_WHITELIST: u64 = 1;
+// pub const EGLD_TO_WHITELIST: u64 = 1;
 pub const FIRST_ADD_LIQUIDITY_AMOUNT: u64 = 100;
 
 impl<LiquidStakingContractObjBuilder> LiquidStakingContractSetup<LiquidStakingContractObjBuilder>
@@ -89,6 +87,7 @@ where
     }
     */
 
+    #[allow(dead_code)]
     pub fn update_staking_contract_params(
         &mut self,
         owner_address: &Address,
@@ -114,6 +113,7 @@ where
             })
             .assert_ok();
     }
+
     /*
         pub fn set_governance_sc(&mut self) {
              let rust_zero = rust_biguint!(0u64);
@@ -170,6 +170,7 @@ where
             .assert_ok();
     }
 
+    #[allow(dead_code)]
     pub fn set_inactive(&mut self) {
         self.b_mock
             .execute_tx(
@@ -267,6 +268,7 @@ where
             .assert_ok();
     }
 
+    #[allow(dead_code)]
     pub fn withdraw_all(&mut self, caller: &Address, provider: &Address) {
         let rust_zero = rust_biguint!(0u64);
         self.b_mock
@@ -373,6 +375,7 @@ where
             .assert_ok();
     }
 
+    #[allow(dead_code)]
     pub fn check_delegation_contract_values(
         &mut self,
         delegation_contract: &Address,
@@ -403,6 +406,7 @@ where
         u128::from(ls_value)
     }
 
+    #[allow(dead_code)]
     pub fn check_delegation_contract_values_denominated(
         &mut self,
         delegation_contract: &Address,

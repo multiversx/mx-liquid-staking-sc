@@ -19,11 +19,20 @@ pub trait ClaimBackModule:
         );
         let locked_balance = self.locked_vote_balance(&caller).take();
 
+        let mut claim_back_early = true;
         let current_epoch = self.blockchain().get_block_epoch();
+        for proposal in self.voted_proposals(&caller).iter() {
+            if self.proposal_end_period(proposal).get() > current_epoch {
+                claim_back_early = false;
+            }
+        }
+
         require!(
-            current_epoch >= locked_balance.claim_back,
+            claim_back_early || (current_epoch >= locked_balance.claim_back),
             "cannot claim yet"
         );
+
+        self.voted_proposals(&caller).clear();
 
         self.send().direct_esdt(
             &caller,
