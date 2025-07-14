@@ -28,13 +28,7 @@ pub trait VoteModule {
 
     #[only_owner]
     #[endpoint]
-    fn set_lock_vote_period(&self, sc_address: ManagedAddress) {
-        self.governance_contract().set(sc_address);
-    }
-
-    #[only_owner]
-    #[endpoint]
-    fn set_porposal_end_period(&self, proposal: ManagedBuffer, end_period: Epoch) {
+    fn set_proposal_end_period(&self, proposal: ManagedBuffer, end_period: Epoch) {
         self.proposal_end_period(proposal).set(end_period);
     }
 
