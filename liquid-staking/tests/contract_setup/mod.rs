@@ -44,6 +44,9 @@ where
         let mut b_mock = BlockchainStateWrapper::new();
         let owner_address = b_mock.create_user_account(&rust_zero);
 
+        let egld_balance_biguint = &Self::exp18(1000);
+        b_mock.set_egld_balance(&owner_address, egld_balance_biguint);
+
         let sc_wrapper = b_mock.create_sc_account(
             &rust_zero,
             Some(&owner_address),

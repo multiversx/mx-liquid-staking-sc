@@ -403,6 +403,7 @@ pub trait DelegationModule:
     fn is_state_active(&self, state: State) -> bool {
         state == State::Active
     }
+
     #[view(getDelegationAddressesList)]
     #[storage_mapper("delegationAddressesList")]
     fn delegation_addresses_list(&self) -> LinkedListMapper<ManagedAddress>;

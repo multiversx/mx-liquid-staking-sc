@@ -20,6 +20,7 @@ fn liquid_staking_add_liquidity_test() {
         sc_setup.deploy_staking_contract(&sc_setup.owner_address.clone(), 1000, 1000, 1500, 0, 0);
     */
     let first_user = sc_setup.setup_new_user(100u64);
+    sc_setup.set_active();
     sc_setup.add_liquidity(&sc_setup.owner_address.clone(), FIRST_ADD_LIQUIDITY_AMOUNT);
     sc_setup.add_liquidity(&first_user, 100u64);
     sc_setup.check_contract_storage(200, 200, 0);
@@ -276,7 +277,7 @@ fn liquid_staking_delegate_vote_test() {
     DebugApi::dummy();
     let mut sc_setup = LiquidStakingContractSetup::new(liquid_staking::contract_obj);
 
-    sc_setup.set_governance_sc();
+    //sc_setup.set_governance_sc();
     // sc_setup.deploy_staking_contract(&sc_setup.owner_address.clone(), 1000, 1000, 1500, 0, 0);
 
     let first_user = sc_setup.setup_new_user(100u64);

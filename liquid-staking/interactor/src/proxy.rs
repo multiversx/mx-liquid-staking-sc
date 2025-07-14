@@ -439,6 +439,14 @@ where
             .original_result()
     }
 
+    pub fn claim_back(
+        self,
+    ) -> TxTypedCall<Env, From, To, (), Gas, ()> {
+        self.wrapped_tx
+            .raw_call("claimBack")
+            .original_result()
+    }
+
     pub fn add_liquidity(
         self,
     ) -> TxTypedCall<Env, From, To, (), Gas, ()> {
@@ -465,6 +473,35 @@ where
             .payment(NotPayable)
             .raw_call("set_governance_contract")
             .argument(&sc_address)
+            .original_result()
+    }
+
+    pub fn set_lock_vote_period<
+        Arg0: ProxyArg<ManagedAddress<Env::Api>>,
+    >(
+        self,
+        sc_address: Arg0,
+    ) -> TxTypedCall<Env, From, To, NotPayable, Gas, ()> {
+        self.wrapped_tx
+            .payment(NotPayable)
+            .raw_call("set_lock_vote_period")
+            .argument(&sc_address)
+            .original_result()
+    }
+
+    pub fn set_porposal_end_period<
+        Arg0: ProxyArg<ManagedBuffer<Env::Api>>,
+        Arg1: ProxyArg<u64>,
+    >(
+        self,
+        proposal: Arg0,
+        end_period: Arg1,
+    ) -> TxTypedCall<Env, From, To, NotPayable, Gas, ()> {
+        self.wrapped_tx
+            .payment(NotPayable)
+            .raw_call("set_porposal_end_period")
+            .argument(&proposal)
+            .argument(&end_period)
             .original_result()
     }
 }

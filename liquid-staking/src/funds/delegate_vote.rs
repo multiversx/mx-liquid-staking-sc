@@ -43,10 +43,12 @@ pub trait DelegateVoteModule:
 
         let payments = self.call_value().all_transfers();
         require!(
-            payments.len() == 1
-                || (payments.is_empty() && !self.locked_vote_balance(caller).is_empty()),
+            payments.len() == 1     // user comes with new payment
+                || (payments.is_empty() && !self.locked_vote_balance(caller).is_empty()), // user already has locked LS tokens from a previous proposal vote
             "invalid payment or missing voting power"
         );
+
+        // the require above ensures us that at least in 1 place from below to_be_locked_balance will be increased
 
         let claim_back = self.blockchain().get_block_timestamp() + TEN_DAYS;
         let mut to_be_locked_balance = LockedFunds {

@@ -24,71 +24,71 @@ where
     LiquidStakingContractObjBuilder: 'static + Copy + Fn() -> liquid_staking::ContractObj<DebugApi>,
 {
     /*
-       pub fn deploy_staking_contract(
-           &mut self,
-           owner_address: &Address,
-           egld_balance: u64,
-           total_staked: u64,
-           delegation_contract_cap: u64,
-           nr_nodes: u64,
-           apy: u64,
-       ) -> Address {
-           let rust_zero = rust_biguint!(0u64);
-           let egld_balance_biguint = &Self::exp18(egld_balance);
-           let deposit_amount =
-               &Self::exp18(egld_balance - EGLD_TO_WHITELIST - FIRST_ADD_LIQUIDITY_AMOUNT);
-           let total_staked_biguint = Self::exp18(total_staked);
-           let delegation_contract_cap_biguint = Self::exp18(delegation_contract_cap);
+        pub fn deploy_staking_contract(
+        &mut self,
+        owner_address: &Address,
+        egld_balance: u64,
+        total_staked: u64,
+        delegation_contract_cap: u64,
+        nr_nodes: u64,
+        apy: u64,
+    ) -> Address {
+        let rust_zero = rust_biguint!(0u64);
+        let egld_balance_biguint = &Self::exp18(egld_balance);
+        let deposit_amount =
+            &Self::exp18(egld_balance - EGLD_TO_WHITELIST - FIRST_ADD_LIQUIDITY_AMOUNT);
+        let total_staked_biguint = Self::exp18(total_staked);
+        let delegation_contract_cap_biguint = Self::exp18(delegation_contract_cap);
 
-           self.b_mock
-               .set_egld_balance(owner_address, egld_balance_biguint);
+        self.b_mock
+            .set_egld_balance(owner_address, egld_balance_biguint);
 
-           let delegation_wrapper = self.b_mock.create_sc_account(
-               &rust_zero,
-               Some(owner_address),
-               delegation_mock::contract_obj,
-               "delegation-mock.wasm",
-           );
+        let delegation_wrapper = self.b_mock.create_sc_account(
+            &rust_zero,
+            Some(owner_address),
+            delegation_mock::contract_obj,
+            "delegation-mock.wasm",
+        );
 
-           self.b_mock
-               .execute_tx(owner_address, &delegation_wrapper, &rust_zero, |sc| {
-                   sc.init();
-               })
-               .assert_ok();
+        self.b_mock
+            .execute_tx(owner_address, &delegation_wrapper, &rust_zero, |sc| {
+                sc.init();
+            })
+            .assert_ok();
 
-           self.b_mock
-               .execute_tx(owner_address, &delegation_wrapper, deposit_amount, |sc| {
-                   sc.deposit_egld();
-               })
-               .assert_ok();
+        self.b_mock
+            .execute_tx(owner_address, &delegation_wrapper, deposit_amount, |sc| {
+                sc.deposit_egld();
+            })
+            .assert_ok();
 
-           self.b_mock
-               .execute_tx(
-                   owner_address,
-                   &self.sc_wrapper,
-                   &Self::exp18(EGLD_TO_WHITELIST),
-                   |sc| {
-                       sc.whitelist_delegation_contract(
-                           managed_address!(delegation_wrapper.address_ref()),
-                           managed_address!(owner_address),
-                           Self::to_managed_biguint(total_staked_biguint),
-                           Self::to_managed_biguint(delegation_contract_cap_biguint),
-                           nr_nodes,
-                           apy,
-                       );
-                   },
-               )
-               .assert_ok();
-           self.b_mock
-               .execute_tx(owner_address, &self.sc_wrapper, &rust_zero, |sc| {
-                   sc.set_state_active();
-               })
-               .assert_ok();
+        self.b_mock
+            .execute_tx(
+                owner_address,
+                &self.sc_wrapper,
+                &Self::exp18(EGLD_TO_WHITELIST),
+                |sc| {
+                    sc.whitelist_delegation_contract(
+                        managed_address!(delegation_wrapper.address_ref()),
+                        managed_address!(owner_address),
+                        Self::to_managed_biguint(total_staked_biguint),
+                        Self::to_managed_biguint(delegation_contract_cap_biguint),
+                        nr_nodes,
+                        apy,
+                    );
+                },
+            )
+            .assert_ok();
+        self.b_mock
+            .execute_tx(owner_address, &self.sc_wrapper, &rust_zero, |sc| {
+                sc.set_state_active();
+            })
+            .assert_ok();
 
-           delegation_wrapper.address_ref().clone()
-
-       }
+        delegation_wrapper.address_ref().clone()
+    }
     */
+
     pub fn update_staking_contract_params(
         &mut self,
         owner_address: &Address,
@@ -114,48 +114,73 @@ where
             })
             .assert_ok();
     }
-
-    pub fn set_governance_sc(&mut self) {
-        /*/ let rust_zero = rust_biguint!(0u64);
-                let governance_wrapper = self.b_mock.create_sc_account(
-                    &rust_zero,
-                    Some(&self.owner_address),
-                    vote_mock::contract_obj,
-                    "vote-mock.wasm",
-                );
-        self.b_mock
-            .execute_tx(&self.owner_address, &governance_wrapper, &rust_zero, |sc| {
-                sc.init(managed_address!(&self.sc_wrapper.address_ref().clone()));
-            })
-            .assert_ok();
-
-        self.b_mock
-            .execute_tx(
-                &self.owner_address,
-                &governance_wrapper,
-                &Self::exp18(0),
-                |sc| {
-                    let curent_epoch = sc.blockchain().get_block_epoch();
-                    sc.propose(
-                        managed_buffer!(b"play chess"),
-                        curent_epoch,
-                        curent_epoch + 5,
+    /*
+        pub fn set_governance_sc(&mut self) {
+             let rust_zero = rust_biguint!(0u64);
+                    let governance_wrapper = self.b_mock.create_sc_account(
+                        &rust_zero,
+                        Some(&self.owner_address),
+                        vote_mock::contract_obj,
+                        "vote-mock.wasm",
                     );
-                },
-            )
-            .assert_ok();
+            self.b_mock
+                .execute_tx(&self.owner_address, &governance_wrapper, &rust_zero, |sc| {
+                    sc.init(managed_address!(&self.sc_wrapper.address_ref().clone()));
+                })
+                .assert_ok();
 
+            self.b_mock
+                .execute_tx(
+                    &self.owner_address,
+                    &governance_wrapper,
+                    &Self::exp18(0),
+                    |sc| {
+                        let curent_epoch = sc.blockchain().get_block_epoch();
+                        sc.propose(
+                            managed_buffer!(b"play chess"),
+                            curent_epoch,
+                            curent_epoch + 5,
+                        );
+                    },
+                )
+                .assert_ok();
+
+            self.b_mock
+                .execute_tx(
+                    &self.owner_address,
+                    &self.sc_wrapper,
+                    &Self::exp18(0),
+                    |sc| {
+                        sc.set_governance_contract(managed_address!(governance_wrapper.address_ref()));
+                    },
+                )
+                .assert_ok();
+        }
+    */
+    pub fn set_active(&mut self) {
         self.b_mock
             .execute_tx(
                 &self.owner_address,
                 &self.sc_wrapper,
                 &Self::exp18(0),
                 |sc| {
-                    sc.set_governance_contract(managed_address!(governance_wrapper.address_ref()));
+                    sc.set_state_active();
                 },
             )
             .assert_ok();
-        */
+    }
+
+    pub fn set_inactive(&mut self) {
+        self.b_mock
+            .execute_tx(
+                &self.owner_address,
+                &self.sc_wrapper,
+                &Self::exp18(0),
+                |sc| {
+                    sc.set_state_inactive();
+                },
+            )
+            .assert_ok();
     }
 
     pub fn add_liquidity(&mut self, caller: &Address, payment_amount: u64) {
