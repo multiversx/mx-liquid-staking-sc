@@ -1,12 +1,16 @@
 multiversx_sc::imports!();
 
-use crate::{basics::errors::ERROR_INSUFFICIENT_LIQ_BURNED, liquidity_pool, setup};
+use crate::{
+    basics::errors::ERROR_INSUFFICIENT_LIQ_BURNED, contexts::base::StorageCache, liquidity_pool,
+    setup,
+};
 
 #[multiversx_sc::module]
 pub trait ViewsModule:
     setup::config::ConfigModule
     + multiversx_sc_modules::default_issue_callbacks::DefaultIssueCallbacksModule
     + liquidity_pool::LiquidityPoolModule
+    + setup::vote::VoteModule
 {
     // views
     #[view(getLsValueForPosition)]
@@ -18,5 +22,22 @@ pub trait ViewsModule:
         require!(egld_amount > 0u64, ERROR_INSUFFICIENT_LIQ_BURNED);
 
         egld_amount
+    }
+
+    #[view(getVotingPower)]
+    fn get_voting_power(&self, payment: EsdtTokenPayment) -> BigUint {
+        let caller = self.blockchain().get_caller();
+        let storage_cache = StorageCache::new(self);
+        let mut available_ls_token =
+            EsdtTokenPayment::new(storage_cache.ls_token_id.clone(), 0, BigUint::zero());
+
+        if !self.locked_vote_balance(&caller).is_empty() {
+            let locked_balance = self.locked_vote_balance(&caller).get();
+            available_ls_token = locked_balance.funds;
+        }
+        self.get_egld_amount(
+            &(available_ls_token.amount + payment.amount),
+            &storage_cache,
+        )
     }
 }

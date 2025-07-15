@@ -35,6 +35,8 @@ impl State {
     pub fn set_delegation_address(&mut self, address: Bech32Address) {
         self.delegation_address = Some(address);
     }
+
+    #[allow(dead_code)]
     pub fn set_governance_address(&mut self, address: Bech32Address) {
         self.governance_contract = Some(address);
     }

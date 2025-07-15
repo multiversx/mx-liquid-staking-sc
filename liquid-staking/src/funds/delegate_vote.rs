@@ -77,7 +77,7 @@ pub trait DelegateVoteModule:
 
         let egld_amount = self.get_egld_amount(&to_be_locked_balance.funds.amount, &storage_cache);
         self.locked_vote_balance(caller).set(to_be_locked_balance);
-        self.tokens_locked_for_delegate_vote_event(&caller, &egld_amount, claim_back);
+        self.tokens_locked_for_delegate_vote_event(caller, &egld_amount, claim_back);
         egld_amount
     }
 
