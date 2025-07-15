@@ -42,7 +42,11 @@ pub trait LiquidityPoolModule:
         token_amount: &BigUint,
         storage_cache: &mut StorageCache<Self>,
     ) -> BigUint {
-        let egld_amount = self.get_egld_amount(token_amount, storage_cache);
+        let egld_amount = self.get_egld_amount(
+            token_amount,
+            &storage_cache.ls_token_supply,
+            &storage_cache.virtual_egld_reserve,
+        );
 
         require!(egld_amount > 0u64, ERROR_INSUFFICIENT_LIQ_BURNED);
         storage_cache.ls_token_supply -= token_amount;
@@ -54,9 +58,10 @@ pub trait LiquidityPoolModule:
     fn get_egld_amount(
         &self,
         ls_token_amount: &BigUint,
-        storage_cache: &StorageCache<Self>,
+        ls_token_supply: &BigUint,
+        virtual_egld_reserve: &BigUint,
     ) -> BigUint {
-        ls_token_amount * &storage_cache.virtual_egld_reserve / &storage_cache.ls_token_supply
+        ls_token_amount * virtual_egld_reserve / ls_token_supply
     }
 
     fn mint_ls_token(&self, amount: BigUint) -> EsdtTokenPayment<Self::Api> {

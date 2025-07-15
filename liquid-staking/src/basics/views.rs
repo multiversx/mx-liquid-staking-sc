@@ -1,9 +1,6 @@
 multiversx_sc::imports!();
 
-use crate::{
-    basics::errors::ERROR_INSUFFICIENT_LIQ_BURNED, contexts::base::StorageCache, liquidity_pool,
-    setup,
-};
+use crate::{basics::errors::ERROR_INSUFFICIENT_LIQ_BURNED, liquidity_pool, setup};
 
 #[multiversx_sc::module]
 pub trait ViewsModule:
@@ -27,9 +24,11 @@ pub trait ViewsModule:
     #[view(getVotingPower)]
     fn get_voting_power(&self, payment: EsdtTokenPayment) -> BigUint {
         let caller = self.blockchain().get_caller();
-        let storage_cache = StorageCache::new(self);
-        let mut available_ls_token =
-            EsdtTokenPayment::new(storage_cache.ls_token_id.clone(), 0, BigUint::zero());
+        let ls_token_id = self.ls_token().get_token_id();
+        let ls_token_supply = self.ls_token_supply().get();
+        let virtual_egld_reserve = self.virtual_egld_reserve().get();
+
+        let mut available_ls_token = EsdtTokenPayment::new(ls_token_id.clone(), 0, BigUint::zero());
 
         if !self.locked_vote_balance(&caller).is_empty() {
             let locked_balance = self.locked_vote_balance(&caller).get();
@@ -37,7 +36,8 @@ pub trait ViewsModule:
         }
         self.get_egld_amount(
             &(available_ls_token.amount + payment.amount),
-            &storage_cache,
+            &ls_token_supply,
+            &virtual_egld_reserve,
         )
     }
 }

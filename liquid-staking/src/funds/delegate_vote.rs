@@ -75,7 +75,11 @@ pub trait DelegateVoteModule:
             to_be_locked_balance.funds.amount += payment.amount;
         }
 
-        let egld_amount = self.get_egld_amount(&to_be_locked_balance.funds.amount, &storage_cache);
+        let egld_amount = self.get_egld_amount(
+            &to_be_locked_balance.funds.amount,
+            &storage_cache.ls_token_supply,
+            &storage_cache.virtual_egld_reserve,
+        );
         self.locked_vote_balance(caller).set(to_be_locked_balance);
         self.tokens_locked_for_delegate_vote_event(caller, &egld_amount, claim_back);
         egld_amount

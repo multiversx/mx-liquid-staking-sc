@@ -6,10 +6,10 @@
 
 // Init:                                 1
 // Upgrade:                              1
-// Endpoints:                           35
+// Endpoints:                           36
 // Async Callback:                       1
 // Promise callbacks:                    5
-// Total number of exported functions:  43
+// Total number of exported functions:  44
 
 #![no_std]
 
@@ -22,6 +22,7 @@ multiversx_sc_wasm_adapter::endpoints! {
         init => init
         upgrade => upgrade
         getLsValueForPosition => get_ls_value_for_position
+        getVotingPower => get_voting_power
         registerLsToken => register_ls_token
         registerUnstakeToken => register_unstake_token
         getState => state

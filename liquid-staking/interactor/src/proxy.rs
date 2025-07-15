@@ -94,6 +94,19 @@ where
             .original_result()
     }
 
+    pub fn get_voting_power<
+        Arg0: ProxyArg<EsdtTokenPayment<Env::Api>>,
+    >(
+        self,
+        payment: Arg0,
+    ) -> TxTypedCall<Env, From, To, NotPayable, Gas, BigUint<Env::Api>> {
+        self.wrapped_tx
+            .payment(NotPayable)
+            .raw_call("getVotingPower")
+            .argument(&payment)
+            .original_result()
+    }
+
     pub fn register_ls_token<
         Arg0: ProxyArg<ManagedBuffer<Env::Api>>,
         Arg1: ProxyArg<ManagedBuffer<Env::Api>>,

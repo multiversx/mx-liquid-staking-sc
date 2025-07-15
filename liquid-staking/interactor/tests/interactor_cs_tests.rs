@@ -170,5 +170,10 @@ async fn delegate_vote() {
     interact.add_liquidity().await;
     interact.add_liquidity().await;
     interact.deploy_governance_contract().await;
-    interact.delegate_vote(&ls_token).await;
+    interact.delegate_vote(&ls_token, None).await;
+    interact.generate_blocks_until_epoch(10).await;
+    interact
+        .get_voting_power(&ls_token, BigUint::from(1000u64))
+        .await;
+    interact.claim_back(None).await;
 }
