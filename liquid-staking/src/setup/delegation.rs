@@ -426,8 +426,8 @@ pub trait DelegationModule:
         contract_address: &ManagedAddress,
     ) -> SingleValueMapper<DelegationContractData<Self::Api>>;
 
-    #[view(getGovernanceContract)]
-    #[storage_mapper("governanceContract")]
+    #[view(getVoteContract)]
+    #[storage_mapper("voteContract")]
     fn governance_contract(&self) -> SingleValueMapper<ManagedAddress>;
 
     #[storage_mapper("whitelistingDelegationOngoing")]

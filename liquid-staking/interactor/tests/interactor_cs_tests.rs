@@ -155,3 +155,25 @@ async fn test_delegate_not_enough_egld() {
         )))
         .await;
 }
+
+#[tokio::test]
+#[cfg_attr(not(feature = "chain-simulator-tests"), ignore)]
+async fn delegate_vote() {
+    let mut interact = ContractInteract::new(Config::chain_simulator_config()).await;
+    interact.deploy().await;
+    interact.deploy_delegation_contract().await;
+    interact.whitelist_delegation_contract().await;
+    interact.set_state_active().await;
+    let ls_token = interact.register_ls_token().await;
+    let _ = interact.register_unstake_token().await;
+    interact.add_liquidity().await;
+    interact.add_liquidity().await;
+    interact.add_liquidity().await;
+    interact.deploy_governance_contract().await;
+    interact.delegate_vote(&ls_token, None).await;
+    interact.generate_blocks_until_epoch(10).await;
+    interact
+        .get_voting_power(&ls_token, BigUint::from(1000u64))
+        .await;
+    interact.claim_back(None).await;
+}

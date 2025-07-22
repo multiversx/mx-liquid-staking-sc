@@ -5,6 +5,8 @@ members = [
   "liquid-staking",
   "liquid-staking/meta",
   "liquid-staking/interactor",
+  "vote-sc",
+  "vote-sc/meta",
   "delegation/interactor",
   #"governance/interactor",
 ]

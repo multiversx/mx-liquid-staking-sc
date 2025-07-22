@@ -18,5 +18,3 @@ pub const EGLD_TO_WHITELIST: u64 = 1_000_000_000_000_000_000; // 1 EGLD
 pub const MINIMUM_LIQUIDITY: u64 = 1_000;
 
 pub const MAX_DELEGATION_ADDRESSES: usize = 20;
-
-pub const TEN_DAYS: Timestamp = 60 * 60 * 24 * 10;

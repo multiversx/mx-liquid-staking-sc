@@ -28,12 +28,14 @@ pub static ERROR_NO_DELEGATION_CONTRACTS: &[u8] = b"There are no delegation cont
 pub static ERROR_FIRST_DELEGATION_NODE: &[u8] = b"The first delegation node is incorrect";
 pub static ERROR_ALREADY_WHITELISTED: &[u8] = b"Delegation contract already whitelisted";
 pub static ERROR_NOT_WHITELISTED: &[u8] = b"Delegation contract is not whitelisted";
-pub static ERROR_GOVERNANCE_SC_NOT_SET: &[u8] = b"Vote contract is not set";
+pub static ERROR_GOVERNANCE_SC_NOT_SET: &[u8] = b"Governance contract is not set";
 pub static ERROR_DELEGATION_CAP: &[u8] =
     b"Delegation cap must be higher than the total staked amount";
 pub static ERROR_ONLY_DELEGATION_ADMIN: &[u8] =
     b"Only the admin of the delegation contract can change the status";
 
+pub static ERROR_INVALID_CALLER: &[u8] = b"Invalid caller";
+pub static ERROR_VOTE_SC_NOT_SET: &[u8] = b"Vote contract is not set";
 pub static ERROR_ALREADY_VOTED: &[u8] = b"already voted for this proposal";
 pub static ERROR_MISSING_VOTING_POWER: &[u8] = b"invalid payment or missing voting power";
 

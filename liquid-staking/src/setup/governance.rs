@@ -19,7 +19,9 @@ where
 }
 
 #[multiversx_sc::module]
-pub trait GovernanceModule {
+pub trait GovernanceModule:
+    multiversx_sc_modules::default_issue_callbacks::DefaultIssueCallbacksModule
+{
     #[only_owner]
     #[endpoint]
     fn set_governance_contract(&self, sc_address: ManagedAddress) {
@@ -47,5 +49,5 @@ pub trait GovernanceModule {
     fn governance_contract(&self) -> SingleValueMapper<ManagedAddress>;
 
     #[storage_mapper("votedProposals")]
-    fn voted_proposals(&self, address: &ManagedAddress) -> UnorderedSetMapper<ManagedBuffer>;
+    fn voted_proposals(&self, address: &ManagedAddress) -> UnorderedSetMapper<u32>;
 }

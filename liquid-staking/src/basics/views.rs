@@ -7,7 +7,6 @@ pub trait ViewsModule:
     setup::config::ConfigModule
     + multiversx_sc_modules::default_issue_callbacks::DefaultIssueCallbacksModule
     + liquidity_pool::LiquidityPoolModule
-    + setup::governance::GovernanceModule
 {
     // views
     #[view(getLsValueForPosition)]

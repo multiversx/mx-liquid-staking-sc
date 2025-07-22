@@ -21,6 +21,8 @@ pub trait LiquidStaking:
     + basics::views::ViewsModule
     + setup::config::ConfigModule
     + setup::delegation::DelegationModule
+    + setup::governance::GovernanceModule
+    + setup::vote::VoteModule
     + funds::claim::ClaimModule
     + funds::delegate_rewards::DelegateRewardsModule
     + funds::recompute_token_reserve::RecomputeTokenReserveModule
@@ -30,7 +32,6 @@ pub trait LiquidStaking:
     + liquidity::remove_liquidity::RemoveLiquidityModule
     + liquidity_pool::LiquidityPoolModule
     + multiversx_sc_modules::default_issue_callbacks::DefaultIssueCallbacksModule
-    + setup::governance::GovernanceModule
 {
     #[init]
     fn init(&self) {
