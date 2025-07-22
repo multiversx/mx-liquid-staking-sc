@@ -5,7 +5,7 @@ mod delegation_sc_interact_state;
 use std::vec;
 
 use clap::Parser;
-pub use delegation_sc_interact_config::DelegationConfig;
+pub use delegation_sc_interact_config::Config;
 use delegation_sc_interact_state::State;
 
 use multiversx_sc_snippets::{
@@ -16,120 +16,122 @@ use multiversx_sc_snippets::{
 pub async fn delegation_sc_interact_cli() {
     env_logger::init();
 
-    let mut interact = DelegateCallsInteract::new(DelegationConfig::load_config()).await;
+    let mut interact = DelegateCallsInteract::new(Config::load_config()).await;
 
     let cli = delegation_sc_interact_cli::InteractCli::parse();
     match cli.command {
         Some(delegation_sc_interact_cli::InteractCliCommand::Create(args)) => {
+            interact.set_state(&interact.owner.to_address()).await;
             interact
-                .set_state(&interact.wallet_address.to_address())
+                .create_new_delegation_contract(
+                    args.total_delegation_cap,
+                    args.service_fee,
+                    1250000000000000000000u128,
+                )
                 .await;
-            interact
-                .create_new_delegation_contract(args.total_delegation_cap, args.service_fee)
-                .await;
-        }
+        },
         Some(delegation_sc_interact_cli::InteractCliCommand::GetAllContractAddresses) => {
             interact.get_all_contract_addresses().await;
-        }
+        },
         Some(delegation_sc_interact_cli::InteractCliCommand::SetMetadata(args)) => {
             interact
                 .set_metadata(&args.name, &args.website, &args.identifier)
                 .await;
-        }
+        },
         Some(delegation_sc_interact_cli::InteractCliCommand::ChangeServiceFee(args)) => {
             interact.change_service_fee(args.fee).await;
-        }
+        },
         Some(delegation_sc_interact_cli::InteractCliCommand::SetAutomaticActivation(args)) => {
             interact
                 .set_automatic_activation(args.automatic_activation)
                 .await;
-        }
+        },
         Some(delegation_sc_interact_cli::InteractCliCommand::ModifyTotalDelegationCap(args)) => {
             interact
                 .modify_total_delegation_cap(args.total_delegation_cap)
                 .await;
-        }
+        },
         Some(delegation_sc_interact_cli::InteractCliCommand::AddNode(args)) => {
             let bls_key = BLSKey::parse_hex(&args.public_key)
                 .expect("Failed to decode public BLS key from hex");
             let bls_sig = BLSSignature::parse_hex(&args.verified_message)
                 .expect("Failed to decode BLS signature from hex");
             interact.add_nodes(vec![(bls_key, bls_sig)]).await;
-        }
+        },
         Some(delegation_sc_interact_cli::InteractCliCommand::GetAllNodeStates) => {
             interact.get_all_node_states().await;
-        }
+        },
         Some(delegation_sc_interact_cli::InteractCliCommand::StakeNode(args)) => {
             let bls_key = BLSKey::parse_hex(&args.public_key)
                 .expect("Failed to decode public BLS key from hex");
             interact.stake_nodes(vec![bls_key]).await;
-        }
+        },
         Some(delegation_sc_interact_cli::InteractCliCommand::UnstakeNode(args)) => {
             let bls_key = BLSKey::parse_hex(&args.public_key)
                 .expect("Failed to decode public BLS key from hex");
             interact.unstake_nodes(vec![bls_key]).await;
-        }
+        },
         Some(delegation_sc_interact_cli::InteractCliCommand::RestakeNode(args)) => {
             let bls_key = BLSKey::parse_hex(&args.public_key)
                 .expect("Failed to decode public BLS key from hex");
             interact.restake_unstaked_nodes(vec![bls_key]).await;
-        }
+        },
         Some(delegation_sc_interact_cli::InteractCliCommand::UnbondNode(args)) => {
             let bls_key = BLSKey::parse_hex(&args.public_key)
                 .expect("Failed to decode public BLS key from hex");
             interact.unbond_nodes(vec![bls_key]).await;
-        }
+        },
         Some(delegation_sc_interact_cli::InteractCliCommand::RemoveNode(args)) => {
             let bls_key = BLSKey::parse_hex(&args.public_key)
                 .expect("Failed to decode public BLS key from hex");
             interact.remove_nodes(vec![bls_key]).await;
-        }
+        },
         Some(delegation_sc_interact_cli::InteractCliCommand::UnjailNode(args)) => {
             let bls_key = BLSKey::parse_hex(&args.public_key)
                 .expect("Failed to decode public BLS key from hex");
             interact.unjail_nodes(vec![bls_key]).await;
-        }
+        },
         Some(delegation_sc_interact_cli::InteractCliCommand::Delegate(args)) => {
             let sender = Bech32Address::from_bech32_string(args.from.clone());
             interact.delegate(&sender, args.egld).await;
-        }
+        },
         Some(delegation_sc_interact_cli::InteractCliCommand::ClaimRewards(args)) => {
             let sender = Bech32Address::from_bech32_string(args.from.clone());
             interact.claim_rewards(&sender).await;
-        }
+        },
         Some(delegation_sc_interact_cli::InteractCliCommand::RedelegateRewards(args)) => {
             let sender = Bech32Address::from_bech32_string(args.from.clone());
             interact.redelegate_rewards(&sender).await;
-        }
+        },
         Some(delegation_sc_interact_cli::InteractCliCommand::UndelegateFunds(args)) => {
             let sender = Bech32Address::from_bech32_string(args.from.clone());
             interact.undelegate(&sender, args.egld).await;
-        }
+        },
         Some(delegation_sc_interact_cli::InteractCliCommand::Withdraw(args)) => {
             let sender = Bech32Address::from_bech32_string(args.from.clone());
             interact.withdraw(&sender).await;
-        }
+        },
         Some(delegation_sc_interact_cli::InteractCliCommand::SetCheckCapOnRedelegateRewards(
             args,
         )) => {
             interact
                 .set_check_cap_on_redelegate_rewards(args.check_cap_redelegate_rewards)
                 .await;
-        }
-        None => {}
+        },
+        None => {},
     }
 }
 
 pub struct DelegateCallsInteract {
     pub interactor: Interactor,
-    pub wallet_address: Bech32Address,
+    pub owner: Bech32Address,
     pub delegator1: Bech32Address,
     pub delegator2: Bech32Address,
     pub state: State,
 }
 
 impl DelegateCallsInteract {
-    pub async fn new(config: DelegationConfig) -> Self {
+    pub async fn new(config: Config) -> Self {
         let mut interactor = Interactor::new(config.gateway_uri())
             .await
             .use_chain_simulator(config.is_chain_simulator());
@@ -144,7 +146,7 @@ impl DelegateCallsInteract {
 
         Self {
             interactor,
-            wallet_address: wallet_address.into(),
+            owner: wallet_address.into(),
             delegator1: delegator1.into(),
             delegator2: delegator2.into(),
             state: State::load_state(),
@@ -153,7 +155,7 @@ impl DelegateCallsInteract {
 
     pub async fn set_state(&mut self, address: &Address) {
         let mut account = self.interactor.get_account(address).await;
-        account.balance = "10000000000000000000000".to_owned();
+        account.balance = "100000000000000000000000".to_owned();
         let set_state_account = SetStateAccount::from(account);
         let vec_state = vec![set_state_account];
 
@@ -176,14 +178,19 @@ impl DelegateCallsInteract {
         &mut self,
         total_delegation_cap: u128,
         service_fee: u64,
+        amount: u128,
     ) {
         let logs = self
             .interactor
             .tx()
-            .from(&self.wallet_address)
+            .from(&self.owner)
             .to(DelegationManagerSCAddress)
             .typed(DelegationManagerSCProxy)
-            .create_new_delegation_contract(BigUint::from(total_delegation_cap), service_fee)
+            .create_new_delegation_contract(
+                BigUint::from(total_delegation_cap),
+                service_fee,
+                BigUint::from(amount),
+            )
             .gas(60_000_000u64)
             .returns(ReturnsLogs)
             .run()
@@ -218,8 +225,7 @@ impl DelegateCallsInteract {
 
         println!("All delegation contract addresses:");
         for address in addresses.iter() {
-            let address = Bech32Address::from(address).to_bech32_expr();
-            println!("{address}");
+            println!("{}", Bech32Address::from(address).to_bech32_expr());
         }
 
         addresses.iter().map(Bech32Address::from).collect()
@@ -228,7 +234,7 @@ impl DelegateCallsInteract {
     pub async fn set_metadata(&mut self, name: &str, website: &str, identifier: &str) {
         self.interactor
             .tx()
-            .from(&self.wallet_address)
+            .from(&self.owner)
             .to(self.state.current_delegation_address())
             .typed(DelegationSCProxy)
             .set_metadata(name, website, identifier)
@@ -242,7 +248,7 @@ impl DelegateCallsInteract {
     pub async fn change_service_fee(&mut self, service_fee: u64) {
         self.interactor
             .tx()
-            .from(&self.wallet_address)
+            .from(&self.owner)
             .to(self.state.current_delegation_address())
             .typed(DelegationSCProxy)
             .change_service_fee(service_fee)
@@ -256,7 +262,7 @@ impl DelegateCallsInteract {
     pub async fn set_automatic_activation(&mut self, automatic_activation: bool) {
         self.interactor
             .tx()
-            .from(&self.wallet_address)
+            .from(&self.owner)
             .to(self.state.current_delegation_address())
             .typed(DelegationSCProxy)
             .set_automatic_activation(automatic_activation)
@@ -270,7 +276,7 @@ impl DelegateCallsInteract {
     pub async fn modify_total_delegation_cap(&mut self, total_delegation_cap: u128) {
         self.interactor
             .tx()
-            .from(&self.wallet_address)
+            .from(&self.owner)
             .to(self.state.current_delegation_address())
             .typed(DelegationSCProxy)
             .modify_total_delegation_cap(BigUint::from(total_delegation_cap))
@@ -291,7 +297,7 @@ impl DelegateCallsInteract {
 
         self.interactor
             .tx()
-            .from(&self.wallet_address)
+            .from(&self.owner)
             .to(self.state.current_delegation_address())
             .typed(DelegationSCProxy)
             .add_nodes(arg)
@@ -313,14 +319,14 @@ impl DelegateCallsInteract {
             .run()
             .await;
 
-        println!("Node states: {node_states}");
+        println!("Node states: {}", node_states);
         node_states.to_string()
     }
 
     pub async fn stake_nodes(&mut self, bls_keys: Vec<BLSKey>) {
         self.interactor
             .tx()
-            .from(&self.wallet_address)
+            .from(&self.owner)
             .to(self.state.current_delegation_address())
             .gas(1000000u64 + bls_keys.len() as u64 * 6000000u64)
             .typed(DelegationSCProxy)
@@ -356,7 +362,7 @@ impl DelegateCallsInteract {
             .run()
             .await;
 
-        println!("Total active stake: {total_stake}");
+        println!("Total active stake: {}", total_stake);
         total_stake
     }
 
@@ -366,21 +372,19 @@ impl DelegateCallsInteract {
             .query()
             .to(self.state.current_delegation_address())
             .typed(DelegationSCProxy)
-            .get_user_active_stake(&ManagedAddress::from_address(
-                &self.wallet_address.to_address(),
-            ))
+            .get_user_active_stake(&ManagedAddress::from_address(&self.owner.to_address()))
             .returns(ReturnsResultUnmanaged)
             .run()
             .await;
 
-        println!("User active stake: {active_stake}");
+        println!("User active stake: {}", active_stake);
         active_stake
     }
 
     pub async fn unstake_nodes(&mut self, bls_keys: Vec<BLSKey>) {
         self.interactor
             .tx()
-            .from(&self.wallet_address)
+            .from(&self.owner)
             .to(self.state.current_delegation_address())
             .gas(1000000u64 + bls_keys.len() as u64 * 6000000u64)
             .typed(DelegationSCProxy)
@@ -394,7 +398,7 @@ impl DelegateCallsInteract {
     pub async fn restake_unstaked_nodes(&mut self, bls_keys: Vec<BLSKey>) {
         self.interactor
             .tx()
-            .from(&self.wallet_address)
+            .from(&self.owner)
             .to(self.state.current_delegation_address())
             .typed(DelegationSCProxy)
             .restake_unstaked_nodes(MultiValueVec::from(bls_keys))
@@ -408,7 +412,7 @@ impl DelegateCallsInteract {
     pub async fn unbond_nodes(&mut self, bls_keys: Vec<BLSKey>) {
         self.interactor
             .tx()
-            .from(&self.wallet_address)
+            .from(&self.owner)
             .to(self.state.current_delegation_address())
             .gas(1000000u64 + bls_keys.len() as u64 * 6000000u64)
             .typed(DelegationSCProxy)
@@ -422,7 +426,7 @@ impl DelegateCallsInteract {
     pub async fn remove_nodes(&mut self, bls_keys: Vec<BLSKey>) {
         self.interactor
             .tx()
-            .from(&self.wallet_address)
+            .from(&self.owner)
             .to(self.state.current_delegation_address())
             .gas(1000000u64 + bls_keys.len() as u64 * 6000000u64)
             .typed(DelegationSCProxy)
@@ -436,7 +440,7 @@ impl DelegateCallsInteract {
     pub async fn unjail_nodes(&mut self, bls_keys: Vec<BLSKey>) {
         self.interactor
             .tx()
-            .from(&self.wallet_address)
+            .from(&self.owner)
             .to(self.state.current_delegation_address())
             .gas(1000000u64 + bls_keys.len() as u64 * 6000000u64)
             .typed(DelegationSCProxy)
@@ -505,7 +509,7 @@ impl DelegateCallsInteract {
     pub async fn set_check_cap_on_redelegate_rewards(&mut self, state: bool) {
         self.interactor
             .tx()
-            .from(self.wallet_address.clone())
+            .from(self.owner.clone())
             .to(self.state.current_delegation_address())
             .typed(DelegationSCProxy)
             .set_check_cap_on_redelegate_rewards(state) // Example delegation amount
@@ -513,6 +517,6 @@ impl DelegateCallsInteract {
             .run()
             .await;
 
-        println!("Set check cap on redelegate rewards to: {state}");
+        println!("Set check cap on redelegate rewards to: {}", state);
     }
 }

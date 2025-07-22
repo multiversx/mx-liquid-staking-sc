@@ -6,6 +6,7 @@ mod caller_check;
 pub mod constants;
 mod errors;
 pub mod events;
+pub mod liquid_staking_proxy;
 pub mod views;
 
 use crate::{constants::*, errors::*};
@@ -55,8 +56,8 @@ pub trait VoteSC:
         let ls_sc_address = self.liquid_staking_sc().get();
         self.tx()
             .to(ls_sc_address)
-            .typed(LiquidStakingProxy)
-            .vote(proposal_id, vote, voter, voting_power)
+            .typed(liquid_staking_proxy::LiquidStakingProxy)
+            .delegate_vote(proposal_id, vote, voter, voting_power)
             .call_and_exit();
     }
 

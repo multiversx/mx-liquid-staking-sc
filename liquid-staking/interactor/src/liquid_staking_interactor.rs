@@ -4,7 +4,7 @@ mod liquid_staking_config;
 mod liquid_staking_state;
 mod proxy;
 
-use delegation_sc_interact::{DelegateCallsInteract, DelegationConfig};
+use delegation_sc_interact::DelegateCallsInteract;
 pub use liquid_staking_config::Config;
 use liquid_staking_state::State;
 use multiversx_sc_snippets::imports::*;
@@ -118,7 +118,8 @@ impl ContractInteract {
 
     pub async fn deploy_delegation_contract(&mut self) {
         let mut delegation_interactor =
-            DelegateCallsInteract::new(DelegationConfig::chain_simulator_config()).await;
+            DelegateCallsInteract::new(delegation_sc_interact::Config::chain_simulator_config())
+                .await;
         let validator_1 =
             Validator::from_pem_file("./../../delegation/interactor/validatorKey1.pem")
                 .expect("unable to load validator key");
@@ -138,7 +139,7 @@ impl ContractInteract {
             .unwrap();
 
         delegation_interactor
-            .set_state(&delegation_interactor.wallet_address.to_address())
+            .set_state(&delegation_interactor.owner.to_address())
             .await;
         delegation_interactor
             .set_state(&delegation_interactor.delegator1.to_address())
@@ -147,7 +148,11 @@ impl ContractInteract {
             .set_state(&delegation_interactor.delegator2.to_address())
             .await;
         delegation_interactor
-            .create_new_delegation_contract(51_000_000_000_000_000_000_000_u128, 3745u64)
+            .create_new_delegation_contract(
+                51_000_000_000_000_000_000_000_u128,
+                3745u64,
+                1250000000000000000000u128,
+            )
             .await;
         delegation_interactor
             .set_check_cap_on_redelegate_rewards(false)
@@ -655,22 +660,6 @@ impl ContractInteract {
         println!("Result: {result_value:?}");
     }
 
-    pub async fn get_voting_power(&mut self, token_id: &str, token_amount: BigUint<StaticApi>) {
-        let token_nonce = 0u64;
-
-        let payment =
-            EsdtTokenPayment::new(TokenIdentifier::from(token_id), token_nonce, token_amount);
-
-        self.interactor
-            .query()
-            .to(self.state.current_address())
-            .typed(proxy::LiquidStakingProxy)
-            .get_voting_power(payment)
-            .returns(ReturnsResultUnmanaged)
-            .run()
-            .await;
-    }
-
     pub async fn delegation_claim_status(&mut self) {
         self.interactor
             .query()
@@ -702,10 +691,7 @@ impl ContractInteract {
             .unwrap();
     }
 
-    pub async fn delegate_vote(&mut self, token_id: &str, error: Option<ExpectError<'_>>) {
-        let token_nonce = 0u64;
-        let token_amount = BigUint::<StaticApi>::from(1_000_000_000_000u64);
-
+    pub async fn delegate_vote(&mut self, error: Option<ExpectError<'_>>) {
         let tx = self
             .interactor
             .tx()
@@ -713,27 +699,7 @@ impl ContractInteract {
             .to(self.state.current_address())
             .gas(50_000_000u64)
             .typed(proxy::LiquidStakingProxy)
-            .delegate_vote("1", "yes")
-            .payment((TokenIdentifier::from(token_id), token_nonce, token_amount));
-        match error {
-            None => {
-                tx.returns(ReturnsResultUnmanaged).run().await;
-            }
-            Some(expect_error) => {
-                tx.returns(expect_error).run().await;
-            }
-        }
-    }
-
-    pub async fn claim_back(&mut self, error: Option<ExpectError<'_>>) {
-        let tx = self
-            .interactor
-            .tx()
-            .from(&self.wallet_address)
-            .to(self.state.current_address())
-            .gas(50_000_000u64)
-            .typed(proxy::LiquidStakingProxy)
-            .claim_back();
+            .delegate_vote(1u32, "yes", &self.wallet_address, 10000u32);
 
         match error {
             None => {

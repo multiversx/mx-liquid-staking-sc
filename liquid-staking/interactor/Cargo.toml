@@ -21,10 +21,12 @@ path = ".."
 path = "../../delegation/interactor"
 
 [dependencies.multiversx-sc-snippets]
-version = "0.59.0"
+git = "https://github.com/multiversx/mx-sdk-rs.git"
+rev = "2cf3e0b8fe53654e63924bc524a5db518f7cb469"
 
 [dependencies.multiversx-sc]
-version = "0.59.0"
+git = "https://github.com/multiversx/mx-sdk-rs.git"
+rev = "2cf3e0b8fe53654e63924bc524a5db518f7cb469"
 
 [dependencies.clap]
 version = "4.4.7"

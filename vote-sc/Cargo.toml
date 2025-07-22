@@ -9,10 +9,5 @@ publish = false
 path = "src/lib.rs"
 
 [dependencies.multiversx-sc]
-version = "0.59.0"
-
-[dev-dependencies]
-num-bigint = "0.4.2"
-
-[dev-dependencies.multiversx-sc-scenario]
-version = "=0.39.4"
+git = "https://github.com/multiversx/mx-sdk-rs.git"
+rev = "2cf3e0b8fe53654e63924bc524a5db518f7cb469"
