@@ -3,15 +3,14 @@ multiversx_sc::imports!();
 use crate::{
     basics::constants::{MIN_EGLD_TO_DELEGATE, RECOMPUTE_BLOCK_OFFSET},
     basics::errors::{ERROR_NOT_ACTIVE, ERROR_RECOMPUTE_RESERVES, ERROR_RECOMPUTE_TOO_SOON},
-    config,
-    delegation::{self, ClaimStatusType},
+    setup::{self, delegation::ClaimStatusType},
     StorageCache,
 };
 
 #[multiversx_sc::module]
 pub trait RecomputeTokenReserveModule:
-    config::ConfigModule
-    + delegation::DelegationModule
+    setup::config::ConfigModule
+    + setup::delegation::DelegationModule
     + multiversx_sc_modules::default_issue_callbacks::DefaultIssueCallbacksModule
 {
     #[endpoint(recomputeTokenReserve)]

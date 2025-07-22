@@ -4,25 +4,25 @@ multiversx_sc::imports!();
 multiversx_sc::derive_imports!();
 
 pub mod basics;
-pub mod config;
 pub mod contexts;
-pub mod delegation;
-pub mod delegation_proxy;
 pub mod funds;
 pub mod liquidity;
 pub mod liquidity_pool;
+pub mod setup;
 
-use delegation::{ClaimStatus, ClaimStatusType};
+use setup::delegation::{ClaimStatus, ClaimStatusType};
 
 use contexts::base::*;
 use liquidity_pool::State;
+
+use crate::basics::constants::TEN_DAYS;
 
 #[multiversx_sc::contract]
 pub trait LiquidStaking:
     basics::events::EventsModule
     + basics::views::ViewsModule
-    + config::ConfigModule
-    + delegation::DelegationModule
+    + setup::config::ConfigModule
+    + setup::delegation::DelegationModule
     + funds::claim::ClaimModule
     + funds::delegate_rewards::DelegateRewardsModule
     + funds::recompute_token_reserve::RecomputeTokenReserveModule
@@ -32,6 +32,7 @@ pub trait LiquidStaking:
     + liquidity::remove_liquidity::RemoveLiquidityModule
     + liquidity_pool::LiquidityPoolModule
     + multiversx_sc_modules::default_issue_callbacks::DefaultIssueCallbacksModule
+    + setup::vote::VoteModule
 {
     #[init]
     fn init(&self) {
@@ -43,7 +44,7 @@ pub trait LiquidStaking:
             last_claim_epoch: current_epoch,
             last_claim_block: current_round,
         };
-
+        self.vote_lock_period().set(TEN_DAYS);
         self.delegation_claim_status().set_if_empty(claim_status);
     }
 

@@ -1,15 +1,16 @@
 #![allow(non_snake_case)]
 
-mod delegation_proxy;
 mod liquid_staking_config;
 mod liquid_staking_state;
 mod proxy;
 
+use delegation_sc_interact::{DelegateCallsInteract, DelegationConfig};
 pub use liquid_staking_config::Config;
 use liquid_staking_state::State;
 use multiversx_sc_snippets::imports::*;
+use multiversx_sc_snippets::sdk::gateway::NetworkStatusRequest;
 
-const DELEGATION_MOCK_CONTRACT_CODE: &str = "../delegation-mock/output/delegation-mock.mxsc.json";
+pub const CHAIN_SIMULATOR_GATEWAY: &str = "http://localhost:8085";
 
 pub async fn liquid_staking_cli() {
     env_logger::init();
@@ -67,7 +68,6 @@ pub struct ContractInteract {
     interactor: Interactor,
     wallet_address: Address,
     contract_code: BytesValue,
-    delegation_mock_contract_code: String,
     state: State,
 }
 
@@ -91,7 +91,6 @@ impl ContractInteract {
             interactor,
             wallet_address,
             contract_code,
-            delegation_mock_contract_code: DELEGATION_MOCK_CONTRACT_CODE.to_string(),
             state: State::load_state(),
         }
     }
@@ -101,7 +100,7 @@ impl ContractInteract {
             .interactor
             .tx()
             .from(&self.wallet_address)
-            .gas(90_000_000u64)
+            .gas(100_000_000u64)
             .typed(proxy::LiquidStakingProxy)
             .init()
             .code(&self.contract_code)
@@ -109,36 +108,59 @@ impl ContractInteract {
             .run()
             .await;
 
-        let new_address_bech32 = bech32::encode(&new_address);
-        self.state.set_address(Bech32Address::from_bech32_string(
-            new_address_bech32.clone(),
-        ));
+        let new_address_bech32 = Bech32Address::from(&new_address);
+        self.state.set_address(new_address_bech32.clone());
 
-        println!("new address: {new_address_bech32}");
+        let new_address_string = new_address_bech32.to_string();
+
+        println!("new address: {new_address_string}");
     }
 
     pub async fn deploy_delegation_contract(&mut self) {
-        let contract_code = MxscPath::new(&self.delegation_mock_contract_code);
+        let mut delegation_interactor =
+            DelegateCallsInteract::new(DelegationConfig::chain_simulator_config()).await;
+        let validator_1 =
+            Validator::from_pem_file("./../../delegation/interactor/validatorKey1.pem")
+                .expect("unable to load validator key");
+        let validator_2 =
+            Validator::from_pem_file("./../../delegation/interactor/validatorKey2.pem")
+                .expect("unable to load validator key");
 
-        let new_address = self
+        let _ = delegation_interactor
             .interactor
-            .tx()
-            .from(&self.wallet_address)
-            .gas(90_000_000u64)
-            .typed(delegation_proxy::DelegationMockProxy)
-            .init()
-            .code(contract_code)
-            .returns(ReturnsNewAddress)
-            .run()
+            .add_key(validator_1.private_key.clone())
+            .await
+            .unwrap();
+        let _ = delegation_interactor
+            .interactor
+            .add_key(validator_2.private_key.clone())
+            .await
+            .unwrap();
+
+        delegation_interactor
+            .set_state(&delegation_interactor.wallet_address.to_address())
+            .await;
+        delegation_interactor
+            .set_state(&delegation_interactor.delegator1.to_address())
+            .await;
+        delegation_interactor
+            .set_state(&delegation_interactor.delegator2.to_address())
+            .await;
+        delegation_interactor
+            .create_new_delegation_contract(51_000_000_000_000_000_000_000_u128, 3745u64)
+            .await;
+        delegation_interactor
+            .set_check_cap_on_redelegate_rewards(false)
             .await;
 
-        let new_address_bech32 = bech32::encode(&new_address);
-        self.state
-            .set_delegation_address(Bech32Address::from_bech32_string(
-                new_address_bech32.clone(),
-            ));
+        let addresses = delegation_interactor.get_all_contract_addresses().await;
 
-        println!("new address: {new_address_bech32}");
+        let new_address_bech32 = &addresses[0];
+        self.state
+            .set_delegation_address(new_address_bech32.clone());
+
+        let new_address_string = new_address_bech32.to_string();
+        println!("new delegation address: {new_address_string}");
     }
 
     pub async fn upgrade(&mut self) {
@@ -212,59 +234,41 @@ impl ContractInteract {
     pub async fn withdraw_all(&mut self, error: Option<ExpectError<'_>>) {
         let delegation_contract = self.state.delegation_address();
 
+        let tx = self
+            .interactor
+            .tx()
+            .from(&self.wallet_address)
+            .to(self.state.current_address())
+            .gas(50_000_000u64)
+            .typed(proxy::LiquidStakingProxy)
+            .withdraw_all(delegation_contract);
+
         match error {
             None => {
-                self.interactor
-                    .tx()
-                    .from(&self.wallet_address)
-                    .to(self.state.current_address())
-                    .gas(50_000_000u64)
-                    .typed(proxy::LiquidStakingProxy)
-                    .withdraw_all(delegation_contract)
-                    .returns(ReturnsResultUnmanaged)
-                    .run()
-                    .await;
+                tx.returns(ReturnsResultUnmanaged).run().await;
             }
             Some(expect_error) => {
-                self.interactor
-                    .tx()
-                    .from(&self.wallet_address)
-                    .to(self.state.current_address())
-                    .gas(50_000_000u64)
-                    .typed(proxy::LiquidStakingProxy)
-                    .withdraw_all(delegation_contract)
-                    .returns(expect_error)
-                    .run()
-                    .await;
+                tx.returns(expect_error).run().await;
             }
         }
     }
 
     pub async fn claim_rewards(&mut self, error: Option<ExpectError<'_>>) {
+        let tx = self
+            .interactor
+            .tx()
+            .from(&self.wallet_address)
+            .to(self.state.current_address())
+            .gas(50_000_000u64)
+            .typed(proxy::LiquidStakingProxy)
+            .claim_rewards();
+
         match error {
             None => {
-                self.interactor
-                    .tx()
-                    .from(&self.wallet_address)
-                    .to(self.state.current_address())
-                    .gas(50_000_000u64)
-                    .typed(proxy::LiquidStakingProxy)
-                    .claim_rewards()
-                    .returns(ReturnsResultUnmanaged)
-                    .run()
-                    .await;
+                tx.returns(ReturnsResultUnmanaged).run().await;
             }
             Some(expect_error) => {
-                self.interactor
-                    .tx()
-                    .from(&self.wallet_address)
-                    .to(self.state.current_address())
-                    .gas(50_000_000u64)
-                    .typed(proxy::LiquidStakingProxy)
-                    .claim_rewards()
-                    .returns(expect_error)
-                    .run()
-                    .await;
+                tx.returns(expect_error).run().await;
             }
         }
     }
@@ -286,30 +290,21 @@ impl ContractInteract {
     }
 
     pub async fn delegate_rewards(&mut self, error: Option<ExpectError<'_>>) {
+        let tx = self
+            .interactor
+            .tx()
+            .from(&self.wallet_address)
+            .to(self.state.current_address())
+            .gas(50_000_000u64)
+            .typed(proxy::LiquidStakingProxy)
+            .delegate_rewards();
+
         match error {
             None => {
-                self.interactor
-                    .tx()
-                    .from(&self.wallet_address)
-                    .to(self.state.current_address())
-                    .gas(50_000_000u64)
-                    .typed(proxy::LiquidStakingProxy)
-                    .delegate_rewards()
-                    .returns(ReturnsResultUnmanaged)
-                    .run()
-                    .await;
+                tx.returns(ReturnsResultUnmanaged).run().await;
             }
             Some(expect_error) => {
-                self.interactor
-                    .tx()
-                    .from(&self.wallet_address)
-                    .to(self.state.current_address())
-                    .gas(50_000_000u64)
-                    .typed(proxy::LiquidStakingProxy)
-                    .delegate_rewards()
-                    .returns(expect_error)
-                    .run()
-                    .await;
+                tx.returns(expect_error).run().await;
             }
         }
     }
@@ -499,7 +494,7 @@ impl ContractInteract {
 
     pub async fn change_delegation_contract_admin(&mut self) {
         let contract_address = self.state.delegation_address();
-        let admin_address = bech32::decode("");
+        let admin_address = Bech32Address::from_bech32_string("".to_string());
 
         let response = self
             .interactor
@@ -660,6 +655,22 @@ impl ContractInteract {
         println!("Result: {result_value:?}");
     }
 
+    pub async fn get_voting_power(&mut self, token_id: &str, token_amount: BigUint<StaticApi>) {
+        let token_nonce = 0u64;
+
+        let payment =
+            EsdtTokenPayment::new(TokenIdentifier::from(token_id), token_nonce, token_amount);
+
+        self.interactor
+            .query()
+            .to(self.state.current_address())
+            .typed(proxy::LiquidStakingProxy)
+            .get_voting_power(payment)
+            .returns(ReturnsResultUnmanaged)
+            .run()
+            .await;
+    }
+
     pub async fn delegation_claim_status(&mut self) {
         self.interactor
             .query()
@@ -689,5 +700,50 @@ impl ContractInteract {
             .generate_blocks_until_epoch(epoch)
             .await
             .unwrap();
+    }
+
+    pub async fn deploy_governance_contract(&mut self) {
+        // let mut governance_interactor =
+        //     GovernanceCallsInteract::new(Config::chain_simulator_config()).await;
+
+        // governance_interactor
+        //     .set_state(&governance_interactor.owner.to_address())
+        //     .await;
+
+        // governance_interactor
+        //     .proposal("6db132d759482f9f3515fe3ca8f72a8d6dc61244", 9, 11)
+        //     .await;
+
+        // let current_epoch = Self::get_current_epoch().await;
+        // self.interactor
+        //     .tx()
+        //     .from(&self.wallet_address)
+        //     .to(governance_sc_address)
+        //     .typed(GovernanceSCProxy)
+        //     .proposal(b"play chess", current_epoch, current_epoch + 5)
+        //     .returns(ReturnsResultUnmanaged)
+        //     .run()
+        //     .await;
+
+        // self.interactor
+        //     .generate_blocks_until_epoch(5)
+        //     .await
+        //     .unwrap();
+
+        // self.state
+        //     .set_governance_address(new_address_bech32.clone());
+
+        // println!("vote sc new address: {new_address_bech32}");
+    }
+
+    #[allow(dead_code)]
+    async fn get_current_epoch() -> u64 {
+        let blockchain = GatewayHttpProxy::new(CHAIN_SIMULATOR_GATEWAY.to_string());
+
+        let network_config = blockchain
+            .http_request(NetworkStatusRequest::default())
+            .await
+            .unwrap();
+        network_config.epoch_number
     }
 }

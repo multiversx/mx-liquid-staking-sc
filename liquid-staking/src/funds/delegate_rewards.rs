@@ -4,15 +4,14 @@ use crate::{
     basics,
     basics::constants::{MIN_EGLD_TO_DELEGATE, MIN_GAS_FOR_CALLBACK},
     basics::errors::{ERROR_BAD_DELEGATION_AMOUNT, ERROR_CLAIM_REDELEGATE, ERROR_NOT_ACTIVE},
-    config,
-    delegation::{self, ClaimStatusType},
-    delegation_proxy, StorageCache,
+    setup::{self, delegation::ClaimStatusType},
+    StorageCache,
 };
 
 #[multiversx_sc::module]
 pub trait DelegateRewardsModule:
-    config::ConfigModule
-    + delegation::DelegationModule
+    setup::config::ConfigModule
+    + setup::delegation::DelegationModule
     + multiversx_sc_modules::default_issue_callbacks::DefaultIssueCallbacksModule
     + basics::events::EventsModule
 {
@@ -75,9 +74,8 @@ pub trait DelegateRewardsModule:
         let gas_for_async_call = self.get_gas_for_async_call();
         self.tx()
             .to(delegation_contract.clone())
-            .typed(delegation_proxy::DelegationMockProxy)
-            .delegate()
-            .egld(rewards_reserve.clone())
+            .typed(DelegationSCProxy)
+            .delegate(rewards_reserve.clone())
             .gas(gas_for_async_call)
             .callback(
                 DelegateRewardsModule::callbacks(self)

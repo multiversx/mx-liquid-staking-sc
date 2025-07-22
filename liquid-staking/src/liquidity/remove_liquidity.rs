@@ -7,15 +7,19 @@ use crate::{
         ERROR_BAD_PAYMENT_AMOUNT, ERROR_BAD_PAYMENT_TOKEN, ERROR_INSUFFICIENT_UNSTAKE_AMOUNT,
         ERROR_LS_TOKEN_NOT_ISSUED, ERROR_NOT_ACTIVE,
     },
-    config::{self, UnstakeTokenAttributes, UNBOND_PERIOD},
-    delegation, delegation_proxy, liquidity_pool, StorageCache,
+    liquidity_pool,
+    setup::{
+        self,
+        config::{UnstakeTokenAttributes, UNBOND_PERIOD},
+    },
+    StorageCache,
 };
 
 #[multiversx_sc::module]
 pub trait RemoveLiquidityModule:
-    config::ConfigModule
+    setup::config::ConfigModule
     + multiversx_sc_modules::default_issue_callbacks::DefaultIssueCallbacksModule
-    + delegation::DelegationModule
+    + setup::delegation::DelegationModule
     + liquidity_pool::LiquidityPoolModule
     + basics::events::EventsModule
 {
@@ -128,7 +132,7 @@ pub trait RemoveLiquidityModule:
         let gas_for_async_call = self.get_gas_for_async_call();
         self.tx()
             .to(delegation_contract.clone())
-            .typed(delegation_proxy::DelegationMockProxy)
+            .typed(DelegationSCProxy)
             .undelegate(egld_to_unstake.clone())
             .gas(gas_for_async_call)
             .callback(

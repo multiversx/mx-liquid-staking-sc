@@ -1,7 +1,7 @@
 multiversx_sc::imports!();
 multiversx_sc::derive_imports!();
 
-use crate::contexts::base::StorageCache;
+use crate::{basics::constants::Timestamp, contexts::base::StorageCache};
 
 #[type_abi]
 #[derive(TopEncode)]
@@ -35,7 +35,7 @@ pub struct RemoveLiquidityEvent<M: ManagedTypeApi> {
 
 #[multiversx_sc::module]
 pub trait EventsModule:
-    crate::config::ConfigModule
+    crate::setup::config::ConfigModule
     + multiversx_sc_modules::default_issue_callbacks::DefaultIssueCallbacksModule
 {
     fn emit_add_liquidity_event(
@@ -118,4 +118,12 @@ pub trait EventsModule:
 
     #[event("failed_claim")]
     fn failed_claim_event(&self, #[indexed] caller: &ManagedAddress);
+
+    #[event("tokens_locked_for_delegate_vote_event")]
+    fn tokens_locked_for_delegate_vote_event(
+        &self,
+        #[indexed] voter: &ManagedAddress,
+        amount: &BigUint,
+        #[indexed] lock_until: Timestamp,
+    );
 }

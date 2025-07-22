@@ -37,7 +37,7 @@ async fn remove_liquidity_and_withdraw_early() {
     interact.add_liquidity().await;
     interact.remove_liquidity(&ls_token).await;
     interact
-        .withdraw_all(Some(ExpectError(4, "Cannot withdraw yet")))
+        .withdraw_all(Some(ExpectError(4, "nothing to unbond")))
         .await;
 }
 

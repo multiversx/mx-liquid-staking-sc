@@ -1,5 +1,7 @@
 pub type GasLimit = u64;
 pub type Blocks = u64;
+pub type Epoch = u64;
+pub type Timestamp = u64;
 
 pub const DEFAULT_MIN_GAS_TO_SAVE_PROGRESS: GasLimit = 30_000_000;
 pub const DEFAULT_GAS_TO_CLAIM_REWARDS: GasLimit = 6_000_000;
@@ -16,3 +18,5 @@ pub const EGLD_TO_WHITELIST: u64 = 1_000_000_000_000_000_000; // 1 EGLD
 pub const MINIMUM_LIQUIDITY: u64 = 1_000;
 
 pub const MAX_DELEGATION_ADDRESSES: usize = 20;
+
+pub const TEN_DAYS: Timestamp = 60 * 60 * 24 * 10;

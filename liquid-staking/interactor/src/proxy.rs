@@ -94,6 +94,19 @@ where
             .original_result()
     }
 
+    pub fn get_voting_power<
+        Arg0: ProxyArg<EsdtTokenPayment<Env::Api>>,
+    >(
+        self,
+        payment: Arg0,
+    ) -> TxTypedCall<Env, From, To, NotPayable, Gas, BigUint<Env::Api>> {
+        self.wrapped_tx
+            .payment(NotPayable)
+            .raw_call("getVotingPower")
+            .argument(&payment)
+            .original_result()
+    }
+
     pub fn register_ls_token<
         Arg0: ProxyArg<ManagedBuffer<Env::Api>>,
         Arg1: ProxyArg<ManagedBuffer<Env::Api>>,
@@ -367,6 +380,15 @@ where
             .original_result()
     }
 
+    pub fn governance_contract(
+        self,
+    ) -> TxTypedCall<Env, From, To, NotPayable, Gas, ManagedAddress<Env::Api>> {
+        self.wrapped_tx
+            .payment(NotPayable)
+            .raw_call("getVoteContract")
+            .original_result()
+    }
+
     pub fn claim_rewards(
         self,
     ) -> TxTypedCall<Env, From, To, NotPayable, Gas, ()> {
@@ -428,6 +450,35 @@ where
     ) -> TxTypedCall<Env, From, To, (), Gas, ()> {
         self.wrapped_tx
             .raw_call("removeLiquidity")
+            .original_result()
+    }
+
+    pub fn set_governance_contract<
+        Arg0: ProxyArg<ManagedAddress<Env::Api>>,
+    >(
+        self,
+        sc_address: Arg0,
+    ) -> TxTypedCall<Env, From, To, NotPayable, Gas, ()> {
+        self.wrapped_tx
+            .payment(NotPayable)
+            .raw_call("set_governance_contract")
+            .argument(&sc_address)
+            .original_result()
+    }
+
+    pub fn set_proposal_end_period<
+        Arg0: ProxyArg<ManagedBuffer<Env::Api>>,
+        Arg1: ProxyArg<u64>,
+    >(
+        self,
+        proposal: Arg0,
+        end_period: Arg1,
+    ) -> TxTypedCall<Env, From, To, NotPayable, Gas, ()> {
+        self.wrapped_tx
+            .payment(NotPayable)
+            .raw_call("set_proposal_end_period")
+            .argument(&proposal)
+            .argument(&end_period)
             .original_result()
     }
 }
