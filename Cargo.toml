@@ -6,4 +6,5 @@ members = [
     "liquid-staking/meta",
     "liquid-staking/interactor",
     "delegation/interactor",
+    "governance/interactor",
 ]
