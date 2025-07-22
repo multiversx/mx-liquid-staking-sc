@@ -655,22 +655,6 @@ impl ContractInteract {
         println!("Result: {result_value:?}");
     }
 
-    pub async fn get_voting_power(&mut self, token_id: &str, token_amount: BigUint<StaticApi>) {
-        let token_nonce = 0u64;
-
-        let payment =
-            EsdtTokenPayment::new(TokenIdentifier::from(token_id), token_nonce, token_amount);
-
-        self.interactor
-            .query()
-            .to(self.state.current_address())
-            .typed(proxy::LiquidStakingProxy)
-            .get_voting_power(payment)
-            .returns(ReturnsResultUnmanaged)
-            .run()
-            .await;
-    }
-
     pub async fn delegation_claim_status(&mut self) {
         self.interactor
             .query()

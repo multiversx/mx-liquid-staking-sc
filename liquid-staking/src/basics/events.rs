@@ -1,7 +1,7 @@
 multiversx_sc::imports!();
 multiversx_sc::derive_imports!();
 
-use crate::{basics::constants::Timestamp, contexts::base::StorageCache};
+use crate::contexts::base::StorageCache;
 
 #[type_abi]
 #[derive(TopEncode)]
@@ -118,12 +118,4 @@ pub trait EventsModule:
 
     #[event("failed_claim")]
     fn failed_claim_event(&self, #[indexed] caller: &ManagedAddress);
-
-    #[event("tokens_locked_for_delegate_vote_event")]
-    fn tokens_locked_for_delegate_vote_event(
-        &self,
-        #[indexed] voter: &ManagedAddress,
-        amount: &BigUint,
-        #[indexed] lock_until: Timestamp,
-    );
 }

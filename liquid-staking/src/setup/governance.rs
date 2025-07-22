@@ -1,5 +1,5 @@
 use crate::basics::{
-    constants::{Epoch, Timestamp},
+    constants::Timestamp,
     errors::{ERROR_GOVERNANCE_SC_NOT_SET, ERROR_INVALID_SC_ADDRESS},
 };
 
@@ -19,17 +19,11 @@ where
 }
 
 #[multiversx_sc::module]
-pub trait VoteModule {
+pub trait GovernanceModule {
     #[only_owner]
     #[endpoint]
     fn set_governance_contract(&self, sc_address: ManagedAddress) {
         self.governance_contract().set(sc_address);
-    }
-
-    #[only_owner]
-    #[endpoint]
-    fn set_proposal_end_period(&self, proposal: ManagedBuffer, end_period: Epoch) {
-        self.proposal_end_period(proposal).set(end_period);
     }
 
     fn get_governance_sc(&self) -> ManagedAddress {
@@ -51,18 +45,6 @@ pub trait VoteModule {
 
     #[storage_mapper("governanceContract")]
     fn governance_contract(&self) -> SingleValueMapper<ManagedAddress>;
-
-    #[storage_mapper("proposalEndPeriod")]
-    fn proposal_end_period(&self, proposal: ManagedBuffer) -> SingleValueMapper<Epoch>;
-
-    #[storage_mapper("voteLockPeriod")]
-    fn vote_lock_period(&self) -> SingleValueMapper<Timestamp>;
-
-    #[storage_mapper("lockedVoteBalanceAndProposals")]
-    fn locked_vote_balance(
-        &self,
-        address: &ManagedAddress,
-    ) -> SingleValueMapper<LockedFunds<Self::Api>>;
 
     #[storage_mapper("votedProposals")]
     fn voted_proposals(&self, address: &ManagedAddress) -> UnorderedSetMapper<ManagedBuffer>;
