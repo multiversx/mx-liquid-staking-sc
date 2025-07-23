@@ -17,7 +17,6 @@ pub trait VoteModule:
         delegate_to: ManagedAddress,
         voting_power: BigUint,
     ) {
-        self.blockchain().check_caller_is_user_account();
         let caller = self.blockchain().get_caller();
 
         require!(!self.vote_contract().is_empty(), ERROR_VOTE_SC_NOT_SET);

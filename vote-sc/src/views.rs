@@ -50,7 +50,9 @@ pub trait ViewsModule {
 
         let mut hash = self.crypto().sha256(&leaf_bytes);
         for proof_item in proof {
-            if hash.as_managed_buffer() < proof_item.as_managed_buffer() {
+            if BigUint::from(hash.as_managed_buffer())
+                < BigUint::from(proof_item.as_managed_buffer())
+            {
                 let mut tst = hash.as_managed_buffer().clone();
                 tst.append(proof_item.as_managed_buffer());
 
