@@ -1,3 +1,5 @@
+use crate::errors::SELF_CALL_ERROR;
+
 multiversx_sc::imports!();
 
 #[multiversx_sc::module]
@@ -6,9 +8,6 @@ pub trait CallerCheckModule {
         let caller = self.blockchain().get_caller();
         let sc_address = self.blockchain().get_sc_address();
 
-        require!(
-            caller != sc_address,
-            "Cannot call this endpoint through proposed action"
-        );
+        require!(caller != sc_address, SELF_CALL_ERROR);
     }
 }

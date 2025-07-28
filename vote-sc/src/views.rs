@@ -12,11 +12,23 @@ pub trait ViewsModule {
         &self,
         proposal_id: ProposalId,
     ) -> OptionalValue<ManagedByteArray<HASH_LENGTH>> {
-        if self.root_hash_proposal_nonce(proposal_id).is_empty() {
-            return OptionalValue::None;
+        let mut id_to_check = proposal_id;
+        if self.proposal_root_hash(proposal_id).is_empty() {
+            // check if proposal does not exist
+            if proposal_id != 0 {
+                // check inexistent proposal is not default
+                id_to_check = 0;
+
+                if self.proposal_root_hash(id_to_check).is_empty() {
+                    // check default proposal is set
+                    return OptionalValue::None;
+                }
+            } else {
+                return OptionalValue::None;
+            }
         }
 
-        OptionalValue::Some(self.root_hash_proposal_nonce(proposal_id).get())
+        OptionalValue::Some(self.proposal_root_hash(id_to_check).get())
     }
 
     #[view(confirmVotingPower)]
@@ -68,9 +80,6 @@ pub trait ViewsModule {
         hash == root_hash
     }
 
-    #[storage_mapper("rootHashProposalNonce")]
-    fn root_hash_proposal_nonce(
-        &self,
-        proposal_id: ProposalId,
-    ) -> SingleValueMapper<Hash<Self::Api>>;
+    #[storage_mapper("proposalRootHash")]
+    fn proposal_root_hash(&self, proposal_id: ProposalId) -> SingleValueMapper<Hash<Self::Api>>;
 }

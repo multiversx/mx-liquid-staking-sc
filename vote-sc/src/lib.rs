@@ -22,7 +22,7 @@ pub trait VoteSC:
     #[endpoint]
     fn set_root_hash(&self, root_hash: Hash<Self::Api>, proposal_id: ProposalId) {
         require!(!root_hash.is_empty(), INVALID_ROOT_HASH);
-        self.root_hash_proposal_nonce(proposal_id).set(root_hash)
+        self.proposal_root_hash(proposal_id).set(root_hash)
     }
 
     #[only_owner]
@@ -36,13 +36,14 @@ pub trait VoteSC:
     }
 
     #[endpoint]
-    fn vote(
+    fn delegate_vote(
         &self,
         proposal_id: ProposalId,
         vote: ManagedBuffer,
         voting_power: BigUint<Self::Api>,
         proof: ArrayVec<ManagedByteArray<HASH_LENGTH>, PROOF_LENGTH>,
     ) {
+        require!(!self.liquid_staking_sc().is_empty(), LS_SC_NOT_SET);
         self.require_caller_not_self();
 
         let voter = self.blockchain().get_caller();
@@ -50,8 +51,6 @@ pub trait VoteSC:
             self.confirm_voting_power(proposal_id, voting_power.clone(), proof),
             INVALID_MERKLE_PROOF
         );
-
-        require!(!self.liquid_staking_sc().is_empty(), LS_SC_NOT_SET);
 
         let ls_sc_address = self.liquid_staking_sc().get();
         self.tx()

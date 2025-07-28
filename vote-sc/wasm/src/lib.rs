@@ -20,7 +20,7 @@ multiversx_sc_wasm_adapter::endpoints! {
         init => init
         set_root_hash => set_root_hash
         set_liquid_staking_address => set_liquid_staking_address
-        vote => vote
+        delegate_vote => delegate_vote
         getProposalRootHash => get_root_hash
         confirmVotingPower => confirm_voting_power
     )

@@ -25,6 +25,7 @@ pub trait GovernanceModule:
     #[only_owner]
     #[endpoint]
     fn set_governance_contract(&self, sc_address: ManagedAddress) {
+        self.require_sc_address(&sc_address);
         self.governance_contract().set(sc_address);
     }
 
@@ -34,7 +35,7 @@ pub trait GovernanceModule:
             ERROR_GOVERNANCE_SC_NOT_SET
         );
         let address = self.governance_contract().get();
-        self.require_sc_address(&address);
+
         address
     }
 
@@ -47,7 +48,4 @@ pub trait GovernanceModule:
 
     #[storage_mapper("governanceContract")]
     fn governance_contract(&self) -> SingleValueMapper<ManagedAddress>;
-
-    #[storage_mapper("votedProposals")]
-    fn voted_proposals(&self, address: &ManagedAddress) -> UnorderedSetMapper<u32>;
 }
