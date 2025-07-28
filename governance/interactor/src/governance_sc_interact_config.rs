@@ -13,12 +13,12 @@ pub enum ChainType {
 
 /// GovernanceFuncCalls Interact configuration
 #[derive(Debug, Deserialize)]
-pub struct GovernanceConfig {
+pub struct Config {
     gateway_uri: String,
     chain_type: ChainType,
 }
 
-impl GovernanceConfig {
+impl Config {
     // Deserializes config from file
     pub fn load_config() -> Self {
         let mut file = std::fs::File::open(CONFIG_FILE).unwrap();
@@ -28,7 +28,7 @@ impl GovernanceConfig {
     }
 
     pub fn chain_simulator_config() -> Self {
-        GovernanceConfig {
+        Config {
             gateway_uri: "http://localhost:8085".to_owned(),
             chain_type: ChainType::Simulator,
         }

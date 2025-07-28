@@ -13,7 +13,9 @@ edition = "2021"
 
 [dependencies]
 toml = "0.8"
-tokio = { version = "1.24" }
+
+[dependencies.tokio]
+version = "1.24"
 
 [dependencies.clap]
 version = "4.4.7"
@@ -24,8 +26,7 @@ version = "1.0"
 features = ["derive"]
 
 [dependencies.multiversx-sc-snippets]
-git = "https://github.com/multiversx/mx-sdk-rs.git"
-rev = "2cf3e0b8fe53654e63924bc524a5db518f7cb469"
+version = "0.59.1"
 
 [features]
 chain-simulator-tests = []

@@ -137,7 +137,6 @@ impl ContractInteract {
             .add_key(validator_2.private_key.clone())
             .await
             .unwrap();
-
         delegation_interactor
             .set_state(&delegation_interactor.owner.to_address())
             .await;
@@ -148,17 +147,24 @@ impl ContractInteract {
             .set_state(&delegation_interactor.delegator2.to_address())
             .await;
         delegation_interactor
-            .create_new_delegation_contract(
-                51_000_000_000_000_000_000_000_u128,
-                3745u64,
-                1250000000000000000000u128,
-            )
+            .create_new_delegation_contract(0, 3745u64, 1250000000000000000000u128)
             .await;
         delegation_interactor
             .set_check_cap_on_redelegate_rewards(false)
             .await;
 
         let addresses = delegation_interactor.get_all_contract_addresses().await;
+        assert_eq!(
+            &addresses[0],
+            delegation_interactor.state.current_delegation_address()
+        );
+
+        delegation_interactor
+            .add_nodes(vec![
+                (validator_1.public_key, BLSSignature::dummy("signed1")),
+                (validator_2.public_key, BLSSignature::dummy("signed2")),
+            ])
+            .await;
 
         let new_address_bech32 = &addresses[0];
         self.state
