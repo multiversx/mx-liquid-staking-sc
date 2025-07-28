@@ -8,5 +8,8 @@ members = [
   "vote-sc",
   "vote-sc/meta",
   "delegation/interactor",
-  #"governance/interactor",
+  "governance/interactor",
+  "payable-features",
+  "payable-features/meta",
+  "payable-features/interactor",
 ]

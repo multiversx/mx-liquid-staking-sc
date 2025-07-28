@@ -24,15 +24,14 @@ version = "1.0"
 features = ["derive"]
 
 [dependencies.multiversx-sc-snippets]
-version = "=0.59.0"
-path = "../../framework/snippets"
+version = "0.59.1"
 
 [dependencies.delegation-sc-interact]
-path = "../interactor-delegation-func-calls"
+path = "../../delegation/interactor"
 
 
 [dependencies.payable-interactor]
-path = "../../contracts/feature-tests/payable-features/interactor"
+path = "../../payable-features/interactor"
 
 [features]
 chain-simulator-tests = []

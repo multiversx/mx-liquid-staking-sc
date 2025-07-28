@@ -5,6 +5,7 @@ mod liquid_staking_state;
 mod proxy;
 
 use delegation_sc_interact::DelegateCallsInteract;
+use governance_sc_interact::GovernanceCallsInteract;
 pub use liquid_staking_config::Config;
 use liquid_staking_state::State;
 use multiversx_sc_snippets::imports::*;
@@ -718,37 +719,32 @@ impl ContractInteract {
     }
 
     pub async fn deploy_governance_contract(&mut self) {
-        // let mut governance_interactor =
-        //     GovernanceCallsInteract::new(Config::chain_simulator_config()).await;
+        let mut governance_interactor =
+            GovernanceCallsInteract::new(governance_sc_interact::Config::chain_simulator_config())
+                .await;
+        governance_interactor
+            .set_state(&governance_interactor.owner.to_address())
+            .await;
+        governance_interactor
+            .set_state(&governance_interactor.user1.to_address())
+            .await;
+        governance_interactor
+            .set_state(&governance_interactor.delegator.to_address())
+            .await;
 
-        // governance_interactor
-        //     .set_state(&governance_interactor.owner.to_address())
-        //     .await;
+        let _ = governance_interactor
+            .interactor
+            .generate_blocks_until_epoch(8)
+            .await;
 
-        // governance_interactor
-        //     .proposal("6db132d759482f9f3515fe3ca8f72a8d6dc61244", 9, 11)
-        //     .await;
-
-        // let current_epoch = Self::get_current_epoch().await;
-        // self.interactor
-        //     .tx()
-        //     .from(&self.wallet_address)
-        //     .to(governance_sc_address)
-        //     .typed(GovernanceSCProxy)
-        //     .proposal(b"play chess", current_epoch, current_epoch + 5)
-        //     .returns(ReturnsResultUnmanaged)
-        //     .run()
-        //     .await;
-
-        // self.interactor
-        //     .generate_blocks_until_epoch(5)
-        //     .await
-        //     .unwrap();
-
-        // self.state
-        //     .set_governance_address(new_address_bech32.clone());
-
-        // println!("vote sc new address: {new_address_bech32}");
+        governance_interactor
+            .proposal(
+                &governance_interactor.owner.to_address(),
+                "6db132d759482f9f3515fe3ca8f72a8d6dc61244",
+                9,
+                11,
+            )
+            .await;
     }
 
     #[allow(dead_code)]

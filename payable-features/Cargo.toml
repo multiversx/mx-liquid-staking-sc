@@ -1,0 +1,19 @@
+[package]
+name = "payable-features"
+version = "0.0.0"
+authors = ["Andrei Marinica <andrei.marinica@multiversx.com>"]
+edition = "2021"
+publish = false
+
+[lib]
+path = "src/payable_features.rs"
+
+[features]
+barnard = ["multiversx-sc/barnard"]
+
+[dependencies.multiversx-sc]
+version = "0.59.1"
+
+[dev-dependencies.multiversx-sc-scenario]
+version = "0.59.1"
+features = ["wasmer-experimental"]
