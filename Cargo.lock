@@ -2555,6 +2555,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "rust-interact"
+version = "0.0.0"
+dependencies = [
+ "clap",
+ "multiversx-sc",
+ "multiversx-sc-snippets",
+ "serde",
+ "tokio",
+ "toml 0.8.19",
+ "vote-sc",
+]
+
+[[package]]
 name = "rustc-demangle"
 version = "0.1.24"
 source = "registry+https://github.com/rust-lang/crates.io-index"
