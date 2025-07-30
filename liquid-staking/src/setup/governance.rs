@@ -34,9 +34,9 @@ pub trait GovernanceModule:
             !self.governance_contract().is_empty(),
             ERROR_GOVERNANCE_SC_NOT_SET
         );
-        let address = self.governance_contract().get();
+        
 
-        address
+        self.governance_contract().get()
     }
 
     fn require_sc_address(&self, address: &ManagedAddress) {
