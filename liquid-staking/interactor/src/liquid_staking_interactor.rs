@@ -3,6 +3,7 @@
 mod liquid_staking_config;
 mod liquid_staking_state;
 mod proxy;
+mod vote_proxy;
 
 use delegation_sc_interact::DelegateCallsInteract;
 use governance_sc_interact::GovernanceCallsInteract;
@@ -10,6 +11,7 @@ pub use liquid_staking_config::Config;
 use liquid_staking_state::State;
 use multiversx_sc_snippets::imports::*;
 use multiversx_sc_snippets::sdk::gateway::NetworkStatusRequest;
+use vote_interact::{vote_interact_config, VoteInteract};
 
 pub const CHAIN_SIMULATOR_GATEWAY: &str = "http://localhost:8085";
 
@@ -67,6 +69,9 @@ pub async fn liquid_staking_cli() {
 
 pub struct ContractInteract {
     interactor: Interactor,
+    delegation_interactor: Option<DelegateCallsInteract>,
+    governance_interactor: Option<GovernanceCallsInteract>,
+    vote_interactor: Option<VoteInteract>,
     wallet_address: Address,
     contract_code: BytesValue,
     state: State,
@@ -90,6 +95,9 @@ impl ContractInteract {
 
         ContractInteract {
             interactor,
+            delegation_interactor: None,
+            governance_interactor: None,
+            vote_interactor: None,
             wallet_address,
             contract_code,
             state: State::load_state(),
@@ -167,6 +175,7 @@ impl ContractInteract {
             ])
             .await;
 
+        self.delegation_interactor = Some(delegation_interactor);
         let new_address_bech32 = &addresses[0];
         self.state
             .set_delegation_address(new_address_bech32.clone());
@@ -745,6 +754,32 @@ impl ContractInteract {
                 11,
             )
             .await;
+        self.governance_interactor = Some(governance_interactor);
+    }
+
+    pub async fn deploy_vote_contract(&mut self) {
+        let mut vote_interactor =
+            VoteInteract::new(vote_interact_config::Config::chain_simulator_config()).await;
+
+        let new_address = vote_interactor
+            .interactor
+            .tx()
+            .from(&self.wallet_address)
+            .gas(100_000_000u64)
+            .typed(vote_proxy::VoteSCProxy)
+            .init()
+            .code(&self.contract_code)
+            .returns(ReturnsNewAddress)
+            .run()
+            .await;
+
+        self.vote_interactor = Some(vote_interactor);
+        let new_address_bech32 = Bech32Address::from(&new_address);
+        self.state.set_address(new_address_bech32.clone());
+
+        let new_address_string = new_address_bech32.to_string();
+
+        println!("new address: {new_address_string}");
     }
 
     #[allow(dead_code)]

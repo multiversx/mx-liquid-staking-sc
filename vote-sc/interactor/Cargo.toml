@@ -6,7 +6,7 @@ path = "src/vote_interactor_main.rs"
 path = "src/vote_interact.rs"
 
 [package]
-name = "rust-interact"
+name = "vote-interact"
 version = "0.0.0"
 publish = false
 edition = "2021"

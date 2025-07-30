@@ -23,6 +23,9 @@ path = "../../delegation/interactor"
 [dependencies.governance-sc-interact]
 path = "../../governance/interactor"
 
+[dependencies.vote-interact]
+path = "../../vote-sc/interactor"
+
 [dependencies.multiversx-sc-snippets]
 version = "0.59.1"
 
