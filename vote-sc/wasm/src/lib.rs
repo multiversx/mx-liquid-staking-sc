@@ -5,9 +5,9 @@
 ////////////////////////////////////////////////////
 
 // Init:                                 1
-// Endpoints:                            5
+// Endpoints:                            6
 // Async Callback (empty):               1
-// Total number of exported functions:   7
+// Total number of exported functions:   8
 
 #![no_std]
 
@@ -21,6 +21,7 @@ multiversx_sc_wasm_adapter::endpoints! {
         set_root_hash => set_root_hash
         set_liquid_staking_address => set_liquid_staking_address
         delegate_vote => delegate_vote
+        liquid_staking_sc => liquid_staking_sc
         getProposalRootHash => get_root_hash
         confirmVotingPower => confirm_voting_power
     )

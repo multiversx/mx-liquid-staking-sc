@@ -367,15 +367,6 @@ where
             .original_result()
     }
 
-    pub fn governance_contract(
-        self,
-    ) -> TxTypedCall<Env, From, To, NotPayable, Gas, ManagedAddress<Env::Api>> {
-        self.wrapped_tx
-            .payment(NotPayable)
-            .raw_call("getVoteContract")
-            .original_result()
-    }
-
     pub fn set_governance_contract<
         Arg0: ProxyArg<ManagedAddress<Env::Api>>,
     >(
@@ -386,6 +377,15 @@ where
             .payment(NotPayable)
             .raw_call("set_governance_contract")
             .argument(&sc_address)
+            .original_result()
+    }
+
+    pub fn governance_contract(
+        self,
+    ) -> TxTypedCall<Env, From, To, NotPayable, Gas, ManagedAddress<Env::Api>> {
+        self.wrapped_tx
+            .payment(NotPayable)
+            .raw_call("governance_contract")
             .original_result()
     }
 
@@ -421,6 +421,15 @@ where
             .argument(&vote_type)
             .argument(&delegate_to)
             .argument(&voting_power)
+            .original_result()
+    }
+
+    pub fn vote_contract(
+        self,
+    ) -> TxTypedCall<Env, From, To, NotPayable, Gas, ManagedAddress<Env::Api>> {
+        self.wrapped_tx
+            .payment(NotPayable)
+            .raw_call("vote_contract")
             .original_result()
     }
 

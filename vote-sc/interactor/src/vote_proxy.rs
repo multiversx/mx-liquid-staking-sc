@@ -113,6 +113,15 @@ where
             .original_result()
     }
 
+    pub fn liquid_staking_sc(
+        self,
+    ) -> TxTypedCall<Env, From, To, NotPayable, Gas, ManagedAddress<Env::Api>> {
+        self.wrapped_tx
+            .payment(NotPayable)
+            .raw_call("liquid_staking_sc")
+            .original_result()
+    }
+
     pub fn get_root_hash<
         Arg0: ProxyArg<u32>,
     >(
