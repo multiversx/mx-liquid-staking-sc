@@ -389,6 +389,19 @@ where
             .original_result()
     }
 
+    pub fn set_vote_contract<
+        Arg0: ProxyArg<ManagedAddress<Env::Api>>,
+    >(
+        self,
+        sc_address: Arg0,
+    ) -> TxTypedCall<Env, From, To, NotPayable, Gas, ()> {
+        self.wrapped_tx
+            .payment(NotPayable)
+            .raw_call("set_vote_contract")
+            .argument(&sc_address)
+            .original_result()
+    }
+
     pub fn delegate_vote<
         Arg0: ProxyArg<u32>,
         Arg1: ProxyArg<ManagedBuffer<Env::Api>>,

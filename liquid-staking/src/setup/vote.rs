@@ -9,6 +9,13 @@ pub trait VoteModule:
     governance::GovernanceModule
     + multiversx_sc_modules::default_issue_callbacks::DefaultIssueCallbacksModule
 {
+    #[only_owner]
+    #[endpoint]
+    fn set_vote_contract(&self, sc_address: ManagedAddress) {
+        self.require_sc_address(&sc_address);
+        self.vote_contract().set(sc_address);
+    }
+
     #[endpoint(delegateVote)]
     fn delegate_vote(
         &self,
