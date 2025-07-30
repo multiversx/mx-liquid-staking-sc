@@ -46,6 +46,7 @@ pub trait GovernanceModule:
         );
     }
 
+    #[view]
     #[storage_mapper("governanceContract")]
     fn governance_contract(&self) -> SingleValueMapper<ManagedAddress>;
 }

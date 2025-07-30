@@ -60,6 +60,7 @@ pub trait VoteModule:
             .async_call_and_exit();
     }
 
+    #[view]
     #[storage_mapper("voteContract")]
     fn vote_contract(&self) -> SingleValueMapper<ManagedAddress>;
 

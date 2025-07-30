@@ -60,6 +60,7 @@ pub trait VoteSC:
             .call_and_exit();
     }
 
+    #[view]
     #[storage_mapper("liquidStakingAddress")]
     fn liquid_staking_sc(&self) -> SingleValueMapper<ManagedAddress>;
 }
