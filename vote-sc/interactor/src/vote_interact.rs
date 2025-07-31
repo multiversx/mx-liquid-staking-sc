@@ -74,8 +74,8 @@ impl VoteInteract {
             .await
             .use_chain_simulator(config.use_chain_simulator());
 
-        interactor.set_current_dir_from_workspace("vote-sc");
-        let wallet_address = interactor.register_wallet(test_wallets::alice()).await;
+        interactor.set_current_dir_from_workspace("fuck-you-relative-pathing");
+        let wallet_address = interactor.register_wallet(test_wallets::mallory()).await;
 
         // Useful in the chain simulator setting
         // generate blocks until ESDTSystemSCAddress is enabled

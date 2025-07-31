@@ -7,10 +7,6 @@ members = [
   "liquid-staking/interactor",
   "vote-sc",
   "vote-sc/meta",
-  "vote-sc/interactor",
-  "delegation/interactor",
-  "governance/interactor",
   "payable-features",
   "payable-features/meta",
-  "payable-features/interactor",
 ]

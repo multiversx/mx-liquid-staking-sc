@@ -11,7 +11,7 @@ pub use liquid_staking_config::Config;
 use liquid_staking_state::State;
 use multiversx_sc_snippets::imports::*;
 use multiversx_sc_snippets::sdk::gateway::NetworkStatusRequest;
-use vote_interact::{vote_interact_config, VoteInteract};
+use vote_interact::{vote_interact_cli::HASH_LENGTH, vote_interact_config, VoteInteract};
 
 pub const CHAIN_SIMULATOR_GATEWAY: &str = "http://localhost:8085";
 
@@ -23,7 +23,7 @@ pub async fn liquid_staking_cli() {
     let cmd = args.next().expect("at least one argument required");
 
     let config = Config::load_config();
-    let mut interact = ContractInteract::new(config).await;
+    let mut interact = LiquidStakingInteract::new(config).await;
     match cmd.as_str() {
         "deploy" => interact.deploy().await,
         "upgrade" => interact.upgrade().await,
@@ -67,39 +67,45 @@ pub async fn liquid_staking_cli() {
     }
 }
 
-pub struct ContractInteract {
+pub struct LiquidStakingInteract {
     interactor: Interactor,
     delegation_interactor: Option<DelegateCallsInteract>,
-    governance_interactor: Option<GovernanceCallsInteract>,
-    vote_interactor: Option<VoteInteract>,
+    governance_interactor: GovernanceCallsInteract,
+    vote_interactor: VoteInteract,
     wallet_address: Address,
-    contract_code: BytesValue,
+    liquid_staking_contract_code: BytesValue,
     state: State,
 }
 
-impl ContractInteract {
+impl LiquidStakingInteract {
     pub async fn new(config: Config) -> Self {
         let mut interactor = Interactor::new(config.gateway_uri())
             .await
             .use_chain_simulator(config.use_chain_simulator());
 
-        interactor.set_current_dir_from_workspace("liquid-staking");
+        let vote_interactor =
+            VoteInteract::new(vote_interact_config::Config::chain_simulator_config()).await;
+
+        let governance_interactor =
+            GovernanceCallsInteract::new(governance_sc_interact::Config::chain_simulator_config())
+                .await;
+
         let wallet_address = interactor.register_wallet(test_wallets::mallory()).await;
 
         interactor.generate_blocks_until_epoch(1).await.unwrap();
 
-        let contract_code = BytesValue::interpret_from(
+        let liquid_staking_contract_code = BytesValue::interpret_from(
             "mxsc:../output/liquid-staking.mxsc.json",
             &InterpreterContext::default(),
         );
 
-        ContractInteract {
+        LiquidStakingInteract {
             interactor,
             delegation_interactor: None,
-            governance_interactor: None,
-            vote_interactor: None,
+            governance_interactor,
+            vote_interactor,
             wallet_address,
-            contract_code,
+            liquid_staking_contract_code,
             state: State::load_state(),
         }
     }
@@ -112,7 +118,7 @@ impl ContractInteract {
             .gas(100_000_000u64)
             .typed(proxy::LiquidStakingProxy)
             .init()
-            .code(&self.contract_code)
+            .code(&self.liquid_staking_contract_code)
             .returns(ReturnsNewAddress)
             .run()
             .await;
@@ -193,7 +199,7 @@ impl ContractInteract {
             .gas(30_000_000u64)
             .typed(proxy::LiquidStakingProxy)
             .upgrade()
-            .code(&self.contract_code)
+            .code(&self.liquid_staking_contract_code)
             .code_metadata(CodeMetadata::UPGRADEABLE)
             .returns(ReturnsNewAddress)
             .run()
@@ -708,14 +714,21 @@ impl ContractInteract {
     }
 
     pub async fn delegate_vote(&mut self, error: Option<ExpectError<'_>>) {
+        let mut bytes = [0u8; 32];
+        bytes.copy_from_slice("trust me, I am legit".as_bytes());
+        let hash = ManagedByteArray::<StaticApi, { HASH_LENGTH }>::new_from_bytes(&bytes);
+        let mut proof = ArrayVec::new();
+        proof.push(hash);
+
         let tx = self
+            .vote_interactor
             .interactor
             .tx()
             .from(&self.wallet_address)
             .to(self.state.current_address())
             .gas(50_000_000u64)
-            .typed(proxy::LiquidStakingProxy)
-            .delegate_vote(1u32, "yes", &self.wallet_address, 10000u32);
+            .typed(vote_proxy::VoteSCProxy)
+            .delegate_vote(1u32, "yes", 10000u32, proof);
 
         match error {
             None => {
@@ -728,54 +741,71 @@ impl ContractInteract {
     }
 
     pub async fn deploy_governance_contract(&mut self) {
-        let mut governance_interactor =
-            GovernanceCallsInteract::new(governance_sc_interact::Config::chain_simulator_config())
-                .await;
-        governance_interactor
-            .set_state(&governance_interactor.owner.to_address())
+        self.governance_interactor
+            .set_state(&self.governance_interactor.owner.to_address())
             .await;
-        governance_interactor
-            .set_state(&governance_interactor.user1.to_address())
+        self.governance_interactor
+            .set_state(&self.governance_interactor.user1.to_address())
             .await;
-        governance_interactor
-            .set_state(&governance_interactor.delegator.to_address())
+        self.governance_interactor
+            .set_state(&self.governance_interactor.delegator.to_address())
             .await;
 
-        let _ = governance_interactor
+        let _ = self
+            .governance_interactor
             .interactor
             .generate_blocks_until_epoch(8)
             .await;
 
-        governance_interactor
+        self.governance_interactor
             .proposal(
-                &governance_interactor.owner.to_address(),
+                &self.governance_interactor.owner.to_address(),
                 "6db132d759482f9f3515fe3ca8f72a8d6dc61244",
                 9,
                 11,
             )
             .await;
-        self.governance_interactor = Some(governance_interactor);
     }
 
     pub async fn deploy_vote_contract(&mut self) {
-        let mut vote_interactor =
-            VoteInteract::new(vote_interact_config::Config::chain_simulator_config()).await;
-
-        let new_address = vote_interactor
+        let new_address = self
+            .vote_interactor
             .interactor
             .tx()
             .from(&self.wallet_address)
             .gas(100_000_000u64)
             .typed(vote_proxy::VoteSCProxy)
             .init()
-            .code(&self.contract_code)
+            .code(&self.vote_interactor.contract_code)
             .returns(ReturnsNewAddress)
             .run()
             .await;
 
-        self.vote_interactor = Some(vote_interactor);
         let new_address_bech32 = Bech32Address::from(&new_address);
-        self.state.set_address(new_address_bech32.clone());
+        self.state.set_vote_address(new_address_bech32.clone());
+
+        self.vote_interactor
+            .interactor
+            .tx()
+            .from(&self.wallet_address)
+            .to(self.state.vote_address())
+            .gas(100_000_000u64)
+            .typed(vote_proxy::VoteSCProxy)
+            .set_liquid_staking_address(self.state.current_address())
+            .returns(ReturnsResultUnmanaged)
+            .run()
+            .await;
+
+        self.interactor
+            .tx()
+            .from(&self.wallet_address)
+            .to(self.state.current_address())
+            .gas(100_000_000u64)
+            .typed(proxy::LiquidStakingProxy)
+            .set_vote_contract(new_address_bech32.clone())
+            .returns(ReturnsResultUnmanaged)
+            .run()
+            .await;
 
         let new_address_string = new_address_bech32.to_string();
 

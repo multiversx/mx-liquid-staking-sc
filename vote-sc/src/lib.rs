@@ -18,6 +18,9 @@ pub trait VoteSC:
     #[init]
     fn init(&self) {}
 
+    #[upgrade]
+    fn upgrade(&self) {}
+
     #[only_owner]
     #[endpoint]
     fn set_root_hash(&self, root_hash: Hash<Self::Api>, proposal_id: ProposalId) {

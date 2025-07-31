@@ -91,7 +91,7 @@ impl GovernanceCallsInteract {
             .await
             .use_chain_simulator(config.is_chain_simulator());
 
-        interactor.set_current_dir_from_workspace("tools/interactor-governance-func-calls");
+        interactor.set_current_dir_from_workspace("governance/interactor");
         let owner = interactor.register_wallet(test_wallets::eve()).await;
         let user1 = interactor.register_wallet(test_wallets::mike()).await;
         let user2 = interactor.register_wallet(test_wallets::judy()).await;

@@ -136,7 +136,7 @@ impl DelegateCallsInteract {
             .await
             .use_chain_simulator(config.is_chain_simulator());
 
-        interactor.set_current_dir_from_workspace("tools/interactor-delegation-func-calls");
+        interactor.set_current_dir_from_workspace("delegation/interactor");
         let wallet_address = interactor.register_wallet(test_wallets::alice()).await;
         let delegator1 = interactor.register_wallet(test_wallets::bob()).await;
         let delegator2 = interactor.register_wallet(test_wallets::dan()).await;
