@@ -74,7 +74,6 @@ impl VoteInteract {
             .await
             .use_chain_simulator(config.use_chain_simulator());
 
-        interactor.set_current_dir_from_workspace("fuck-you-relative-pathing");
         let wallet_address = interactor.register_wallet(test_wallets::mallory()).await;
 
         // Useful in the chain simulator setting
@@ -82,7 +81,7 @@ impl VoteInteract {
         interactor.generate_blocks_until_epoch(1).await.unwrap();
 
         let contract_code = BytesValue::interpret_from(
-            "mxsc:../output/vote-sc.mxsc.json",
+            "../../vote-sc/output/vote-sc.mxsc.json",
             &InterpreterContext::default(),
         );
 
