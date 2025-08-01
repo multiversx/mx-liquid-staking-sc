@@ -60,7 +60,7 @@ pub trait VoteSC:
             .to(ls_sc_address)
             .typed(liquid_staking_proxy::LiquidStakingProxy)
             .delegate_vote(proposal_id, vote, voter, voting_power)
-            .call_and_exit();
+            .sync_call();
     }
 
     #[view]
