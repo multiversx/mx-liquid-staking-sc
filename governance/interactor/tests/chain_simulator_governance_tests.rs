@@ -36,14 +36,10 @@ async fn cs_governance_run_tests() {
 
     let mut delegation_interactor =
         DelegateCallsInteract::new(delegation_sc_interact::Config::chain_simulator_config()).await;
-    let validator_1 =
-        Validator::from_pem_file("../interactor-delegation-func-calls/validatorKey1.pem")
-            .expect("unable to load validator key");
-    let validator_2 =
-        Validator::from_pem_file("../interactor-delegation-func-calls/validatorKey2.pem")
-            .expect("unable to load validator key");
-    let validator_3 =
-        Validator::from_pem_file("./validatorKey3.pem").expect("unable to load validator key");
+    let validator_1 = Validator::from_pem_file("../../delegation/interactor/validatorKey1.pem")
+        .expect("unable to load validator key");
+    let validator_2 = Validator::from_pem_file("../../delegation/interactor/validatorKey2.pem")
+        .expect("unable to load validator key");
 
     let _ = delegation_interactor
         .interactor
@@ -53,11 +49,6 @@ async fn cs_governance_run_tests() {
     let _ = delegation_interactor
         .interactor
         .add_key(validator_2.private_key.clone())
-        .await
-        .unwrap();
-    let _ = delegation_interactor
-        .interactor
-        .add_key(validator_3.private_key.clone())
         .await
         .unwrap();
 
@@ -95,17 +86,6 @@ async fn cs_governance_run_tests() {
 
     delegation_interactor
         .create_new_delegation_contract(0u128, 0u64, 40_000_000_000_000_000_000_000_u128)
-        .await;
-
-    delegation_interactor
-        .add_nodes(vec![(
-            validator_3.public_key,
-            BLSSignature::dummy("signed3"),
-        )])
-        .await;
-
-    delegation_interactor
-        .stake_nodes(vec![validator_3.public_key])
         .await;
 
     governance_interactor

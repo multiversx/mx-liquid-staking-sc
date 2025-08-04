@@ -161,6 +161,7 @@ async fn test_delegate_not_enough_egld() {
 async fn delegate_vote() {
     let mut interact = LiquidStakingInteract::new(Config::chain_simulator_config()).await;
     interact.deploy().await;
+    interact.deploy_governance_contract().await;
     interact.deploy_delegation_contract().await;
     interact.whitelist_delegation_contract().await;
     interact.set_state_active().await;
@@ -169,7 +170,6 @@ async fn delegate_vote() {
     interact.add_liquidity().await;
     interact.add_liquidity().await;
     interact.add_liquidity().await;
-    interact.deploy_governance_contract().await;
     interact.deploy_vote_contract().await;
     // interact.delegate_vote(None).await;
 }

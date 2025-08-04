@@ -715,7 +715,7 @@ impl LiquidStakingInteract {
 
     pub async fn delegate_vote(&mut self, error: Option<ExpectError<'_>>) {
         let mut bytes = [0u8; 32];
-        bytes.copy_from_slice("trust me, I am legit".as_bytes());
+        bytes.copy_from_slice("trust me I am legit and you know".as_bytes());
         let hash = ManagedByteArray::<StaticApi, { HASH_LENGTH }>::new_from_bytes(&bytes);
         let mut proof = ArrayVec::new();
         proof.push(hash);
@@ -765,6 +765,8 @@ impl LiquidStakingInteract {
                 11,
             )
             .await;
+        self.governance_interactor.view_config().await;
+        self.governance_interactor.view_proposal(1).await;
     }
 
     pub async fn deploy_vote_contract(&mut self) {
