@@ -95,7 +95,7 @@ impl GovernanceCallsInteract {
         let owner = interactor.register_wallet(test_wallets::eve()).await;
         let user1 = interactor.register_wallet(test_wallets::mike()).await;
         let user2 = interactor.register_wallet(test_wallets::judy()).await;
-        let delegator = interactor.register_wallet(test_wallets::heidi()).await;
+        let delegator = interactor.register_wallet(test_wallets::bob()).await;
 
         // generate blocks until ESDTSystemSCAddress is enabled
         interactor.generate_blocks_until_epoch(1).await.unwrap();

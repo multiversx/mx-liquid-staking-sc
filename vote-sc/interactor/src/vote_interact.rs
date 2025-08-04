@@ -81,7 +81,7 @@ impl VoteInteract {
         interactor.generate_blocks_until_epoch(1).await.unwrap();
 
         let contract_code = BytesValue::interpret_from(
-            "../../vote-sc/output/vote-sc.mxsc.json",
+            "mxsc:../output/vote-sc.mxsc.json",
             &InterpreterContext::default(),
         );
 
@@ -115,35 +115,37 @@ impl VoteInteract {
         root_hash: ManagedByteArray<StaticApi, { HASH_LENGTH }>,
         proposal_id: u32,
     ) {
+        let gas = 30_000_000u64;
         let response = self
             .interactor
             .tx()
             .from(&self.owner)
             .to(self.state.current_vote_address())
-            .gas(30_000_000u64)
+            .gas(gas)
             .typed(vote_proxy::VoteSCProxy)
             .set_root_hash(root_hash, proposal_id)
             .returns(ReturnsResultUnmanaged)
             .run()
             .await;
 
-        println!("Result: {response:?}");
+        println!("set_root_hash call result: {response:?}");
     }
 
     pub async fn set_liquid_staking_address(&mut self, address: Bech32Address) {
+        let gas = 30_000_000u64;
         let response = self
             .interactor
             .tx()
             .from(&self.owner)
             .to(self.state.current_vote_address())
-            .gas(30_000_000u64)
+            .gas(gas)
             .typed(vote_proxy::VoteSCProxy)
             .set_liquid_staking_address(address)
             .returns(ReturnsResultUnmanaged)
             .run()
             .await;
 
-        println!("Result: {response:?}");
+        println!("set_liquid_staking_address call result: {response:?}");
     }
 
     pub async fn delegate_vote(
@@ -153,19 +155,20 @@ impl VoteInteract {
         voting_power: u128,
         proof: ArrayVec<ManagedByteArray<StaticApi, { HASH_LENGTH }>, { PROOF_LENGTH }>,
     ) {
+        let gas = 30_000_000u64;
         let response = self
             .interactor
             .tx()
             .from(&self.owner)
             .to(self.state.current_vote_address())
-            .gas(30_000_000u64)
+            .gas(gas)
             .typed(vote_proxy::VoteSCProxy)
             .delegate_vote(proposal_id, vote, voting_power, proof)
             .returns(ReturnsResultUnmanaged)
             .run()
             .await;
 
-        println!("Result: {response:?}");
+        println!("delegate_vote call result: {response:?}");
     }
 
     pub async fn get_root_hash(&mut self, proposal_id: u32) {
@@ -179,7 +182,7 @@ impl VoteInteract {
             .run()
             .await;
 
-        println!("Result: {result_value:?}");
+        println!("get_root_hash call result: {result_value:?}");
     }
 
     pub async fn confirm_voting_power(
@@ -198,6 +201,6 @@ impl VoteInteract {
             .run()
             .await;
 
-        println!("Result: {result_value:?}");
+        println!("confirm_voting_power call result: {result_value:?}");
     }
 }
