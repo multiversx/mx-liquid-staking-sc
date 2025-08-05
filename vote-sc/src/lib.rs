@@ -49,10 +49,10 @@ pub trait VoteSC:
         require!(!self.liquid_staking_sc().is_empty(), LS_SC_NOT_SET);
         self.require_caller_not_self();
 
-        require!(
-            self.confirm_voting_power(proposal_id, voting_power.clone(), proof),
-            INVALID_MERKLE_PROOF
-        );
+        // require!(
+        //     self.confirm_voting_power(proposal_id, voting_power.clone(), proof),
+        //     INVALID_MERKLE_PROOF
+        // );
 
         let voter = self.blockchain().get_caller();
         let ls_sc_address = self.liquid_staking_sc().get();
@@ -61,26 +61,6 @@ pub trait VoteSC:
             .typed(liquid_staking_proxy::LiquidStakingProxy)
             .delegate_vote(proposal_id, vote, voter, voting_power)
             .sync_call();
-    }
-
-    // delete this when done testing
-    #[endpoint]
-    fn delegate_test_vote(
-        &self,
-        _proposal_id: ProposalId,
-        _vote: ManagedBuffer,
-        _voting_power: BigUint<Self::Api>,
-    ) {
-        require!(!self.liquid_staking_sc().is_empty(), LS_SC_NOT_SET);
-        self.require_caller_not_self();
-
-        let _voter = self.blockchain().get_caller();
-        let _ls_sc_address = self.liquid_staking_sc().get();
-        // self.tx()
-        //     .to(ls_sc_address)
-        //     .typed(liquid_staking_proxy::LiquidStakingProxy)
-        //     .delegate_vote(proposal_id, vote, voter, voting_power)
-        //     .sync_call();
     }
 
     #[view]

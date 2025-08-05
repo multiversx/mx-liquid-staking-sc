@@ -1,13 +1,11 @@
 multiversx_sc::imports!();
 
-use crate::{
-    basics::errors::{ERROR_ALREADY_VOTED, ERROR_INVALID_CALLER, ERROR_VOTE_SC_NOT_SET},
-    setup::governance,
+use crate::basics::errors::{
+    ERROR_ALREADY_VOTED, ERROR_INVALID_CALLER, ERROR_INVALID_SC_ADDRESS, ERROR_VOTE_SC_NOT_SET,
 };
 #[multiversx_sc::module]
 pub trait VoteModule:
-    governance::GovernanceModule
-    + multiversx_sc_modules::default_issue_callbacks::DefaultIssueCallbacksModule
+    multiversx_sc_modules::default_issue_callbacks::DefaultIssueCallbacksModule
 {
     #[only_owner]
     #[endpoint]
@@ -51,13 +49,18 @@ pub trait VoteModule:
         delegate_to: &ManagedAddress,
         voting_power: &BigUint,
     ) {
-        let governance_contract = self.get_governance_sc();
-
         self.tx()
-            .to(governance_contract.clone())
+            .to(GovernanceSystemSCAddress)
             .typed(GovernanceSCProxy)
             .delegate_vote(proposal, vote_type, delegate_to, voting_power)
             .async_call_and_exit();
+    }
+
+    fn require_sc_address(&self, address: &ManagedAddress) {
+        require!(
+            !address.is_zero() && self.blockchain().is_smart_contract(address),
+            ERROR_INVALID_SC_ADDRESS
+        );
     }
 
     #[view]

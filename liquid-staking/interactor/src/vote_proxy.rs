@@ -132,25 +132,6 @@ where
             .original_result()
     }
 
-    pub fn delegate_test_vote<
-        Arg0: ProxyArg<u32>,
-        Arg1: ProxyArg<ManagedBuffer<Env::Api>>,
-        Arg2: ProxyArg<BigUint<Env::Api>>,
-    >(
-        self,
-        _proposal_id: Arg0,
-        _vote: Arg1,
-        _voting_power: Arg2,
-    ) -> TxTypedCall<Env, From, To, NotPayable, Gas, ()> {
-        self.wrapped_tx
-            .payment(NotPayable)
-            .raw_call("delegate_test_vote")
-            .argument(&_proposal_id)
-            .argument(&_vote)
-            .argument(&_voting_power)
-            .original_result()
-    }
-
     pub fn liquid_staking_sc(
         self,
     ) -> TxTypedCall<Env, From, To, NotPayable, Gas, ManagedAddress<Env::Api>> {

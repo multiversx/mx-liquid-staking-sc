@@ -36,7 +36,7 @@ impl State {
     pub fn current_delegation_address(&self) -> &Bech32Address {
         self.delegation_address
             .as_ref()
-            .expect("no known adder contract, deploy first")
+            .expect("no known delegation contract, deploy first")
     }
 }
 

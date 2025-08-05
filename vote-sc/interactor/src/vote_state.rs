@@ -36,7 +36,7 @@ impl State {
     pub fn current_vote_address(&self) -> &Bech32Address {
         self.vote_address
             .as_ref()
-            .expect("no known adder contract, deploy first")
+            .expect("no known vote contract, deploy first")
     }
 }
 

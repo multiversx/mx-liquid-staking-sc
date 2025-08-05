@@ -79,6 +79,8 @@ impl LiquidStakingInteract {
     }
 
     pub async fn delegate_vote(&mut self, error: Option<ExpectError<'_>>) {
+        let proof = ArrayVec::new();
+
         let tx = self
             .vote_interactor
             .interactor
@@ -87,7 +89,7 @@ impl LiquidStakingInteract {
             .to(self.state.vote_address())
             .gas(50_000_000u64)
             .typed(vote_proxy::VoteSCProxy)
-            .delegate_test_vote(1u32, "yes", 1_000_000u32);
+            .delegate_vote(1u32, "yes", 1_000_000u32, proof);
 
         match error {
             None => {

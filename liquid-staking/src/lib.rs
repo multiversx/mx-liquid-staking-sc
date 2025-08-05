@@ -21,7 +21,6 @@ pub trait LiquidStaking:
     + basics::views::ViewsModule
     + setup::config::ConfigModule
     + setup::delegation::DelegationModule
-    + setup::governance::GovernanceModule
     + setup::vote::VoteModule
     + funds::claim::ClaimModule
     + funds::delegate_rewards::DelegateRewardsModule

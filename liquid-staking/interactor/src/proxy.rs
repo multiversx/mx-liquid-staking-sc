@@ -367,28 +367,6 @@ where
             .original_result()
     }
 
-    pub fn set_governance_contract<
-        Arg0: ProxyArg<ManagedAddress<Env::Api>>,
-    >(
-        self,
-        sc_address: Arg0,
-    ) -> TxTypedCall<Env, From, To, NotPayable, Gas, ()> {
-        self.wrapped_tx
-            .payment(NotPayable)
-            .raw_call("set_governance_contract")
-            .argument(&sc_address)
-            .original_result()
-    }
-
-    pub fn governance_contract(
-        self,
-    ) -> TxTypedCall<Env, From, To, NotPayable, Gas, ManagedAddress<Env::Api>> {
-        self.wrapped_tx
-            .payment(NotPayable)
-            .raw_call("governance_contract")
-            .original_result()
-    }
-
     pub fn set_vote_contract<
         Arg0: ProxyArg<ManagedAddress<Env::Api>>,
     >(

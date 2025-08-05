@@ -36,7 +36,7 @@ impl State {
     pub fn current_governance_address(&self) -> &Bech32Address {
         self.governance_address
             .as_ref()
-            .expect("no known adder contract, deploy first")
+            .expect("no known governance contract, deploy first")
     }
 }
 
