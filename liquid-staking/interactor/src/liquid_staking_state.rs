@@ -11,7 +11,6 @@ const STATE_FILE: &str = "state.toml";
 pub struct State {
     contract_address: Option<Bech32Address>,
     delegation_address: Option<Bech32Address>,
-    governance_address: Option<Bech32Address>,
     vote_address: Option<Bech32Address>,
 }
 
@@ -37,11 +36,6 @@ impl State {
         self.delegation_address = Some(address);
     }
 
-    #[allow(dead_code)]
-    pub fn set_governance_address(&mut self, address: Bech32Address) {
-        self.governance_address = Some(address);
-    }
-
     pub fn set_vote_address(&mut self, address: Bech32Address) {
         self.vote_address = Some(address);
     }
@@ -59,16 +53,10 @@ impl State {
             .expect("no known delegation contract, deploy first")
     }
 
-    #[allow(dead_code)]
-    pub fn governance_address(&self) -> &Bech32Address {
-        self.governance_address
-            .as_ref()
-            .expect("no known delegation contract, deploy first")
-    }
     pub fn vote_address(&self) -> &Bech32Address {
         self.vote_address
             .as_ref()
-            .expect("no known delegation contract, deploy first")
+            .expect("no known vote contract, deploy first")
     }
 }
 
