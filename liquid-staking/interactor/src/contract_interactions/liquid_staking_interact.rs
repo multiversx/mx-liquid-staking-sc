@@ -41,29 +41,27 @@ impl LiquidStakingInteract {
         println!("Result: {response:?}");
     }
 
-    pub async fn add_liquidity(&mut self) {
-        let egld_amount = BigUint::<StaticApi>::from(1_000_000_000_000_000_001u64);
-
+    pub async fn add_liquidity(&mut self, caller: Bech32Address, liquidity: u128) {
         self.interactor
             .tx()
-            .from(&self.wallet_address)
+            .from(caller)
             .to(self.state.current_address())
             .gas(50_000_000u64)
             .typed(proxy::LiquidStakingProxy)
             .add_liquidity()
-            .egld(egld_amount)
+            .egld(liquidity)
             .returns(ReturnsResultUnmanaged)
             .run()
             .await
     }
 
-    pub async fn remove_liquidity(&mut self, token_id: &str) {
+    pub async fn remove_liquidity(&mut self, caller: Bech32Address, token_id: &str, amount: u128) {
         let token_nonce = 0u64;
-        let token_amount = BigUint::<StaticApi>::from(1_000_000_000_000_000_000u64);
+        let token_amount = BigUint::<StaticApi>::from(amount);
 
         self.interactor
             .tx()
-            .from(&self.wallet_address)
+            .from(caller)
             .to(self.state.current_address())
             .gas(50_000_000u64)
             .typed(proxy::LiquidStakingProxy)
@@ -74,13 +72,13 @@ impl LiquidStakingInteract {
             .await
     }
 
-    pub async fn unbond_tokens(&mut self, token_id: &str) {
+    pub async fn unbond_tokens(&mut self, caller: Bech32Address, token_id: &str, amount: u128) {
         let token_nonce = 1u64;
-        let token_amount = BigUint::<StaticApi>::from(1u64);
+        let token_amount = BigUint::<StaticApi>::from(amount);
 
         self.interactor
             .tx()
-            .from(&self.wallet_address)
+            .from(caller)
             .to(self.state.current_address())
             .gas(50_000_000u64)
             .typed(proxy::LiquidStakingProxy)
@@ -91,13 +89,13 @@ impl LiquidStakingInteract {
             .await;
     }
 
-    pub async fn withdraw_all(&mut self, error: Option<ExpectError<'_>>) {
+    pub async fn withdraw_all(&mut self, caller: Bech32Address, error: Option<ExpectError<'_>>) {
         let delegation_contract = self.state.delegation_address();
 
         let tx = self
             .interactor
             .tx()
-            .from(&self.wallet_address)
+            .from(caller)
             .to(self.state.current_address())
             .gas(50_000_000u64)
             .typed(proxy::LiquidStakingProxy)
@@ -113,11 +111,11 @@ impl LiquidStakingInteract {
         }
     }
 
-    pub async fn claim_rewards(&mut self, error: Option<ExpectError<'_>>) {
+    pub async fn claim_rewards(&mut self, caller: Bech32Address, error: Option<ExpectError<'_>>) {
         let tx = self
             .interactor
             .tx()
-            .from(&self.wallet_address)
+            .from(caller)
             .to(self.state.current_address())
             .gas(50_000_000u64)
             .typed(proxy::LiquidStakingProxy)
@@ -133,11 +131,11 @@ impl LiquidStakingInteract {
         }
     }
 
-    pub async fn recompute_token_reserve(&mut self) {
+    pub async fn recompute_token_reserve(&mut self, caller: Bech32Address) {
         let response = self
             .interactor
             .tx()
-            .from(&self.wallet_address)
+            .from(caller)
             .to(self.state.current_address())
             .gas(30_000_000u64)
             .typed(proxy::LiquidStakingProxy)
@@ -149,11 +147,15 @@ impl LiquidStakingInteract {
         println!("Result: {response:?}");
     }
 
-    pub async fn delegate_rewards(&mut self, error: Option<ExpectError<'_>>) {
+    pub async fn delegate_rewards(
+        &mut self,
+        caller: Bech32Address,
+        error: Option<ExpectError<'_>>,
+    ) {
         let tx = self
             .interactor
             .tx()
-            .from(&self.wallet_address)
+            .from(caller)
             .to(self.state.current_address())
             .gas(50_000_000u64)
             .typed(proxy::LiquidStakingProxy)
@@ -169,9 +171,7 @@ impl LiquidStakingInteract {
         }
     }
 
-    pub async fn get_ls_value_for_position(&mut self) {
-        let ls_token_amount = BigUint::<StaticApi>::from(0u128);
-
+    pub async fn get_ls_value_for_position(&mut self, ls_token_amount: u128) {
         let result_value = self
             .interactor
             .query()
@@ -185,12 +185,17 @@ impl LiquidStakingInteract {
         println!("Result: {result_value:?}");
     }
 
-    pub async fn register_ls_token(&mut self) -> String {
-        let egld_amount = BigUint::<StaticApi>::from(50_000_000_000_000_000u64);
+    pub async fn register_ls_token(
+        &mut self,
+        display_name: &str,
+        ticker: &str,
+        num_decimals: u32,
+        amount: u128,
+    ) -> String {
+        let egld_amount = BigUint::<StaticApi>::from(amount);
 
-        let token_display_name = ManagedBuffer::new_from_bytes(&b"LIQTEST"[..]);
-        let token_ticker = ManagedBuffer::new_from_bytes(&b"LTST"[..]);
-        let num_decimals = 18u32;
+        let token_display_name = ManagedBuffer::from(display_name);
+        let token_ticker = ManagedBuffer::from(ticker);
 
         self.interactor
             .tx()
@@ -205,12 +210,17 @@ impl LiquidStakingInteract {
             .await
     }
 
-    pub async fn register_unstake_token(&mut self) -> String {
-        let egld_amount = BigUint::<StaticApi>::from(50_000_000_000_000_000u64);
+    pub async fn register_unstake_token(
+        &mut self,
+        display_name: &str,
+        ticker: &str,
+        num_decimals: u32,
+        amount: u128,
+    ) -> String {
+        let egld_amount = BigUint::<StaticApi>::from(amount);
 
-        let token_display_name = ManagedBuffer::new_from_bytes(&b"UNSTAKETEST"[..]);
-        let token_ticker = ManagedBuffer::new_from_bytes(&b"UNTST"[..]);
-        let num_decimals = 18u32;
+        let token_display_name = ManagedBuffer::from(display_name);
+        let token_ticker = ManagedBuffer::from(ticker);
 
         self.interactor
             .tx()
@@ -322,15 +332,20 @@ impl LiquidStakingInteract {
         println!("Result: {response:?}");
     }
 
-    pub async fn whitelist_delegation_contract(&mut self) {
-        let egld_amount = BigUint::<StaticApi>::from(1_000_000_000_000_000_000u64);
+    pub async fn whitelist_delegation_contract(
+        &mut self,
+        amount: u128,
+        contract_address: Bech32Address,
+        admin_address: Bech32Address,
+        staked: u128,
+        delegation_cap: u128,
+        nr_nodes: u64,
+        apy: u64,
+    ) {
+        let egld_amount = BigUint::<StaticApi>::from(amount);
 
-        let contract_address = self.state.delegation_address();
-        let admin_address = &self.wallet_address;
-        let total_staked = BigUint::<StaticApi>::from(0u128);
-        let delegation_contract_cap = BigUint::<StaticApi>::from(5_000_000_000_000_000_000u64);
-        let nr_nodes = 1u64;
-        let apy = 50_000u64;
+        let total_staked = BigUint::<StaticApi>::from(staked);
+        let delegation_contract_cap = BigUint::<StaticApi>::from(delegation_cap);
 
         self.interactor
             .tx()
@@ -352,10 +367,11 @@ impl LiquidStakingInteract {
             .await
     }
 
-    pub async fn change_delegation_contract_admin(&mut self) {
-        let contract_address = self.state.delegation_address();
-        let admin_address = Bech32Address::from_bech32_string("".to_string());
-
+    pub async fn change_delegation_contract_admin(
+        &mut self,
+        contract_address: Bech32Address,
+        admin_address: Bech32Address,
+    ) {
         let response = self
             .interactor
             .tx()
@@ -371,12 +387,16 @@ impl LiquidStakingInteract {
         println!("Result: {response:?}");
     }
 
-    pub async fn change_delegation_contract_params(&mut self) {
-        let contract_address = self.state.delegation_address();
-        let total_staked = BigUint::<StaticApi>::from(0u128);
-        let delegation_contract_cap = BigUint::<StaticApi>::from(0u128);
-        let nr_nodes = 0u64;
-        let apy = 0u64;
+    pub async fn change_delegation_contract_params(
+        &mut self,
+        contract_address: Bech32Address,
+        staked: u128,
+        delegation_cap: u128,
+        nr_nodes: u64,
+        apy: u64,
+    ) {
+        let total_staked = BigUint::<StaticApi>::from(staked);
+        let delegation_contract_cap = BigUint::<StaticApi>::from(delegation_cap);
 
         let response = self
             .interactor
@@ -410,9 +430,10 @@ impl LiquidStakingInteract {
             .await;
     }
 
-    pub async fn get_delegation_contract_staked_amount(&mut self) {
-        let delegation_address = self.state.delegation_address();
-
+    pub async fn get_delegation_contract_staked_amount(
+        &mut self,
+        delegation_address: Bech32Address,
+    ) {
         let result_value = self
             .interactor
             .query()
@@ -426,9 +447,10 @@ impl LiquidStakingInteract {
         println!("Result: {result_value:?}");
     }
 
-    pub async fn get_delegation_contract_unstaked_amount(&mut self) {
-        let delegation_address = self.state.delegation_address();
-
+    pub async fn get_delegation_contract_unstaked_amount(
+        &mut self,
+        delegation_address: Bech32Address,
+    ) {
         let result_value = self
             .interactor
             .query()
@@ -442,9 +464,10 @@ impl LiquidStakingInteract {
         println!("Result: {result_value:?}");
     }
 
-    pub async fn get_delegation_contract_unbonded_amount(&mut self) {
-        let delegation_address = self.state.delegation_address();
-
+    pub async fn get_delegation_contract_unbonded_amount(
+        &mut self,
+        delegation_address: Bech32Address,
+    ) {
         let result_value = self
             .interactor
             .query()
@@ -526,14 +549,12 @@ impl LiquidStakingInteract {
             .await;
     }
 
-    pub async fn delegation_contract_data(&mut self) {
-        let contract_address = self.state.delegation_address();
-
+    pub async fn delegation_contract_data(&mut self, delegation_address: Bech32Address) {
         self.interactor
             .query()
             .to(self.state.current_address())
             .typed(proxy::LiquidStakingProxy)
-            .delegation_contract_data(contract_address)
+            .delegation_contract_data(delegation_address)
             .returns(ReturnsResultUnmanaged)
             .run()
             .await;

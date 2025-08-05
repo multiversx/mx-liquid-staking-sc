@@ -8,13 +8,13 @@ use vote_interact::{vote_interact_config, VoteInteract};
 use crate::{liquid_staking_state, Config};
 
 pub struct LiquidStakingInteract {
-    pub(crate) interactor: Interactor,
-    pub(crate) delegation_interactor: Option<DelegateCallsInteract>,
-    pub(crate) governance_interactor: GovernanceCallsInteract,
-    pub(crate) vote_interactor: VoteInteract,
-    pub(crate) wallet_address: Address,
-    pub(crate) liquid_staking_contract_code: BytesValue,
-    pub(crate) state: State,
+    pub interactor: Interactor,
+    pub delegation_interactor: Option<DelegateCallsInteract>,
+    pub governance_interactor: GovernanceCallsInteract,
+    pub vote_interactor: VoteInteract,
+    pub wallet_address: Address,
+    pub liquid_staking_contract_code: BytesValue,
+    pub state: State,
 }
 
 impl LiquidStakingInteract {
