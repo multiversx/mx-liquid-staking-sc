@@ -1,4 +1,4 @@
-pub mod delegation_interact;
-pub mod governance_interact;
-pub mod liquid_staking_interact;
+pub mod delegation_interactions;
+pub mod governance_interactions;
+pub mod liquid_staking_interactions;
 pub mod vote_interact;
