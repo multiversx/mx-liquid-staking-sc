@@ -2,10 +2,10 @@ use delegation_sc_interact::DelegateCallsInteract;
 use governance_sc_interact::GovernanceCallsInteract;
 use liquid_staking_state::State;
 
-use multiversx_sc_snippets::imports::*;
+use multiversx_sc_snippets::{imports::*, sdk::gateway::NetworkStatusRequest};
 use vote_interact::{vote_interact_config, VoteInteract};
 
-use crate::{liquid_staking_state, Config};
+use crate::{liquid_staking_state, Config, CHAIN_SIMULATOR_GATEWAY};
 
 pub struct LiquidStakingInteract {
     pub interactor: Interactor,
@@ -55,5 +55,25 @@ impl LiquidStakingInteract {
             .generate_blocks_until_epoch(epoch)
             .await
             .unwrap();
+    }
+    pub async fn generate_blocks(&mut self, num_blocks: u64) {
+        self.interactor.generate_blocks(num_blocks).await.unwrap();
+    }
+
+    pub async fn generate_blocks_until_next_epoch(&mut self) {
+        self.interactor
+            .generate_blocks_until_epoch(self.get_next_epoch().await)
+            .await
+            .unwrap();
+    }
+
+    async fn get_next_epoch(&self) -> u64 {
+        let blockchain = GatewayHttpProxy::new(CHAIN_SIMULATOR_GATEWAY.to_string());
+
+        let network_config = blockchain
+            .http_request(NetworkStatusRequest::default())
+            .await
+            .unwrap();
+        network_config.epoch_number + 1u64
     }
 }

@@ -5,7 +5,6 @@ use multiversx_sc_snippets::imports::*;
 #[tokio::test]
 #[cfg_attr(not(feature = "chain-simulator-tests"), ignore)]
 async fn test_claim_rewards_same_epoch() {
-    // to fix
     let mut interact = LiquidStakingInteract::new(Config::chain_simulator_config()).await;
     let owner_address = Bech32Address::from(interact.wallet_address.clone());
     interact.deploy().await;
@@ -36,6 +35,12 @@ async fn test_claim_rewards_same_epoch() {
         .await;
     interact
         .add_liquidity(owner_address.clone(), 1_000_000_000_000_000_001u128)
+        .await;
+    interact.generate_blocks_until_next_epoch().await;
+    interact.claim_rewards(owner_address.clone(), None).await;
+    interact.generate_blocks(8).await;
+    interact
+        .recompute_token_reserve(owner_address.clone())
         .await;
     interact
         .claim_rewards(
