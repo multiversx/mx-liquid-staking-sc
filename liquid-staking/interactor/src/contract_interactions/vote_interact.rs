@@ -1,5 +1,5 @@
 use multiversx_sc_snippets::imports::*;
-use vote_interact::vote_interact_cli::HASH_LENGTH;
+use vote_interact::vote_interact_cli::{HASH_LENGTH, PROOF_LENGTH};
 
 use crate::{proxy, vote_proxy, LiquidStakingInteract};
 
@@ -78,18 +78,24 @@ impl LiquidStakingInteract {
         println!("get_root_hash call result: {result_value:?}");
     }
 
-    pub async fn delegate_vote(&mut self, error: Option<ExpectError<'_>>) {
-        let proof = ArrayVec::new();
-
+    pub async fn delegate_vote(
+        &mut self,
+        voter: Bech32Address,
+        proposal_id: u32,
+        vote: &str,
+        voting_power: u128,
+        proof: ArrayVec<ManagedByteArray<StaticApi, { HASH_LENGTH }>, { PROOF_LENGTH }>,
+        error: Option<ExpectError<'_>>,
+    ) {
         let tx = self
             .vote_interactor
             .interactor
             .tx()
-            .from(&self.wallet_address)
+            .from(voter)
             .to(self.state.vote_address())
             .gas(50_000_000u64)
             .typed(vote_proxy::VoteSCProxy)
-            .delegate_vote(1u32, "yes", 1_000_000u32, proof);
+            .delegate_vote(proposal_id, vote, voting_power, proof);
 
         match error {
             None => {

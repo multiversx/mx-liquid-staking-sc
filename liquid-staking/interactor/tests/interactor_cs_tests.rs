@@ -364,8 +364,19 @@ async fn delegate_vote() {
         .add_liquidity(owner_address.clone(), 1_000_000_000_000_000_001u128)
         .await;
     interact
-        .add_liquidity(owner_address, 1_000_000_000_000_000_001u128)
+        .add_liquidity(owner_address.clone(), 1_000_000_000_000_000_001u128)
         .await;
     interact.deploy_vote_contract().await;
-    interact.delegate_vote(None).await;
+
+    let proof = ArrayVec::new();
+    interact
+        .delegate_vote(
+            owner_address,
+            1u32,
+            "Yes",
+            3_000_000_000_000_000_001u128,
+            proof,
+            None,
+        )
+        .await;
 }
