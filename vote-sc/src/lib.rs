@@ -49,10 +49,10 @@ pub trait VoteSC:
         require!(!self.liquid_staking_sc().is_empty(), LS_SC_NOT_SET);
         self.require_caller_not_self();
 
-        // require!(
-        //     self.confirm_voting_power(proposal_id, voting_power.clone(), proof),
-        //     INVALID_MERKLE_PROOF
-        // );
+        require!(
+            self.confirm_voting_power(proposal_id, voting_power.clone(), proof),
+            INVALID_MERKLE_PROOF
+        );
 
         let voter = self.blockchain().get_caller();
         let ls_sc_address = self.liquid_staking_sc().get();
