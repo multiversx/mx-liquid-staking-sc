@@ -332,6 +332,7 @@ impl Interact {
         println!("Result: {response:?}");
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub async fn whitelist_delegation_contract(
         &mut self,
         amount: u128,
