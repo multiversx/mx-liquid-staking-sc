@@ -1,11 +1,11 @@
-use liquid_staking_interactor::Config;
-use liquid_staking_interactor::LiquidStakingInteract;
+use interactor::Config;
+use interactor::Interact;
 use multiversx_sc_snippets::imports::*;
 
 #[tokio::test]
 #[cfg_attr(not(feature = "chain-simulator-tests"), ignore)]
-async fn test_unbond_tokens_happy_path() {
-    let mut interact = LiquidStakingInteract::new(Config::chain_simulator_config()).await;
+async fn test_delegate_not_enough_egld() {
+    let mut interact = Interact::new(Config::chain_simulator_config()).await;
     let owner_address = Bech32Address::from(interact.wallet_address.clone());
     interact.deploy().await;
     interact.deploy_delegation_contract().await;
@@ -21,10 +21,10 @@ async fn test_unbond_tokens_happy_path() {
         )
         .await;
     interact.set_state_active().await;
-    let ls_token = interact
+    let _ = interact
         .register_ls_token("LIQTEST", "LTST", 18u32, 50_000_000_000_000_000u128)
         .await;
-    let us_token = interact
+    let _ = interact
         .register_unstake_token("UNSTAKETEST", "UNTST", 18u32, 50_000_000_000_000_000u128)
         .await;
     interact
@@ -36,17 +36,20 @@ async fn test_unbond_tokens_happy_path() {
     interact
         .add_liquidity(owner_address.clone(), 1_000_000_000_000_000_001u128)
         .await;
-    interact.generate_blocks_until_epoch(20).await;
+    interact.generate_blocks_until_epoch(5).await;
+    interact.claim_rewards(owner_address.clone(), None).await;
+    interact.generate_blocks_until_epoch(10).await;
     interact
-        .remove_liquidity(
-            owner_address.clone(),
-            &ls_token,
-            1_000_000_000_000_000_001u128,
-        )
+        .recompute_token_reserve(owner_address.clone())
         .await;
-    interact.generate_blocks_until_epoch(30).await;
-    interact.withdraw_all(owner_address.clone(), None).await;
+    interact.rewards_reserve().await;
     interact
-        .unbond_tokens(owner_address.clone(), &us_token, 1u128)
+        .delegate_rewards(
+            owner_address,
+            Some(ExpectError(
+                4,
+                "Old claimed rewards must be greater than 1 EGLD",
+            )),
+        )
         .await;
 }

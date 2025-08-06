@@ -5,13 +5,13 @@ use std::{
     path::Path,
 };
 
-/// State file
 const STATE_FILE: &str = "state.toml";
 
-/// Multisig Interact state
 #[derive(Debug, Default, Serialize, Deserialize)]
 pub struct State {
-    pub vote_address: Option<Bech32Address>,
+    contract_address: Option<Bech32Address>,
+    delegation_address: Option<Bech32Address>,
+    vote_address: Option<Bech32Address>,
 }
 
 impl State {
@@ -27,13 +27,33 @@ impl State {
         }
     }
 
-    /// Sets the delegation address
+    /// Sets the contract address
+    pub fn set_address(&mut self, address: Bech32Address) {
+        self.contract_address = Some(address);
+    }
+
+    pub fn set_delegation_address(&mut self, address: Bech32Address) {
+        self.delegation_address = Some(address);
+    }
+
     pub fn set_vote_address(&mut self, address: Bech32Address) {
         self.vote_address = Some(address);
     }
 
-    /// Returns the delegation contract
-    pub fn current_vote_address(&self) -> &Bech32Address {
+    /// Returns the contract address
+    pub fn liquid_staking_address(&self) -> &Bech32Address {
+        self.contract_address
+            .as_ref()
+            .expect("no known liquid staking contract, deploy first")
+    }
+
+    pub fn delegation_address(&self) -> &Bech32Address {
+        self.delegation_address
+            .as_ref()
+            .expect("no known delegation contract, deploy first")
+    }
+
+    pub fn vote_address(&self) -> &Bech32Address {
         self.vote_address
             .as_ref()
             .expect("no known vote contract, deploy first")

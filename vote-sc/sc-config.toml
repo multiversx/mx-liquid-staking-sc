@@ -1,5 +1,2 @@
 [[proxy]]
-path = "interactor/src/vote_proxy.rs"
-
-[[proxy]]
-path = "../liquid-staking/interactor/src/vote_proxy.rs"
+path = "../interactor/src/vote_proxy.rs"

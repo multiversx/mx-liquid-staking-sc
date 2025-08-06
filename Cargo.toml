@@ -4,7 +4,7 @@ resolver = "2"
 members = [
   "liquid-staking",
   "liquid-staking/meta",
-  "liquid-staking/interactor",
+  "interactor",
   "vote-sc",
   "vote-sc/meta",
   "payable-features",

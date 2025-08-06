@@ -1,19 +1,17 @@
 use delegation_sc_interact::DelegateCallsInteract;
 use multiversx_sc_snippets::imports::*;
 
-use crate::LiquidStakingInteract;
+use crate::Interact;
 
-impl LiquidStakingInteract {
+impl Interact {
     pub async fn deploy_delegation_contract(&mut self) {
         let mut delegation_interactor =
             DelegateCallsInteract::new(delegation_sc_interact::Config::chain_simulator_config())
                 .await;
-        let validator_1 =
-            Validator::from_pem_file("./../../delegation/interactor/validatorKey1.pem")
-                .expect("unable to load validator key");
-        let validator_2 =
-            Validator::from_pem_file("./../../delegation/interactor/validatorKey2.pem")
-                .expect("unable to load validator key");
+        let validator_1 = Validator::from_pem_file("./../delegation/interactor/validatorKey1.pem")
+            .expect("unable to load validator key");
+        let validator_2 = Validator::from_pem_file("./../delegation/interactor/validatorKey2.pem")
+            .expect("unable to load validator key");
 
         let _ = delegation_interactor
             .interactor

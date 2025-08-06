@@ -1,13 +1,15 @@
-use liquid_staking_interactor::Config;
-use liquid_staking_interactor::LiquidStakingInteract;
+use interactor::Config;
+use interactor::Interact;
 use multiversx_sc_snippets::imports::*;
 
 #[tokio::test]
 #[cfg_attr(not(feature = "chain-simulator-tests"), ignore)]
-async fn test_claim_rewards_same_epoch() {
-    let mut interact = LiquidStakingInteract::new(Config::chain_simulator_config()).await;
+async fn test_delegate_vote() {
+    // to fix
+    let mut interact = Interact::new(Config::chain_simulator_config()).await;
     let owner_address = Bech32Address::from(interact.wallet_address.clone());
     interact.deploy().await;
+    interact.deploy_governance_contract().await;
     interact.deploy_delegation_contract().await;
     interact
         .whitelist_delegation_contract(
@@ -36,19 +38,17 @@ async fn test_claim_rewards_same_epoch() {
     interact
         .add_liquidity(owner_address.clone(), 1_000_000_000_000_000_001u128)
         .await;
-    interact.generate_blocks_until_next_epoch().await;
-    interact.claim_rewards(owner_address.clone(), None).await;
-    interact.generate_blocks(8).await;
+    interact.deploy_vote_contract().await;
+
+    let proof = ArrayVec::new();
     interact
-        .recompute_token_reserve(owner_address.clone())
-        .await;
-    interact
-        .claim_rewards(
+        .delegate_vote(
             owner_address,
-            Some(ExpectError(
-                4,
-                "The rewards were already claimed for this epoch",
-            )),
+            1u32,
+            "Yes",
+            3_000_000_000_000_000_001u128,
+            proof,
+            None,
         )
         .await;
 }

@@ -1,19 +1,20 @@
 use multiversx_sc_snippets::imports::*;
-use vote_interact::vote_interact_cli::{HASH_LENGTH, PROOF_LENGTH};
 
-use crate::{proxy, vote_proxy, LiquidStakingInteract};
+use crate::{liquid_staking_proxy, vote_proxy, Interact};
 
-impl LiquidStakingInteract {
+const HASH_LENGTH: usize = 32;
+const PROOF_LENGTH: usize = 18;
+
+impl Interact {
     pub async fn deploy_vote_contract(&mut self) {
         let new_address = self
-            .vote_interactor
             .interactor
             .tx()
             .from(&self.wallet_address)
             .gas(100_000_000u64)
             .typed(vote_proxy::VoteSCProxy)
             .init()
-            .code(&self.vote_interactor.contract_code)
+            .code(&self.vote_contract_code)
             .returns(ReturnsNewAddress)
             .run()
             .await;
@@ -21,14 +22,13 @@ impl LiquidStakingInteract {
         let new_address_bech32 = Bech32Address::from(&new_address);
         self.state.set_vote_address(new_address_bech32.clone());
 
-        self.vote_interactor
-            .interactor
+        self.interactor
             .tx()
             .from(&self.wallet_address)
             .to(self.state.vote_address())
             .gas(100_000_000u64)
             .typed(vote_proxy::VoteSCProxy)
-            .set_liquid_staking_address(self.state.current_address())
+            .set_liquid_staking_address(self.state.liquid_staking_address())
             .returns(ReturnsResultUnmanaged)
             .run()
             .await;
@@ -36,9 +36,9 @@ impl LiquidStakingInteract {
         self.interactor
             .tx()
             .from(&self.wallet_address)
-            .to(self.state.current_address())
+            .to(self.state.liquid_staking_address())
             .gas(100_000_000u64)
-            .typed(proxy::LiquidStakingProxy)
+            .typed(liquid_staking_proxy::LiquidStakingProxy)
             .set_vote_contract(new_address_bech32.clone())
             .returns(ReturnsResultUnmanaged)
             .run()
@@ -49,7 +49,6 @@ impl LiquidStakingInteract {
             b"ed013f30ed9e82a734b99aaa014f7193",
         );
         let _ = self
-            .vote_interactor
             .interactor
             .tx()
             .from(&self.wallet_address)
@@ -62,7 +61,6 @@ impl LiquidStakingInteract {
             .await;
 
         let result_value = self
-            .vote_interactor
             .interactor
             .query()
             .to(self.state.vote_address())
@@ -88,7 +86,6 @@ impl LiquidStakingInteract {
         error: Option<ExpectError<'_>>,
     ) {
         let tx = self
-            .vote_interactor
             .interactor
             .tx()
             .from(voter)

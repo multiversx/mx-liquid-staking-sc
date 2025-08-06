@@ -1,6 +1,6 @@
-use crate::LiquidStakingInteract;
+use crate::Interact;
 
-impl LiquidStakingInteract {
+impl Interact {
     pub async fn deploy_governance_contract(&mut self) {
         self.governance_interactor
             .set_state(&self.governance_interactor.owner.to_address())

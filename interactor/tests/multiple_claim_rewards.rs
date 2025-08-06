@@ -1,11 +1,11 @@
-use liquid_staking_interactor::Config;
-use liquid_staking_interactor::LiquidStakingInteract;
+use interactor::Config;
+use interactor::Interact;
 use multiversx_sc_snippets::imports::*;
 
 #[tokio::test]
 #[cfg_attr(not(feature = "chain-simulator-tests"), ignore)]
-async fn test_claim_rewards_multiple_times_no_redelegation() {
-    let mut interact = LiquidStakingInteract::new(Config::chain_simulator_config()).await;
+async fn test_multiple_claim_rewards() {
+    let mut interact = Interact::new(Config::chain_simulator_config()).await;
     let owner_address = Bech32Address::from(interact.wallet_address.clone());
     interact.deploy().await;
     interact.deploy_delegation_contract().await;
@@ -38,13 +38,14 @@ async fn test_claim_rewards_multiple_times_no_redelegation() {
         .await;
     interact.generate_blocks_until_epoch(5).await;
     interact.claim_rewards(owner_address.clone(), None).await;
+    interact.generate_blocks_until_epoch(10).await;
     interact
-        .claim_rewards(
-            owner_address,
-            Some(ExpectError(
-                4,
-                "Previous claimed rewards must be redelegated or lesser than 1 EGLD",
-            )),
-        )
+        .recompute_token_reserve(owner_address.clone())
         .await;
+    interact.rewards_reserve().await;
+    interact.generate_blocks_until_epoch(15).await;
+    interact.claim_rewards(owner_address.clone(), None).await;
+    interact.generate_blocks_until_epoch(20).await;
+    interact.recompute_token_reserve(owner_address).await;
+    interact.rewards_reserve().await;
 }

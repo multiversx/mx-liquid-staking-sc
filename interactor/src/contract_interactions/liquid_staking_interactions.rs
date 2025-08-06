@@ -1,14 +1,14 @@
-use crate::{proxy, LiquidStakingInteract};
+use crate::{liquid_staking_proxy, Interact};
 use multiversx_sc_snippets::imports::*;
 
-impl LiquidStakingInteract {
+impl Interact {
     pub async fn deploy(&mut self) {
         let new_address = self
             .interactor
             .tx()
             .from(&self.wallet_address)
             .gas(100_000_000u64)
-            .typed(proxy::LiquidStakingProxy)
+            .typed(liquid_staking_proxy::LiquidStakingProxy)
             .init()
             .code(&self.liquid_staking_contract_code)
             .returns(ReturnsNewAddress)
@@ -27,10 +27,10 @@ impl LiquidStakingInteract {
         let response = self
             .interactor
             .tx()
-            .to(self.state.current_address())
+            .to(self.state.liquid_staking_address())
             .from(&self.wallet_address)
             .gas(30_000_000u64)
-            .typed(proxy::LiquidStakingProxy)
+            .typed(liquid_staking_proxy::LiquidStakingProxy)
             .upgrade()
             .code(&self.liquid_staking_contract_code)
             .code_metadata(CodeMetadata::UPGRADEABLE)
@@ -45,9 +45,9 @@ impl LiquidStakingInteract {
         self.interactor
             .tx()
             .from(caller)
-            .to(self.state.current_address())
+            .to(self.state.liquid_staking_address())
             .gas(50_000_000u64)
-            .typed(proxy::LiquidStakingProxy)
+            .typed(liquid_staking_proxy::LiquidStakingProxy)
             .add_liquidity()
             .egld(liquidity)
             .returns(ReturnsResultUnmanaged)
@@ -62,9 +62,9 @@ impl LiquidStakingInteract {
         self.interactor
             .tx()
             .from(caller)
-            .to(self.state.current_address())
+            .to(self.state.liquid_staking_address())
             .gas(50_000_000u64)
-            .typed(proxy::LiquidStakingProxy)
+            .typed(liquid_staking_proxy::LiquidStakingProxy)
             .remove_liquidity()
             .payment((TokenIdentifier::from(token_id), token_nonce, token_amount))
             .returns(ReturnsResultUnmanaged)
@@ -79,9 +79,9 @@ impl LiquidStakingInteract {
         self.interactor
             .tx()
             .from(caller)
-            .to(self.state.current_address())
+            .to(self.state.liquid_staking_address())
             .gas(50_000_000u64)
-            .typed(proxy::LiquidStakingProxy)
+            .typed(liquid_staking_proxy::LiquidStakingProxy)
             .unbond_tokens()
             .payment((TokenIdentifier::from(token_id), token_nonce, token_amount))
             .returns(ReturnsResultUnmanaged)
@@ -96,9 +96,9 @@ impl LiquidStakingInteract {
             .interactor
             .tx()
             .from(caller)
-            .to(self.state.current_address())
+            .to(self.state.liquid_staking_address())
             .gas(50_000_000u64)
-            .typed(proxy::LiquidStakingProxy)
+            .typed(liquid_staking_proxy::LiquidStakingProxy)
             .withdraw_all(delegation_contract);
 
         match error {
@@ -116,9 +116,9 @@ impl LiquidStakingInteract {
             .interactor
             .tx()
             .from(caller)
-            .to(self.state.current_address())
+            .to(self.state.liquid_staking_address())
             .gas(50_000_000u64)
-            .typed(proxy::LiquidStakingProxy)
+            .typed(liquid_staking_proxy::LiquidStakingProxy)
             .claim_rewards();
 
         match error {
@@ -136,9 +136,9 @@ impl LiquidStakingInteract {
             .interactor
             .tx()
             .from(caller)
-            .to(self.state.current_address())
+            .to(self.state.liquid_staking_address())
             .gas(30_000_000u64)
-            .typed(proxy::LiquidStakingProxy)
+            .typed(liquid_staking_proxy::LiquidStakingProxy)
             .recompute_token_reserve()
             .returns(ReturnsResultUnmanaged)
             .run()
@@ -156,9 +156,9 @@ impl LiquidStakingInteract {
             .interactor
             .tx()
             .from(caller)
-            .to(self.state.current_address())
+            .to(self.state.liquid_staking_address())
             .gas(50_000_000u64)
-            .typed(proxy::LiquidStakingProxy)
+            .typed(liquid_staking_proxy::LiquidStakingProxy)
             .delegate_rewards();
 
         match error {
@@ -175,8 +175,8 @@ impl LiquidStakingInteract {
         let result_value = self
             .interactor
             .query()
-            .to(self.state.current_address())
-            .typed(proxy::LiquidStakingProxy)
+            .to(self.state.liquid_staking_address())
+            .typed(liquid_staking_proxy::LiquidStakingProxy)
             .get_ls_value_for_position(ls_token_amount)
             .returns(ReturnsResultUnmanaged)
             .run()
@@ -200,9 +200,9 @@ impl LiquidStakingInteract {
         self.interactor
             .tx()
             .from(&self.wallet_address)
-            .to(self.state.current_address())
+            .to(self.state.liquid_staking_address())
             .gas(90_000_000u64)
-            .typed(proxy::LiquidStakingProxy)
+            .typed(liquid_staking_proxy::LiquidStakingProxy)
             .register_ls_token(token_display_name, token_ticker, num_decimals)
             .egld(egld_amount)
             .returns(ReturnsNewTokenIdentifier)
@@ -225,9 +225,9 @@ impl LiquidStakingInteract {
         self.interactor
             .tx()
             .from(&self.wallet_address)
-            .to(self.state.current_address())
+            .to(self.state.liquid_staking_address())
             .gas(90_000_000u64)
-            .typed(proxy::LiquidStakingProxy)
+            .typed(liquid_staking_proxy::LiquidStakingProxy)
             .register_unstake_token(token_display_name, token_ticker, num_decimals)
             .egld(egld_amount)
             .returns(ReturnsNewTokenIdentifier)
@@ -238,8 +238,8 @@ impl LiquidStakingInteract {
     pub async fn state(&mut self) {
         self.interactor
             .query()
-            .to(self.state.current_address())
-            .typed(proxy::LiquidStakingProxy)
+            .to(self.state.liquid_staking_address())
+            .typed(liquid_staking_proxy::LiquidStakingProxy)
             .state()
             .returns(ReturnsResultUnmanaged)
             .run()
@@ -250,8 +250,8 @@ impl LiquidStakingInteract {
         let result_value = self
             .interactor
             .query()
-            .to(self.state.current_address())
-            .typed(proxy::LiquidStakingProxy)
+            .to(self.state.liquid_staking_address())
+            .typed(liquid_staking_proxy::LiquidStakingProxy)
             .ls_token()
             .returns(ReturnsResultUnmanaged)
             .run()
@@ -264,8 +264,8 @@ impl LiquidStakingInteract {
         let result_value = self
             .interactor
             .query()
-            .to(self.state.current_address())
-            .typed(proxy::LiquidStakingProxy)
+            .to(self.state.liquid_staking_address())
+            .typed(liquid_staking_proxy::LiquidStakingProxy)
             .ls_token_supply()
             .returns(ReturnsResultUnmanaged)
             .run()
@@ -278,8 +278,8 @@ impl LiquidStakingInteract {
         let result_value = self
             .interactor
             .query()
-            .to(self.state.current_address())
-            .typed(proxy::LiquidStakingProxy)
+            .to(self.state.liquid_staking_address())
+            .typed(liquid_staking_proxy::LiquidStakingProxy)
             .virtual_egld_reserve()
             .returns(ReturnsResultUnmanaged)
             .run()
@@ -292,8 +292,8 @@ impl LiquidStakingInteract {
         let result_value = self
             .interactor
             .query()
-            .to(self.state.current_address())
-            .typed(proxy::LiquidStakingProxy)
+            .to(self.state.liquid_staking_address())
+            .typed(liquid_staking_proxy::LiquidStakingProxy)
             .rewards_reserve()
             .returns(ReturnsResultUnmanaged)
             .run()
@@ -306,8 +306,8 @@ impl LiquidStakingInteract {
         let result_value = self
             .interactor
             .query()
-            .to(self.state.current_address())
-            .typed(proxy::LiquidStakingProxy)
+            .to(self.state.liquid_staking_address())
+            .typed(liquid_staking_proxy::LiquidStakingProxy)
             .unstake_token()
             .returns(ReturnsResultUnmanaged)
             .run()
@@ -321,9 +321,9 @@ impl LiquidStakingInteract {
             .interactor
             .tx()
             .from(&self.wallet_address)
-            .to(self.state.current_address())
+            .to(self.state.liquid_staking_address())
             .gas(30_000_000u64)
-            .typed(proxy::LiquidStakingProxy)
+            .typed(liquid_staking_proxy::LiquidStakingProxy)
             .clear_ongoing_whitelist_op()
             .returns(ReturnsResultUnmanaged)
             .run()
@@ -350,9 +350,9 @@ impl LiquidStakingInteract {
         self.interactor
             .tx()
             .from(&self.wallet_address)
-            .to(self.state.current_address())
+            .to(self.state.liquid_staking_address())
             .gas(30_000_000u64)
-            .typed(proxy::LiquidStakingProxy)
+            .typed(liquid_staking_proxy::LiquidStakingProxy)
             .whitelist_delegation_contract(
                 contract_address,
                 admin_address,
@@ -376,9 +376,9 @@ impl LiquidStakingInteract {
             .interactor
             .tx()
             .from(&self.wallet_address)
-            .to(self.state.current_address())
+            .to(self.state.liquid_staking_address())
             .gas(30_000_000u64)
-            .typed(proxy::LiquidStakingProxy)
+            .typed(liquid_staking_proxy::LiquidStakingProxy)
             .change_delegation_contract_admin(contract_address, admin_address)
             .returns(ReturnsResultUnmanaged)
             .run()
@@ -402,9 +402,9 @@ impl LiquidStakingInteract {
             .interactor
             .tx()
             .from(&self.wallet_address)
-            .to(self.state.current_address())
+            .to(self.state.liquid_staking_address())
             .gas(30_000_000u64)
-            .typed(proxy::LiquidStakingProxy)
+            .typed(liquid_staking_proxy::LiquidStakingProxy)
             .change_delegation_contract_params(
                 contract_address,
                 total_staked,
@@ -422,8 +422,8 @@ impl LiquidStakingInteract {
     pub async fn get_delegation_status(&mut self) {
         self.interactor
             .query()
-            .to(self.state.current_address())
-            .typed(proxy::LiquidStakingProxy)
+            .to(self.state.liquid_staking_address())
+            .typed(liquid_staking_proxy::LiquidStakingProxy)
             .get_delegation_status()
             .returns(ReturnsResultUnmanaged)
             .run()
@@ -437,8 +437,8 @@ impl LiquidStakingInteract {
         let result_value = self
             .interactor
             .query()
-            .to(self.state.current_address())
-            .typed(proxy::LiquidStakingProxy)
+            .to(self.state.liquid_staking_address())
+            .typed(liquid_staking_proxy::LiquidStakingProxy)
             .get_delegation_contract_staked_amount(delegation_address)
             .returns(ReturnsResultUnmanaged)
             .run()
@@ -454,8 +454,8 @@ impl LiquidStakingInteract {
         let result_value = self
             .interactor
             .query()
-            .to(self.state.current_address())
-            .typed(proxy::LiquidStakingProxy)
+            .to(self.state.liquid_staking_address())
+            .typed(liquid_staking_proxy::LiquidStakingProxy)
             .get_delegation_contract_unstaked_amount(delegation_address)
             .returns(ReturnsResultUnmanaged)
             .run()
@@ -471,8 +471,8 @@ impl LiquidStakingInteract {
         let result_value = self
             .interactor
             .query()
-            .to(self.state.current_address())
-            .typed(proxy::LiquidStakingProxy)
+            .to(self.state.liquid_staking_address())
+            .typed(liquid_staking_proxy::LiquidStakingProxy)
             .get_delegation_contract_unbonded_amount(delegation_address)
             .returns(ReturnsResultUnmanaged)
             .run()
@@ -485,9 +485,9 @@ impl LiquidStakingInteract {
         self.interactor
             .tx()
             .from(&self.wallet_address)
-            .to(self.state.current_address())
+            .to(self.state.liquid_staking_address())
             .gas(30_000_000u64)
-            .typed(proxy::LiquidStakingProxy)
+            .typed(liquid_staking_proxy::LiquidStakingProxy)
             .set_state_active()
             .returns(ReturnsResultUnmanaged)
             .run()
@@ -499,9 +499,9 @@ impl LiquidStakingInteract {
             .interactor
             .tx()
             .from(&self.wallet_address)
-            .to(self.state.current_address())
+            .to(self.state.liquid_staking_address())
             .gas(30_000_000u64)
-            .typed(proxy::LiquidStakingProxy)
+            .typed(liquid_staking_proxy::LiquidStakingProxy)
             .set_state_inactive()
             .returns(ReturnsResultUnmanaged)
             .run()
@@ -514,8 +514,8 @@ impl LiquidStakingInteract {
         let result_value = self
             .interactor
             .query()
-            .to(self.state.current_address())
-            .typed(proxy::LiquidStakingProxy)
+            .to(self.state.liquid_staking_address())
+            .typed(liquid_staking_proxy::LiquidStakingProxy)
             .delegation_addresses_list()
             .returns(ReturnsResultUnmanaged)
             .run()
@@ -528,8 +528,8 @@ impl LiquidStakingInteract {
         let result_value = self
             .interactor
             .query()
-            .to(self.state.current_address())
-            .typed(proxy::LiquidStakingProxy)
+            .to(self.state.liquid_staking_address())
+            .typed(liquid_staking_proxy::LiquidStakingProxy)
             .addresses_to_claim()
             .returns(ReturnsResultUnmanaged)
             .run()
@@ -541,8 +541,8 @@ impl LiquidStakingInteract {
     pub async fn delegation_claim_status(&mut self) {
         self.interactor
             .query()
-            .to(self.state.current_address())
-            .typed(proxy::LiquidStakingProxy)
+            .to(self.state.liquid_staking_address())
+            .typed(liquid_staking_proxy::LiquidStakingProxy)
             .delegation_claim_status()
             .returns(ReturnsResultUnmanaged)
             .run()
@@ -552,8 +552,8 @@ impl LiquidStakingInteract {
     pub async fn delegation_contract_data(&mut self, delegation_address: Bech32Address) {
         self.interactor
             .query()
-            .to(self.state.current_address())
-            .typed(proxy::LiquidStakingProxy)
+            .to(self.state.liquid_staking_address())
+            .typed(liquid_staking_proxy::LiquidStakingProxy)
             .delegation_contract_data(delegation_address)
             .returns(ReturnsResultUnmanaged)
             .run()
