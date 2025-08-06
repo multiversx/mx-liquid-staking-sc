@@ -13,4 +13,4 @@
 **/__pycache__/**
 
 # Interactor state file
-state.toml
+**/interactor/state.toml
