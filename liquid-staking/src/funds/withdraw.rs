@@ -45,7 +45,7 @@ pub trait WithdrawModule:
     }
 
     fn call_withdraw(&self, delegation_contract: ManagedAddress) {
-        let gas_for_async_call = self.get_gas_for_async_call();
+        let gas_for_async_call = self.get_gas_for_async_call_with_callback();
         self.tx()
             .to(delegation_contract.clone())
             .typed(DelegationSCProxy)

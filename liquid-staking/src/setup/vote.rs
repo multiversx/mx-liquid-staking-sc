@@ -1,7 +1,11 @@
 multiversx_sc::imports!();
 
-use crate::basics::errors::{
-    ERROR_ALREADY_VOTED, ERROR_INVALID_CALLER, ERROR_INVALID_SC_ADDRESS, ERROR_VOTE_SC_NOT_SET,
+use crate::basics::{
+    constants::{GasLimit, MIN_GAS_FINISH_EXEC, MIN_GAS_FOR_ASYNC_CALL},
+    errors::{
+        ERROR_ALREADY_VOTED, ERROR_INSUFFICIENT_GAS_FOR_ASYNC, ERROR_INVALID_CALLER,
+        ERROR_INVALID_SC_ADDRESS, ERROR_VOTE_SC_NOT_SET,
+    },
 };
 #[multiversx_sc::module]
 pub trait VoteModule:
@@ -49,11 +53,13 @@ pub trait VoteModule:
         delegate_to: &ManagedAddress,
         voting_power: &BigUint,
     ) {
+        let gas = self.get_gas_for_async_call();
         self.tx()
             .to(GovernanceSystemSCAddress)
             .typed(GovernanceSCProxy)
             .delegate_vote(proposal, vote_type, delegate_to, voting_power)
-            .async_call_and_exit();
+            .gas(gas)
+            .register_promise();
     }
 
     fn require_sc_address(&self, address: &ManagedAddress) {
@@ -61,6 +67,15 @@ pub trait VoteModule:
             !address.is_zero() && self.blockchain().is_smart_contract(address),
             ERROR_INVALID_SC_ADDRESS
         );
+    }
+
+    fn get_gas_for_async_call(&self) -> GasLimit {
+        let gas_left = self.blockchain().get_gas_left();
+        require!(
+            gas_left > MIN_GAS_FOR_ASYNC_CALL + MIN_GAS_FINISH_EXEC,
+            ERROR_INSUFFICIENT_GAS_FOR_ASYNC
+        );
+        gas_left - MIN_GAS_FINISH_EXEC
     }
 
     #[view]

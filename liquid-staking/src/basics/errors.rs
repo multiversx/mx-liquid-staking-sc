@@ -2,7 +2,9 @@ pub static ERROR_NOT_ACTIVE: &[u8] = b"Not active";
 pub static ERROR_LS_TOKEN_NOT_ISSUED: &[u8] = b"LS token not issued";
 pub static ERROR_DELEGATION_CONTRACT_NOT_INITIALIZED: &[u8] =
     b"Delegation contract was not initialized yet";
-pub static ERROR_INSUFFICIENT_GAS: &[u8] = b"Insufficient gas remaining for the callback";
+pub static ERROR_INSUFFICIENT_GAS_FOR_CALLBACK: &[u8] =
+    b"Insufficient gas remaining for the callback";
+pub static ERROR_INSUFFICIENT_GAS_FOR_ASYNC: &[u8] = b"Insufficient gas for async_call";
 
 pub static ERROR_CLAIM_IN_PROGRESS: &[u8] = b"Claim operation is already in progress";
 pub static ERROR_OLD_CLAIM_START: &[u8] =

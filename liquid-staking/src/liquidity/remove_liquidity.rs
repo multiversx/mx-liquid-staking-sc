@@ -129,7 +129,7 @@ pub trait RemoveLiquidityModule:
         delegation_contract_mapper
             .update(|contract_data| contract_data.egld_in_ongoing_undelegation += &egld_to_unstake);
 
-        let gas_for_async_call = self.get_gas_for_async_call();
+        let gas_for_async_call = self.get_gas_for_async_call_with_callback();
         self.tx()
             .to(delegation_contract.clone())
             .typed(DelegationSCProxy)

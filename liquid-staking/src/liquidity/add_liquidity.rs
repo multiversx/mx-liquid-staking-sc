@@ -83,7 +83,7 @@ pub trait AddLiquidityModule:
     fn call_delegate(&self, caller: ManagedAddress, payment: BigUint) {
         let delegation_contract = self.get_delegation_contract_for_delegate(&payment);
 
-        let gas_for_async_call = self.get_gas_for_async_call();
+        let gas_for_async_call = self.get_gas_for_async_call_with_callback();
         self.tx()
             .to(delegation_contract.clone())
             .typed(DelegationSCProxy)

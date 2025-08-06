@@ -4,7 +4,7 @@ multiversx_sc::derive_imports!();
 use crate::{
     basics::{
         constants::{GasLimit, MIN_GAS_FINISH_EXEC, MIN_GAS_FOR_ASYNC_CALL, MIN_GAS_FOR_CALLBACK},
-        errors::ERROR_INSUFFICIENT_GAS,
+        errors::ERROR_INSUFFICIENT_GAS_FOR_CALLBACK,
     },
     liquidity_pool::State,
 };
@@ -66,11 +66,11 @@ pub trait ConfigModule:
         );
     }
 
-    fn get_gas_for_async_call(&self) -> GasLimit {
+    fn get_gas_for_async_call_with_callback(&self) -> GasLimit {
         let gas_left = self.blockchain().get_gas_left();
         require!(
             gas_left > MIN_GAS_FOR_ASYNC_CALL + MIN_GAS_FOR_CALLBACK + MIN_GAS_FINISH_EXEC,
-            ERROR_INSUFFICIENT_GAS
+            ERROR_INSUFFICIENT_GAS_FOR_CALLBACK
         );
         gas_left - MIN_GAS_FOR_CALLBACK - MIN_GAS_FINISH_EXEC
     }

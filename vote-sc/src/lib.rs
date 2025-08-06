@@ -56,11 +56,22 @@ pub trait VoteSC:
 
         let voter = self.blockchain().get_caller();
         let ls_sc_address = self.liquid_staking_sc().get();
+        let gas_for_async_call = self.get_gas_for_sync_call();
         self.tx()
             .to(ls_sc_address)
             .typed(liquid_staking_proxy::LiquidStakingProxy)
             .delegate_vote(proposal_id, vote, voter, voting_power)
+            .gas(gas_for_async_call)
             .sync_call();
+    }
+
+    fn get_gas_for_sync_call(&self) -> u64 {
+        let gas_left = self.blockchain().get_gas_left();
+        require!(
+            gas_left > MIN_GAS_FOR_SYNC_CALL + MIN_GAS_FINISH_EXEC,
+            ERROR_INSUFFICIENT_GAS_FOR_SYNC
+        );
+        gas_left - MIN_GAS_FINISH_EXEC
     }
 
     #[view]
