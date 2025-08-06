@@ -315,7 +315,7 @@ impl DelegateCallsInteract {
             .run()
             .await;
 
-        println!("Node states: {}", node_states);
+        println!("Node states: {node_states}");
         node_states.to_string()
     }
 
@@ -358,7 +358,7 @@ impl DelegateCallsInteract {
             .run()
             .await;
 
-        println!("Total active stake: {}", total_stake);
+        println!("Total active stake: {total_stake}");
         total_stake
     }
 
@@ -373,7 +373,7 @@ impl DelegateCallsInteract {
             .run()
             .await;
 
-        println!("User active stake: {}", active_stake);
+        println!("User active stake: {active_stake}");
         active_stake
     }
 
@@ -513,6 +513,6 @@ impl DelegateCallsInteract {
             .run()
             .await;
 
-        println!("Set check cap on redelegate rewards to: {}", state);
+        println!("Set check cap on redelegate rewards to: {state}");
     }
 }

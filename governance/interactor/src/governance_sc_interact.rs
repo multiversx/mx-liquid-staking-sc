@@ -130,7 +130,7 @@ impl GovernanceCallsInteract {
             .run()
             .await;
 
-        println!("view config: {:#?}", result);
+        println!("view config: {result:#?}");
     }
 
     pub async fn proposal(
@@ -157,7 +157,7 @@ impl GovernanceCallsInteract {
         for log in logs {
             if log.endpoint == "proposal" && log.topics.len() >= 4 {
                 let nonce = base64_decode(&log.topics[0]);
-                println!("proposal nonce: {:?}", nonce);
+                println!("proposal nonce: {nonce:?}");
             }
         }
     }
@@ -243,7 +243,7 @@ impl GovernanceCallsInteract {
                 if err_message.is_some() {
                     assert_eq!(err_message.unwrap(), err.message.to_string());
                 } else {
-                    panic!("Unexpected error: {}", err);
+                    panic!("Unexpected error: {err}");
                 }
             }
         };
