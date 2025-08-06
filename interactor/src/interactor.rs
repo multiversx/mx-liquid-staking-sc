@@ -2,11 +2,10 @@
 
 mod config;
 mod contract_interactions;
+mod contract_proxies;
 mod interact;
 mod interact_cli;
-mod liquid_staking_proxy;
 mod state;
-mod vote_proxy;
 
 use clap::Parser;
 pub use config::Config;

@@ -1,6 +1,6 @@
 use multiversx_sc_snippets::imports::*;
 
-use crate::{liquid_staking_proxy, vote_proxy, Interact};
+use crate::{contract_proxies::*, Interact};
 
 const HASH_LENGTH: usize = 32;
 const PROOF_LENGTH: usize = 18;

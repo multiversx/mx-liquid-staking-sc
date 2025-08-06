@@ -1,4 +1,4 @@
-use crate::{liquid_staking_proxy, Interact};
+use crate::{contract_proxies::liquid_staking_proxy, Interact};
 use multiversx_sc_snippets::imports::*;
 
 impl Interact {
