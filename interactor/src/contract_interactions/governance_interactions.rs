@@ -21,9 +21,9 @@ impl Interact {
         self.governance_interactor
             .proposal(
                 &self.governance_interactor.owner.to_address(),
-                "6db132d759482f9f3515fe3ca8f72a8d6dc61244",
-                9,
-                11,
+                "b29feffb6e80cb4622a5b9ee51793c7c2adef835",
+                17,
+                19,
             )
             .await;
         self.governance_interactor.view_config().await;
