@@ -1,7 +1,7 @@
 multiversx_sc::imports!();
 
 use crate::{
-    constants::{Hash, ProposalId, HASH_LENGTH, PROOF_LENGTH},
+    constants::{Hash, ProposalId, HASH_LENGTH},
     errors::NO_PROPOSAL,
 };
 
@@ -36,25 +36,26 @@ pub trait ViewsModule {
         &self,
         proposal_id: ProposalId,
         voting_power: BigUint<Self::Api>,
-        proof: ArrayVec<ManagedByteArray<HASH_LENGTH>, PROOF_LENGTH>,
+        proof: ManagedVec<ManagedByteArray<HASH_LENGTH>>,
     ) -> bool {
         match self.get_root_hash(proposal_id) {
             OptionalValue::None => {
                 sc_panic!(NO_PROPOSAL);
             }
             OptionalValue::Some(root_hash) => {
-                self.verify_merkle_proof(voting_power, proof, root_hash)
+                let caller = self.blockchain().get_caller();
+                self.verify_merkle_proof(&caller, &voting_power, proof, root_hash)
             }
         }
     }
 
     fn verify_merkle_proof(
         &self,
-        power: BigUint<Self::Api>,
-        proof: ArrayVec<ManagedByteArray<HASH_LENGTH>, PROOF_LENGTH>,
+        caller: &ManagedAddress,
+        power: &BigUint<Self::Api>,
+        proof: ManagedVec<ManagedByteArray<HASH_LENGTH>>,
         root_hash: ManagedByteArray<HASH_LENGTH>,
     ) -> bool {
-        let caller = self.blockchain().get_caller();
         let mut leaf_bytes = caller.as_managed_buffer().clone();
 
         let p = power.to_bytes_be_buffer();

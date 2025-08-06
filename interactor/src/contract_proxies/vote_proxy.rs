@@ -114,7 +114,7 @@ where
         Arg0: ProxyArg<u32>,
         Arg1: ProxyArg<ManagedBuffer<Env::Api>>,
         Arg2: ProxyArg<BigUint<Env::Api>>,
-        Arg3: ProxyArg<ArrayVec<ManagedByteArray<Env::Api, 32usize>, 18usize>>,
+        Arg3: ProxyArg<ManagedVec<Env::Api, ManagedByteArray<Env::Api, 32usize>>>,
     >(
         self,
         proposal_id: Arg0,
@@ -157,7 +157,7 @@ where
     pub fn confirm_voting_power<
         Arg0: ProxyArg<u32>,
         Arg1: ProxyArg<BigUint<Env::Api>>,
-        Arg2: ProxyArg<ArrayVec<ManagedByteArray<Env::Api, 32usize>, 18usize>>,
+        Arg2: ProxyArg<ManagedVec<Env::Api, ManagedByteArray<Env::Api, 32usize>>>,
     >(
         self,
         proposal_id: Arg0,

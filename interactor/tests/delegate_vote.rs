@@ -40,7 +40,7 @@ async fn test_delegate_vote() {
         .await;
     interact.deploy_vote_contract().await;
 
-    let proof = ArrayVec::new();
+    let proof = Vec::new();
     interact
         .delegate_vote(
             owner_address,

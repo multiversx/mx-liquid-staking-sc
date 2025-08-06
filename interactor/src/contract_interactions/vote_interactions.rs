@@ -3,7 +3,6 @@ use multiversx_sc_snippets::imports::*;
 use crate::{contract_proxies::*, Interact};
 
 const HASH_LENGTH: usize = 32;
-const PROOF_LENGTH: usize = 18;
 
 impl Interact {
     pub async fn deploy_vote_contract(&mut self) {
@@ -82,7 +81,7 @@ impl Interact {
         proposal_id: u32,
         vote: &str,
         voting_power: u128,
-        proof: ArrayVec<ManagedByteArray<StaticApi, { HASH_LENGTH }>, { PROOF_LENGTH }>,
+        proof: Vec<ManagedByteArray<StaticApi, { HASH_LENGTH }>>,
         error: Option<ExpectError<'_>>,
     ) {
         let tx = self

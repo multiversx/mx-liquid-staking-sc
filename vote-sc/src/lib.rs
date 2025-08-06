@@ -44,25 +44,37 @@ pub trait VoteSC:
         proposal_id: ProposalId,
         vote: ManagedBuffer,
         voting_power: BigUint<Self::Api>,
-        proof: ArrayVec<ManagedByteArray<HASH_LENGTH>, PROOF_LENGTH>,
+        proof: ManagedVec<Hash<Self::Api>>,
     ) {
+        let caller = self.blockchain().get_caller();
         require!(!self.liquid_staking_sc().is_empty(), LS_SC_NOT_SET);
-        self.require_caller_not_self();
+        self.require_caller_not_self(&caller);
+        self.check_caller_has_power(&caller, proposal_id, &voting_power, proof);
 
-        require!(
-            self.confirm_voting_power(proposal_id, voting_power.clone(), proof),
-            INVALID_MERKLE_PROOF
-        );
-
-        let voter = self.blockchain().get_caller();
         let ls_sc_address = self.liquid_staking_sc().get();
         let gas_for_async_call = self.get_gas_for_sync_call();
         self.tx()
             .to(ls_sc_address)
             .typed(liquid_staking_proxy::LiquidStakingProxy)
-            .delegate_vote(proposal_id, vote, voter, voting_power)
+            .delegate_vote(proposal_id, vote, caller, voting_power)
             .gas(gas_for_async_call)
             .sync_call();
+    }
+
+    fn check_caller_has_power(
+        &self,
+        caller: &ManagedAddress,
+        proposal_id: ProposalId,
+        voting_power: &BigUint<Self::Api>,
+        proof: ManagedVec<ManagedByteArray<HASH_LENGTH>>,
+    ) {
+        let wrapped_root_hash = self.get_root_hash(proposal_id);
+
+        if let OptionalValue::Some(root_hash) = wrapped_root_hash {
+            self.verify_merkle_proof(caller, voting_power, proof, root_hash);
+        } else {
+            sc_panic!(INVALID_MERKLE_PROOF);
+        }
     }
 
     fn get_gas_for_sync_call(&self) -> u64 {
