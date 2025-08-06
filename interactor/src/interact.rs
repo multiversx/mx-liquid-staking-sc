@@ -1,4 +1,3 @@
-use delegation_sc_interact::DelegateCallsInteract;
 use governance_sc_interact::GovernanceCallsInteract;
 use state::State;
 
@@ -8,7 +7,6 @@ use crate::{state, Config, CHAIN_SIMULATOR_GATEWAY};
 
 pub struct Interact {
     pub interactor: Interactor,
-    pub delegation_interactor: Option<DelegateCallsInteract>,
     pub governance_interactor: GovernanceCallsInteract,
     pub wallet_address: Address,
     pub liquid_staking_contract_code: BytesValue,
@@ -44,7 +42,6 @@ impl Interact {
 
         Interact {
             interactor,
-            delegation_interactor: None,
             governance_interactor,
             wallet_address,
             liquid_staking_contract_code,

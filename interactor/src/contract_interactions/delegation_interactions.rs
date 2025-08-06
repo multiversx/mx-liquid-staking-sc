@@ -52,7 +52,6 @@ impl Interact {
             ])
             .await;
 
-        self.delegation_interactor = Some(delegation_interactor);
         let new_address_bech32 = &addresses[0];
         self.state
             .set_delegation_address(new_address_bech32.clone());
