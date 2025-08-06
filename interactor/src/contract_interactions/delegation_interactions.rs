@@ -33,7 +33,7 @@ impl Interact {
             .set_state(&delegation_interactor.delegator2.to_address())
             .await;
         delegation_interactor
-            .create_new_delegation_contract(0, 3745u64, 1250000000000000000000u128)
+            .create_new_delegation_contract(0, 3745u64, 1_250_000_000_000_000_000_000u128)
             .await;
         delegation_interactor
             .set_check_cap_on_redelegate_rewards(false)

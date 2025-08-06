@@ -8,7 +8,7 @@ use crate::{state, Config, CHAIN_SIMULATOR_GATEWAY};
 pub struct Interact {
     pub interactor: Interactor,
     pub governance_interactor: GovernanceCallsInteract,
-    pub wallet_address: Address,
+    pub owner_address: Address,
     pub liquid_staking_contract_code: BytesValue,
     pub vote_contract_code: BytesValue,
     pub state: State,
@@ -26,7 +26,7 @@ impl Interact {
             GovernanceCallsInteract::new(governance_sc_interact::Config::chain_simulator_config())
                 .await;
 
-        let wallet_address = interactor.register_wallet(test_wallets::mallory()).await;
+        let owner_address = interactor.register_wallet(test_wallets::alice()).await;
 
         interactor.generate_blocks_until_epoch(1).await.unwrap();
 
@@ -43,7 +43,7 @@ impl Interact {
         Interact {
             interactor,
             governance_interactor,
-            wallet_address,
+            owner_address,
             liquid_staking_contract_code,
             vote_contract_code,
             state: State::load_state(),

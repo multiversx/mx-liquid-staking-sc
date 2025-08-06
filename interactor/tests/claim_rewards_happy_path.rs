@@ -6,7 +6,7 @@ use multiversx_sc_snippets::imports::*;
 #[cfg_attr(not(feature = "chain-simulator-tests"), ignore)]
 async fn test_claim_rewards_happy_path() {
     let mut interact = Interact::new(Config::chain_simulator_config()).await;
-    let owner_address = Bech32Address::from(interact.wallet_address.clone());
+    let owner_address = Bech32Address::from(interact.owner_address.clone());
     interact.deploy().await;
     interact.deploy_delegation_contract().await;
     interact

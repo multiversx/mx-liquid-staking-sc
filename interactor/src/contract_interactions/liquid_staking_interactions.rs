@@ -6,7 +6,7 @@ impl Interact {
         let new_address = self
             .interactor
             .tx()
-            .from(&self.wallet_address)
+            .from(&self.owner_address)
             .gas(100_000_000u64)
             .typed(liquid_staking_proxy::LiquidStakingProxy)
             .init()
@@ -28,7 +28,7 @@ impl Interact {
             .interactor
             .tx()
             .to(self.state.liquid_staking_address())
-            .from(&self.wallet_address)
+            .from(&self.owner_address)
             .gas(30_000_000u64)
             .typed(liquid_staking_proxy::LiquidStakingProxy)
             .upgrade()
@@ -199,7 +199,7 @@ impl Interact {
 
         self.interactor
             .tx()
-            .from(&self.wallet_address)
+            .from(&self.owner_address)
             .to(self.state.liquid_staking_address())
             .gas(90_000_000u64)
             .typed(liquid_staking_proxy::LiquidStakingProxy)
@@ -224,7 +224,7 @@ impl Interact {
 
         self.interactor
             .tx()
-            .from(&self.wallet_address)
+            .from(&self.owner_address)
             .to(self.state.liquid_staking_address())
             .gas(90_000_000u64)
             .typed(liquid_staking_proxy::LiquidStakingProxy)
@@ -320,7 +320,7 @@ impl Interact {
         let response = self
             .interactor
             .tx()
-            .from(&self.wallet_address)
+            .from(&self.owner_address)
             .to(self.state.liquid_staking_address())
             .gas(30_000_000u64)
             .typed(liquid_staking_proxy::LiquidStakingProxy)
@@ -350,7 +350,7 @@ impl Interact {
 
         self.interactor
             .tx()
-            .from(&self.wallet_address)
+            .from(&self.owner_address)
             .to(self.state.liquid_staking_address())
             .gas(30_000_000u64)
             .typed(liquid_staking_proxy::LiquidStakingProxy)
@@ -376,7 +376,7 @@ impl Interact {
         let response = self
             .interactor
             .tx()
-            .from(&self.wallet_address)
+            .from(&self.owner_address)
             .to(self.state.liquid_staking_address())
             .gas(30_000_000u64)
             .typed(liquid_staking_proxy::LiquidStakingProxy)
@@ -402,7 +402,7 @@ impl Interact {
         let response = self
             .interactor
             .tx()
-            .from(&self.wallet_address)
+            .from(&self.owner_address)
             .to(self.state.liquid_staking_address())
             .gas(30_000_000u64)
             .typed(liquid_staking_proxy::LiquidStakingProxy)
@@ -485,7 +485,7 @@ impl Interact {
     pub async fn set_state_active(&mut self) {
         self.interactor
             .tx()
-            .from(&self.wallet_address)
+            .from(&self.owner_address)
             .to(self.state.liquid_staking_address())
             .gas(30_000_000u64)
             .typed(liquid_staking_proxy::LiquidStakingProxy)
@@ -499,7 +499,7 @@ impl Interact {
         let response = self
             .interactor
             .tx()
-            .from(&self.wallet_address)
+            .from(&self.owner_address)
             .to(self.state.liquid_staking_address())
             .gas(30_000_000u64)
             .typed(liquid_staking_proxy::LiquidStakingProxy)

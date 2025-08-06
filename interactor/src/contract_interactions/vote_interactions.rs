@@ -9,7 +9,7 @@ impl Interact {
         let new_address = self
             .interactor
             .tx()
-            .from(&self.wallet_address)
+            .from(&self.owner_address)
             .gas(100_000_000u64)
             .typed(vote_proxy::VoteSCProxy)
             .init()
@@ -23,7 +23,7 @@ impl Interact {
 
         self.interactor
             .tx()
-            .from(&self.wallet_address)
+            .from(&self.owner_address)
             .to(self.state.vote_address())
             .gas(100_000_000u64)
             .typed(vote_proxy::VoteSCProxy)
@@ -34,7 +34,7 @@ impl Interact {
 
         self.interactor
             .tx()
-            .from(&self.wallet_address)
+            .from(&self.owner_address)
             .to(self.state.liquid_staking_address())
             .gas(100_000_000u64)
             .typed(liquid_staking_proxy::LiquidStakingProxy)
@@ -43,18 +43,25 @@ impl Interact {
             .run()
             .await;
 
+        let new_address_string = new_address_bech32.to_string();
+        println!("new address: {new_address_string}");
+    }
+
+    pub async fn set_root_hash(
+        &mut self,
+        hash: ManagedByteArray<StaticApi, HASH_LENGTH>,
+        proposal_id: u32,
+    ) {
         let gas = 30_000_000u64;
-        let hash = ManagedByteArray::<StaticApi, { HASH_LENGTH }>::new_from_bytes(
-            b"ed013f30ed9e82a734b99aaa014f7193",
-        );
+
         let _ = self
             .interactor
             .tx()
-            .from(&self.wallet_address)
+            .from(&self.owner_address)
             .to(self.state.vote_address())
             .gas(gas)
             .typed(vote_proxy::VoteSCProxy)
-            .set_root_hash(hash, 1u32)
+            .set_root_hash(hash, proposal_id)
             .returns(ReturnsResultUnmanaged)
             .run()
             .await;
@@ -69,12 +76,8 @@ impl Interact {
             .run()
             .await;
 
-        let new_address_string = new_address_bech32.to_string();
-        println!("new address: {new_address_string}");
-
         println!("get_root_hash call result: {result_value:?}");
     }
-
     pub async fn delegate_vote(
         &mut self,
         voter: Bech32Address,
@@ -89,7 +92,7 @@ impl Interact {
             .tx()
             .from(voter)
             .to(self.state.vote_address())
-            .gas(50_000_000u64)
+            .gas(200_000_000u64)
             .typed(vote_proxy::VoteSCProxy)
             .delegate_vote(proposal_id, vote, voting_power, proof);
 
