@@ -18,94 +18,142 @@ pub enum InteractCliCommand {
     #[command(name = "upgrade", about = "Upgrade")]
     Upgrade,
 
-    #[command(name = "add-liquidity", about = "Add Liquidity")]
+    #[command(name = "add-liquidity", about = "Add liquidity")]
     AddLiquidity(CallerAndEgldArgs),
 
-    #[command(name = "remove-liquidity", about = "Remove Liquidity")]
+    #[command(name = "remove-liquidity", about = "Remove liquidity")]
     RemoveLiquidity(CallerAndPaymentArgs),
 
-    #[command(name = "unbond-tokens", about = "Unbond Tokens")]
+    #[command(name = "unbond-tokens", about = "Unbond tokens")]
     UnbondTokens(CallerAndPaymentArgs),
 
     #[command(name = "withdraw-all", about = "Withdraw all funds")]
     WithdrawAll(AddressArg),
 
-    #[command(name = "", about = "")]
+    #[command(name = "claim-rewards", about = "Claim rewards")]
     ClaimRewards(AddressArg),
 
-    #[command(name = "", about = "")]
+    #[command(name = "recompute-token-reserve", about = "Recompute token reserve")]
     RecomputeTokenReserve(AddressArg),
 
-    #[command(name = "", about = "")]
+    #[command(name = "delegate-rewards", about = "Delegate rewards")]
     DelegateRewards(AddressArg),
 
-    #[command(name = "", about = "")]
+    #[command(
+        name = "get-ls-value-for-position",
+        about = "Get Liquid Staking value for position"
+    )]
     GetLsValueForPosition(EgldArg),
 
-    #[command(name = "", about = "")]
+    #[command(name = "register-ls-token", about = "Register Liquid Staking token")]
     RegisterLsToken(RegisterTokenArgs),
 
-    #[command(name = "", about = "")]
+    #[command(name = "register-unstake-token", about = "Register unstake token")]
     RegisterUnstakeToken(RegisterTokenArgs),
 
-    #[command(name = "", about = "")]
+    #[command(name = "get-state", about = "Get state of the Liquid Staking contract")]
     GetState,
 
-    #[command(name = "", about = "")]
+    #[command(
+        name = "get-ls-token-id",
+        about = "Get the token identifier of the Liquid Staking token"
+    )]
     GetLsTokenId,
 
-    #[command(name = "", about = "")]
+    #[command(name = "get-ls-supply", about = "Get Liquid STaking supply")]
     GetLsSupply,
 
-    #[command(name = "", about = "")]
+    #[command(
+        name = "get-virtual-egld-reserve",
+        about = "Get virtual Liquid Staking reserver"
+    )]
     GetVirtualEgldReserve,
 
-    #[command(name = "", about = "")]
+    #[command(name = "get-rewards-reserve", about = "Get rewards reserve")]
     GetRewardsReserve,
 
-    #[command(name = "", about = "")]
+    #[command(
+        name = "get-unstake-token-id",
+        about = "Get the token identifier of the unstake token"
+    )]
     GetUnstakeTokenId,
 
-    #[command(name = "", about = "")]
+    #[command(
+        name = "clear-ongoing-whitelist-operation",
+        about = "Clear ongoing whitelist operation"
+    )]
     ClearOngoingWhitelistOp,
 
-    #[command(name = "", about = "")]
+    #[command(
+        name = "whitelist-delegation-contract",
+        about = "Whitelist delegation contract"
+    )]
     WhitelistDelegationContract(WhitelistDelegationContractArgs),
 
-    #[command(name = "", about = "")]
+    #[command(
+        name = "change-delegation-contract-admin",
+        about = "Change the administrator of the delegation contract"
+    )]
     ChangeDelegationContractAdmin(ChangeDelegationContractAdminArgs),
 
-    #[command(name = "", about = "")]
+    #[command(
+        name = "change-delegation-contract-params",
+        about = "Change the parameters of the delegation contract"
+    )]
     ChangeDelegationContractParams(ChangeDelegationContractParamsArgs),
 
-    #[command(name = "", about = "")]
+    #[command(name = "get-delegation-status", about = "Get delegation status")]
     GetDelegationStatus,
 
-    #[command(name = "", about = "")]
+    #[command(
+        name = "get-delegation-contract-staked-amount",
+        about = "Get the staked amount in the delegation contract"
+    )]
     GetDelegationContractStakedAmount(AddressArg),
 
-    #[command(name = "", about = "")]
+    #[command(
+        name = "get-delegation-contract-unstaked-amount",
+        about = "Get the unstaked amount from the delegation contract"
+    )]
     GetDelegationContractUnstakedAmount(AddressArg),
 
-    #[command(name = "", about = "")]
+    #[command(
+        name = "get-delegation-contract-unbonded-contract",
+        about = "Get the unbonded amount from the delegation contract"
+    )]
     GetDelegationContractUnbondedAmount(AddressArg),
 
-    #[command(name = "", about = "")]
+    #[command(
+        name = "set-state-active",
+        about = "Set the state of the Liquid Staking contract as active"
+    )]
     SetStateActive,
 
-    #[command(name = "", about = "")]
+    #[command(
+        name = "set-state-inactive",
+        about = "Set the state of the Liquid Staking contract as inactive"
+    )]
     SetStateInactive,
 
-    #[command(name = "", about = "")]
+    #[command(
+        name = "get-delegation-addresses-list",
+        about = "Get the list of delegation contract addresses"
+    )]
     GetDelegationAddressesList,
 
-    #[command(name = "", about = "")]
+    #[command(name = "get-addresses-to-claim", about = "Get the addresses to claim")]
     GetAddressesToClaim,
 
-    #[command(name = "", about = "")]
+    #[command(
+        name = "get-delgation-claim-status",
+        about = "Get the delegation claim status"
+    )]
     GetDelegationClaimStatus,
 
-    #[command(name = "", about = "")]
+    #[command(
+        name = "get-delegation-contract-data",
+        about = "Get the delegation contract data"
+    )]
     GetDelegationContractData(AddressArg),
 }
 

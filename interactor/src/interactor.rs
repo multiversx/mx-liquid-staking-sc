@@ -14,7 +14,7 @@ use multiversx_sc::imports::Bech32Address;
 use multiversx_sc_snippets::env_logger;
 pub const CHAIN_SIMULATOR_GATEWAY: &str = "http://localhost:8085";
 
-pub async fn liquid_staking_cli() {
+pub async fn cli() {
     env_logger::init();
 
     let mut interact = Interact::new(Config::load_config()).await;
