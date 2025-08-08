@@ -137,7 +137,7 @@ where
     ) -> TxTypedCall<Env, From, To, NotPayable, Gas, ManagedAddress<Env::Api>> {
         self.wrapped_tx
             .payment(NotPayable)
-            .raw_call("liquid_staking_sc")
+            .raw_call("getLiquidStakingAddress")
             .original_result()
     }
 

@@ -78,7 +78,7 @@ pub trait VoteModule:
         gas_left - MIN_GAS_FINISH_EXEC
     }
 
-    #[view]
+    #[view(getVoteContract)]
     #[storage_mapper("voteContract")]
     fn vote_contract(&self) -> SingleValueMapper<ManagedAddress>;
 

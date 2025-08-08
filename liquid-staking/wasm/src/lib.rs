@@ -46,7 +46,7 @@ multiversx_sc_wasm_adapter::endpoints! {
         getDelegationContractData => delegation_contract_data
         set_vote_contract => set_vote_contract
         delegateVote => delegate_vote
-        vote_contract => vote_contract
+        getVoteContract => vote_contract
         claimRewards => claim_rewards
         delegateRewards => delegate_rewards
         recomputeTokenReserve => recompute_token_reserve

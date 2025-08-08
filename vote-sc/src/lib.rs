@@ -86,7 +86,7 @@ pub trait VoteSC:
         gas_left - MIN_GAS_FINISH_EXEC
     }
 
-    #[view]
+    #[view(getLiquidStakingAddress)]
     #[storage_mapper("liquidStakingAddress")]
     fn liquid_staking_sc(&self) -> SingleValueMapper<ManagedAddress>;
 }
