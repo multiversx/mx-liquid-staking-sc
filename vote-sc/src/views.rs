@@ -44,7 +44,7 @@ pub trait ViewsModule {
             }
             OptionalValue::Some(root_hash) => {
                 let caller = self.blockchain().get_caller();
-                return self.verify_merkle_proof(&caller, &voting_power, proof, root_hash);
+                self.verify_merkle_proof(&caller, &voting_power, proof, root_hash)
             }
         }
     }
