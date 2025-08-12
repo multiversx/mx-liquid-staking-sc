@@ -16,4 +16,3 @@ version = "0.59.1"
 
 [dev-dependencies.multiversx-sc-scenario]
 version = "0.59.1"
-features = ["wasmer-experimental"]
