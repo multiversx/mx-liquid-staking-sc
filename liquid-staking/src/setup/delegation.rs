@@ -134,7 +134,7 @@ pub trait DelegationModule:
         self.tx()
             .to(contract_address.clone())
             .typed(DelegationSCProxy)
-            .delegate(payment.clone())
+            .delegate(payment)
             .callback(
                 DelegationModule::callbacks(self).whitelist_contract_callback(
                     caller,
