@@ -2,17 +2,18 @@ multiversx_sc::imports!();
 
 use crate::{
     basics::errors::{
-        ERROR_BAD_PAYMENT_AMOUNT, ERROR_BAD_PAYMENT_TOKEN, ERROR_NOT_ACTIVE,
-        ERROR_UNSTAKE_PERIOD_NOT_PASSED,
+        ERROR_BAD_PAYMENT_AMOUNT, ERROR_BAD_PAYMENT_TOKEN, ERROR_NOTHING_TO_UNBOUND,
+        ERROR_NOT_ACTIVE, ERROR_UNSTAKE_PERIOD_NOT_PASSED,
     },
-    config::{self, UnstakeTokenAttributes},
-    delegation, liquidity_pool, StorageCache,
+    liquidity_pool,
+    setup::{self, config::UnstakeTokenAttributes},
+    StorageCache,
 };
 
 #[multiversx_sc::module]
 pub trait UnbondModule:
-    config::ConfigModule
-    + delegation::DelegationModule
+    setup::config::ConfigModule
+    + setup::delegation::DelegationModule
     + multiversx_sc_modules::default_issue_callbacks::DefaultIssueCallbacksModule
     + liquidity_pool::LiquidityPoolModule
 {
@@ -63,7 +64,7 @@ pub trait UnbondModule:
 
         require!(
             delegation_contract_data.total_unbonded_from_ls_contract >= unstake_amount,
-            "Nothing to unbond"
+            ERROR_NOTHING_TO_UNBOUND
         );
         delegation_contract_mapper.update(|contract_data| {
             contract_data.total_unstaked_from_ls_contract -= &unstake_amount;

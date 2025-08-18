@@ -1,26 +1,27 @@
 use crate::contract_setup::LiquidStakingContractSetup;
 use basics::views::ViewsModule;
-use config::{ConfigModule, UnstakeTokenAttributes};
-use delegation::DelegationModule;
-use delegation_mock::DelegationMock;
 use funds::{
     claim::ClaimModule, delegate_rewards::DelegateRewardsModule,
     recompute_token_reserve::RecomputeTokenReserveModule, unbond::UnbondModule,
     withdraw::WithdrawModule,
 };
+
 use liquid_staking::*;
 use liquidity::{add_liquidity::AddLiquidityModule, remove_liquidity::RemoveLiquidityModule};
 use multiversx_sc::types::Address;
 use multiversx_sc_scenario::{managed_address, num_bigint, rust_biguint, DebugApi};
+use setup::config::{ConfigModule, UnstakeTokenAttributes};
+use setup::delegation::DelegationModule;
 
-pub const EGLD_TO_WHITELIST: u64 = 1;
+// pub const EGLD_TO_WHITELIST: u64 = 1;
 pub const FIRST_ADD_LIQUIDITY_AMOUNT: u64 = 100;
 
 impl<LiquidStakingContractObjBuilder> LiquidStakingContractSetup<LiquidStakingContractObjBuilder>
 where
     LiquidStakingContractObjBuilder: 'static + Copy + Fn() -> liquid_staking::ContractObj<DebugApi>,
 {
-    pub fn deploy_staking_contract(
+    /*
+        pub fn deploy_staking_contract(
         &mut self,
         owner_address: &Address,
         egld_balance: u64,
@@ -83,7 +84,9 @@ where
 
         delegation_wrapper.address_ref().clone()
     }
+    */
 
+    #[allow(dead_code)]
     pub fn update_staking_contract_params(
         &mut self,
         owner_address: &Address,
@@ -107,6 +110,76 @@ where
                     apy,
                 );
             })
+            .assert_ok();
+    }
+
+    /*
+        pub fn set_governance_sc(&mut self) {
+             let rust_zero = rust_biguint!(0u64);
+                    let governance_wrapper = self.b_mock.create_sc_account(
+                        &rust_zero,
+                        Some(&self.owner_address),
+                        vote_mock::contract_obj,
+                        "vote-mock.wasm",
+                    );
+            self.b_mock
+                .execute_tx(&self.owner_address, &governance_wrapper, &rust_zero, |sc| {
+                    sc.init(managed_address!(&self.sc_wrapper.address_ref().clone()));
+                })
+                .assert_ok();
+
+            self.b_mock
+                .execute_tx(
+                    &self.owner_address,
+                    &governance_wrapper,
+                    &Self::exp18(0),
+                    |sc| {
+                        let curent_epoch = sc.blockchain().get_block_epoch();
+                        sc.propose(
+                            managed_buffer!(b"play chess"),
+                            curent_epoch,
+                            curent_epoch + 5,
+                        );
+                    },
+                )
+                .assert_ok();
+
+            self.b_mock
+                .execute_tx(
+                    &self.owner_address,
+                    &self.sc_wrapper,
+                    &Self::exp18(0),
+                    |sc| {
+                        sc.set_governance_contract(managed_address!(governance_wrapper.address_ref()));
+                    },
+                )
+                .assert_ok();
+        }
+    */
+    pub fn set_active(&mut self) {
+        self.b_mock
+            .execute_tx(
+                &self.owner_address,
+                &self.sc_wrapper,
+                &Self::exp18(0),
+                |sc| {
+                    sc.set_state_active();
+                },
+            )
+            .assert_ok();
+    }
+
+    #[allow(dead_code)]
+    pub fn set_inactive(&mut self) {
+        self.b_mock
+            .execute_tx(
+                &self.owner_address,
+                &self.sc_wrapper,
+                &Self::exp18(0),
+                |sc| {
+                    sc.set_state_inactive();
+                },
+            )
             .assert_ok();
     }
 
@@ -194,6 +267,7 @@ where
             .assert_ok();
     }
 
+    #[allow(dead_code)]
     pub fn withdraw_all(&mut self, caller: &Address, provider: &Address) {
         let rust_zero = rust_biguint!(0u64);
         self.b_mock
@@ -275,6 +349,7 @@ where
             .assert_ok();
     }
 
+    #[allow(dead_code)]
     pub fn check_delegation_contract_values(
         &mut self,
         delegation_contract: &Address,
@@ -305,6 +380,7 @@ where
         u128::from(ls_value)
     }
 
+    #[allow(dead_code)]
     pub fn check_delegation_contract_values_denominated(
         &mut self,
         delegation_contract: &Address,

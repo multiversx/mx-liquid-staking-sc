@@ -1,0 +1,2 @@
+[[proxy]]
+path = "../interactor/src/contract_proxies/vote_proxy.rs"

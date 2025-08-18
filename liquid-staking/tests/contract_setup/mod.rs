@@ -1,6 +1,6 @@
 use std::ops::Mul;
 
-use liquid_staking::{config::ConfigModule, LiquidStaking};
+use liquid_staking::{setup::config::ConfigModule, LiquidStaking};
 use multiversx_sc::types::{Address, BigUint, EsdtLocalRole};
 
 use multiversx_sc_scenario::{
@@ -43,6 +43,9 @@ where
         let rust_zero = rust_biguint!(0u64);
         let mut b_mock = BlockchainStateWrapper::new();
         let owner_address = b_mock.create_user_account(&rust_zero);
+
+        let egld_balance_biguint = &Self::exp18(1000);
+        b_mock.set_egld_balance(&owner_address, egld_balance_biguint);
 
         let sc_wrapper = b_mock.create_sc_account(
             &rust_zero,

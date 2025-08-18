@@ -1,17 +1,14 @@
 multiversx_sc::imports!();
 
 use crate::{
-    basics::constants::MIN_GAS_FOR_CALLBACK,
-    basics::errors::ERROR_NOT_ACTIVE,
-    config::{self},
-    delegation, delegation_proxy, StorageCache,
+    basics::constants::MIN_GAS_FOR_CALLBACK, basics::errors::ERROR_NOT_ACTIVE, setup, StorageCache,
 };
 
 #[multiversx_sc::module]
 pub trait WithdrawModule:
-    config::ConfigModule
+    setup::config::ConfigModule
     + multiversx_sc_modules::default_issue_callbacks::DefaultIssueCallbacksModule
-    + delegation::DelegationModule
+    + setup::delegation::DelegationModule
 {
     #[endpoint(withdrawAll)]
     fn withdraw_all(&self, delegation_contract: ManagedAddress) {
@@ -48,10 +45,10 @@ pub trait WithdrawModule:
     }
 
     fn call_withdraw(&self, delegation_contract: ManagedAddress) {
-        let gas_for_async_call = self.get_gas_for_async_call();
+        let gas_for_async_call = self.get_gas_for_async_call_with_callback();
         self.tx()
             .to(delegation_contract.clone())
-            .typed(delegation_proxy::DelegationMockProxy)
+            .typed(DelegationSCProxy)
             .withdraw()
             .gas(gas_for_async_call)
             .callback(WithdrawModule::callbacks(self).withdraw_tokens_callback(delegation_contract))

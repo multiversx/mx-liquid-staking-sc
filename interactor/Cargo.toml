@@ -1,0 +1,41 @@
+[package]
+name = "interactor"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[[bin]]
+name = "interactor"
+path = "src/interactor_main.rs"
+
+[lib]
+path = "src/interactor.rs"
+
+[dependencies]
+toml = "0.8.6"
+
+[dependencies.liquid-staking]
+path = "../liquid-staking"
+
+[dependencies.delegation-sc-interact]
+path = "../delegation/interactor"
+
+[dependencies.governance-sc-interact]
+path = "../governance/interactor"
+
+[dependencies.multiversx-sc-snippets]
+version = "0.59.1"
+
+[dependencies.multiversx-sc]
+version = "0.59.1"
+
+[dependencies.clap]
+version = "4.4.7"
+features = ["derive"]
+
+[dependencies.serde]
+version = "1.0"
+features = ["derive"]
+
+[features]
+chain-simulator-tests = []

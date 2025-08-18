@@ -1,5 +1,7 @@
 pub type GasLimit = u64;
 pub type Blocks = u64;
+pub type Epoch = u64;
+pub type Timestamp = u64;
 
 pub const DEFAULT_MIN_GAS_TO_SAVE_PROGRESS: GasLimit = 30_000_000;
 pub const DEFAULT_GAS_TO_CLAIM_REWARDS: GasLimit = 6_000_000;

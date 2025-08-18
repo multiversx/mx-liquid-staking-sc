@@ -201,9 +201,9 @@ checksum = "9ac0150caa2ae65ca5bd83f25c7de183dea78d4d366469f148435e2acfbad0da"
 
 [[package]]
 name = "cc"
-version = "1.2.1"
+version = "1.2.30"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fd9de9f2205d5ef3fd67e685b0df337994ddd4495e2a28d185500d0e1edfea47"
+checksum = "deec109607ca693028562ed836a5f1c4b8bd77755c4e132fc5ce11b0b6211ae7"
 dependencies = [
  "shlex",
 ]
@@ -366,19 +366,14 @@ dependencies = [
 ]
 
 [[package]]
-name = "delegation-mock"
+name = "delegation-sc-interact"
 version = "0.0.0"
 dependencies = [
- "multiversx-sc",
- "multiversx-sc-scenario",
-]
-
-[[package]]
-name = "delegation-mock-meta"
-version = "0.0.0"
-dependencies = [
- "delegation-mock",
- "multiversx-sc-meta-lib",
+ "clap",
+ "multiversx-sc-snippets",
+ "serde",
+ "tokio",
+ "toml 0.8.19",
 ]
 
 [[package]]
@@ -480,12 +475,12 @@ checksum = "5443807d6dff69373d433ab9ef5378ad8df50ca6298caf15de6e52e24aaf54d5"
 
 [[package]]
 name = "errno"
-version = "0.3.9"
+version = "0.3.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "534c5cf6194dfab3db3242765c03bbe257cf92f22b38f6bc0c58d59108a820ba"
+checksum = "778e2ac28f6c47af28e4907f13ffd1e1ddbd400980a9abd7c8df189bf578a5ad"
 dependencies = [
  "libc",
- "windows-sys 0.52.0",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -660,6 +655,19 @@ name = "gimli"
 version = "0.31.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "07e28edb80900c19c28f1072f2e8aeca7fa06b23cd4169cefe1af5aa3260783f"
+
+[[package]]
+name = "governance-sc-interact"
+version = "0.0.0"
+dependencies = [
+ "clap",
+ "delegation-sc-interact",
+ "multiversx-sc-snippets",
+ "payable-interactor",
+ "serde",
+ "tokio",
+ "toml 0.8.19",
+]
 
 [[package]]
 name = "hashbrown"
@@ -970,6 +978,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "interactor"
+version = "0.0.0"
+dependencies = [
+ "clap",
+ "delegation-sc-interact",
+ "governance-sc-interact",
+ "liquid-staking",
+ "multiversx-sc",
+ "multiversx-sc-snippets",
+ "serde",
+ "toml 0.8.19",
+]
+
+[[package]]
 name = "ipnet"
 version = "2.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -998,10 +1020,11 @@ checksum = "d75a2a4b1b190afb6f5425f10f6a8f959d2ea0b9c2b1d79553551850539e4674"
 
 [[package]]
 name = "js-sys"
-version = "0.3.72"
+version = "0.3.77"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6a88f1bda2bd75b0452a14784937d796722fdebfe50df998aeb3f0b7603019a9"
+checksum = "1cfaf33c695fc6e08064efbc1f72ec937429614f25eef83af942d0e227c3a28f"
 dependencies = [
+ "once_cell",
  "wasm-bindgen",
 ]
 
@@ -1028,9 +1051,9 @@ checksum = "884e2677b40cc8c339eaefcb701c32ef1fd2493d71118dc0ca4b6a736c93bd67"
 
 [[package]]
 name = "libc"
-version = "0.2.166"
+version = "0.2.174"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c2ccc108bbc0b1331bd061864e7cd823c0cab660bbe6970e66e2c0614decde36"
+checksum = "1171693293099992e19cddea4e8b849964e9846f4acee11b3948bcc337be8776"
 
 [[package]]
 name = "linux-raw-sys"
@@ -1042,22 +1065,9 @@ checksum = "78b3ae25bc7c8c38cec158d1f2757ee79e9b3740fbc7ccf0e59e4b08d793fa89"
 name = "liquid-staking"
 version = "0.0.0"
 dependencies = [
- "delegation-mock",
  "multiversx-sc",
  "multiversx-sc-modules",
  "multiversx-sc-scenario",
-]
-
-[[package]]
-name = "liquid-staking-interactor"
-version = "0.0.0"
-dependencies = [
- "clap",
- "liquid-staking",
- "multiversx-sc",
- "multiversx-sc-snippets",
- "serde",
- "toml 0.8.19",
 ]
 
 [[package]]
@@ -1125,12 +1135,15 @@ dependencies = [
 
 [[package]]
 name = "multiversx-chain-core"
-version = "0.15.0"
+version = "0.16.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "be3c3805e7d3052ad369528ac2b9da4fe2071cb235e8f7edbaedbef76b75b2fa"
+checksum = "bc2f439f7a3789d7afd3bb09f3c4e630dd0a6377b3d5f8204b342eb4ee15ab94"
 dependencies = [
+ "bech32",
  "bitflags",
+ "hex",
  "multiversx-sc-codec",
+ "serde",
 ]
 
 [[package]]
@@ -1150,9 +1163,9 @@ dependencies = [
 
 [[package]]
 name = "multiversx-chain-vm"
-version = "0.15.0"
+version = "0.16.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "26e158fc37d55e243cd73c61d13d6b0b395242f0756447b9f2f8e48ab45ca932"
+checksum = "57030cab59084f3a521ccad1165184c2f1e97b0f66f4f6c5e6187360bddf3b7d"
 dependencies = [
  "anyhow",
  "bitflags",
@@ -1175,9 +1188,9 @@ dependencies = [
 
 [[package]]
 name = "multiversx-chain-vm-executor"
-version = "0.4.0"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dad8bd8027123be9cce338ff02bc280541d0fe01bc5a7e2ae3e0f015f42413ae"
+checksum = "0cfb36050709604abee7d7896ad890358692245ddd406adcbce9d717b06c6cdf"
 dependencies = [
  "serde",
  "toml 0.7.8",
@@ -1185,9 +1198,9 @@ dependencies = [
 
 [[package]]
 name = "multiversx-sc"
-version = "0.58.0"
+version = "0.59.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b80108022e160cdfb256fddd4360f99becb134925822e38ed3ce4f08bc1ff78c"
+checksum = "d331ef7fa170e618c81f6486f49dd0c85a930669b9e831c0829fc114316a9e9a"
 dependencies = [
  "bitflags",
  "generic-array 1.2.0",
@@ -1201,9 +1214,9 @@ dependencies = [
 
 [[package]]
 name = "multiversx-sc-codec"
-version = "0.22.1"
+version = "0.23.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ecd901c77708e59ceb438edb90d7a4a0eff6fc1a87304dcd553bb22d19fd8732"
+checksum = "70685641eede17be7d3c678bc5ce4dc7ffeb100cf18399cdcdcdf52482cf98a5"
 dependencies = [
  "arrayvec",
  "bitflags",
@@ -1214,9 +1227,9 @@ dependencies = [
 
 [[package]]
 name = "multiversx-sc-codec-derive"
-version = "0.22.1"
+version = "0.23.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ed8737b8842497cc91d40a3bd6fcadc288364d30ee4defa8bb3a5a9aaac4f86a"
+checksum = "ce73df2ee4376ab524981f980126aba16f395386014207eb6e9efd9ff6015d62"
 dependencies = [
  "hex",
  "proc-macro2",
@@ -1226,9 +1239,9 @@ dependencies = [
 
 [[package]]
 name = "multiversx-sc-derive"
-version = "0.58.0"
+version = "0.59.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9e6a1ca25c8522583cde6ab10538622f99fc5c998bef0d6a6a60064d53aa9df9"
+checksum = "a7b585d0bdd0a4150e3bd7510afa3183d2fab19e4b672132ae42ad6b993c28bc"
 dependencies = [
  "hex",
  "proc-macro2",
@@ -1239,9 +1252,9 @@ dependencies = [
 
 [[package]]
 name = "multiversx-sc-meta-lib"
-version = "0.58.0"
+version = "0.59.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2e6a459f2cda322819d20a936e2927c038711f38e177940686d018350e65d18d"
+checksum = "d649d223cacc263c73b1e1cbd612b2a09e6116c2d095fd11faa3ee1ef43ecf94"
 dependencies = [
  "clap",
  "colored",
@@ -1254,28 +1267,27 @@ dependencies = [
  "serde",
  "serde_json",
  "toml 0.8.19",
- "wasmparser 0.231.0",
+ "wasmparser 0.235.0",
  "wasmprinter",
  "wat",
 ]
 
 [[package]]
 name = "multiversx-sc-modules"
-version = "0.58.0"
+version = "0.59.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "989abf1c261eb0e069035fbad362ad873bdb5cac7de1137695d07f4f9e5e036b"
+checksum = "67c32670207de474d5e4a5b1964a02143537f4db1b907a04986df4f32b1b7ac7"
 dependencies = [
  "multiversx-sc",
 ]
 
 [[package]]
 name = "multiversx-sc-scenario"
-version = "0.58.0"
+version = "0.59.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "39af4c82653d1a88c6b23f8240811639ec5a3ec034004408d7c4fec69d88dc27"
+checksum = "270032995db80bacff591f204b4d55fd0c5cdf3c68e16bdd1979fcbe42bc4867"
 dependencies = [
  "base64",
- "bech32",
  "colored",
  "hex",
  "itertools",
@@ -1297,9 +1309,9 @@ dependencies = [
 
 [[package]]
 name = "multiversx-sc-snippets"
-version = "0.58.0"
+version = "0.59.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "64a69dad92eab602f949cf5ce6950cd82e6878682f026594a450b54068a4474c"
+checksum = "023d2bebcbd90a568f86b55c2cebeb70e6d20b1cd6117ab217a39bb733eb26b5"
 dependencies = [
  "anyhow",
  "base64",
@@ -1318,14 +1330,13 @@ dependencies = [
 
 [[package]]
 name = "multiversx-sdk"
-version = "0.10.0"
+version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "65b436285ff93371b8376fd740912d00ef86e407fdc05bd1766da92375b10b19"
+checksum = "4a085383c17e1ac9f5ec3a05907793313277a9094a022b002fc5401b72b03e79"
 dependencies = [
  "aes",
  "anyhow",
  "base64",
- "bech32",
  "bip39",
  "ctr",
  "hex",
@@ -1348,9 +1359,9 @@ dependencies = [
 
 [[package]]
 name = "multiversx-sdk-http"
-version = "0.10.0"
+version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "85781cf706354b0605fd14bbe5d9e38c2f76f76386cffe42d89e7aa5a5e62a51"
+checksum = "c6a82f0191924fa1fe5f7a77ce627c8964a3577eb51463bcca5ac39d36389e30"
 dependencies = [
  "anyhow",
  "hex",
@@ -1358,6 +1369,7 @@ dependencies = [
  "log",
  "multiversx-sdk",
  "reqwest",
+ "serde_json",
  "tokio",
 ]
 
@@ -1513,6 +1525,35 @@ name = "pathdiff"
 version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "df94ce210e5bc13cb6651479fa48d14f601d9858cfe0467f43ae157023b938d3"
+
+[[package]]
+name = "payable-features"
+version = "0.0.0"
+dependencies = [
+ "multiversx-sc",
+ "multiversx-sc-scenario",
+]
+
+[[package]]
+name = "payable-features-meta"
+version = "0.0.0"
+dependencies = [
+ "multiversx-sc-meta-lib",
+ "payable-features",
+]
+
+[[package]]
+name = "payable-interactor"
+version = "0.0.0"
+dependencies = [
+ "clap",
+ "multiversx-sc-snippets",
+ "payable-features",
+ "serde",
+ "serial_test",
+ "tokio",
+ "toml 0.8.19",
+]
 
 [[package]]
 name = "pbkdf2"
@@ -1766,6 +1807,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "16f1201b3c9a7ee8039bcadc17b7e605e2945b27eee7631788c1bd2b0643674b"
 
 [[package]]
+name = "rustversion"
+version = "1.0.21"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8a0d197bd2c9dc6e53b84da9556a69ba4cdfab8619eb41a8bd1cc2027a0f6b1d"
+
+[[package]]
 name = "ryu"
 version = "1.0.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1778,6 +1825,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "97a22f5af31f73a954c10289c93e8a50cc23d971e80ee446f1f6f7137a088213"
 dependencies = [
  "cipher",
+]
+
+[[package]]
+name = "scc"
+version = "2.3.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "22b2d775fb28f245817589471dd49c5edf64237f4a19d10ce9a92ff4651a27f4"
+dependencies = [
+ "sdd",
 ]
 
 [[package]]
@@ -1806,6 +1862,12 @@ dependencies = [
  "salsa20",
  "sha2",
 ]
+
+[[package]]
+name = "sdd"
+version = "3.0.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "490dcfcbfef26be6800d11870ff2df8774fa6e86d047e3e8c8a76b25655e41ca"
 
 [[package]]
 name = "security-framework"
@@ -1899,6 +1961,31 @@ dependencies = [
  "itoa",
  "ryu",
  "serde",
+]
+
+[[package]]
+name = "serial_test"
+version = "3.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1b258109f244e1d6891bf1053a55d63a5cd4f8f4c30cf9a1280989f80e7a1fa9"
+dependencies = [
+ "futures",
+ "log",
+ "once_cell",
+ "parking_lot",
+ "scc",
+ "serial_test_derive",
+]
+
+[[package]]
+name = "serial_test_derive"
+version = "3.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5d69265a08751de7844521fd15003ae0a888e035773ba05695c5c759a6f89eef"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]
@@ -2303,6 +2390,21 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a"
 
 [[package]]
+name = "vote-sc"
+version = "0.0.0"
+dependencies = [
+ "multiversx-sc",
+]
+
+[[package]]
+name = "vote-sc-meta"
+version = "0.0.0"
+dependencies = [
+ "multiversx-sc-meta-lib",
+ "vote-sc",
+]
+
+[[package]]
 name = "want"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2319,24 +2421,24 @@ checksum = "9c8d87e72b64a3b4db28d11ce29237c246188f4f51057d65a7eab63b7987e423"
 
 [[package]]
 name = "wasm-bindgen"
-version = "0.2.95"
+version = "0.2.100"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "128d1e363af62632b8eb57219c8fd7877144af57558fb2ef0368d0087bddeb2e"
+checksum = "1edc8929d7499fc4e8f0be2262a241556cfc54a0bea223790e71446f2aab1ef5"
 dependencies = [
  "cfg-if",
  "once_cell",
+ "rustversion",
  "wasm-bindgen-macro",
 ]
 
 [[package]]
 name = "wasm-bindgen-backend"
-version = "0.2.95"
+version = "0.2.100"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cb6dd4d3ca0ddffd1dd1c9c04f94b868c37ff5fac97c30b97cff2d74fce3a358"
+checksum = "2f0a0651a5c2bc21487bde11ee802ccaf4c51935d0d3d42a6101f98161700bc6"
 dependencies = [
  "bumpalo",
  "log",
- "once_cell",
  "proc-macro2",
  "quote",
  "syn",
@@ -2357,9 +2459,9 @@ dependencies = [
 
 [[package]]
 name = "wasm-bindgen-macro"
-version = "0.2.95"
+version = "0.2.100"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e79384be7f8f5a9dd5d7167216f022090cf1f9ec128e6e6a482a2cb5c5422c56"
+checksum = "7fe63fc6d09ed3792bd0897b314f53de8e16568c2b3f7982f468c0bf9bd0b407"
 dependencies = [
  "quote",
  "wasm-bindgen-macro-support",
@@ -2367,9 +2469,9 @@ dependencies = [
 
 [[package]]
 name = "wasm-bindgen-macro-support"
-version = "0.2.95"
+version = "0.2.100"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "26c6ab57572f7a24a4985830b120de1594465e5d500f24afe89e16b4e833ef68"
+checksum = "8ae87ea40c9f689fc23f209965b6fb8a99ad69aeeb0231408be24920604395de"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2380,9 +2482,12 @@ dependencies = [
 
 [[package]]
 name = "wasm-bindgen-shared"
-version = "0.2.95"
+version = "0.2.100"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "65fc09f10666a9f147042251e0dda9c18f166ff7de300607007e96bdebc1068d"
+checksum = "1a05d73b933a847d6cccdda8f838a22ff101ad9bf93e33684f39c1f5f0eece3d"
+dependencies = [
+ "unicode-ident",
+]
 
 [[package]]
 name = "wasm-encoder"
@@ -2406,9 +2511,9 @@ dependencies = [
 
 [[package]]
 name = "wasmparser"
-version = "0.231.0"
+version = "0.235.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b1ddaf0d6e069fcd98801b1bf030e3648897d9f09c45ac9ef566d068aca1b76f"
+checksum = "161296c618fa2d63f6ed5fffd1112937e803cb9ec71b32b01a76321555660917"
 dependencies = [
  "bitflags",
  "hashbrown",
@@ -2419,13 +2524,13 @@ dependencies = [
 
 [[package]]
 name = "wasmprinter"
-version = "0.231.0"
+version = "0.235.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4a7edd6cf24de82084a947de7ef493fc0b5a0448affb95a84313823d4f41b1d6"
+checksum = "75aa8e9076de6b9544e6dab4badada518cca0bf4966d35b131bbd057aed8fa0a"
 dependencies = [
  "anyhow",
  "termcolor",
- "wasmparser 0.231.0",
+ "wasmparser 0.235.0",
 ]
 
 [[package]]
