@@ -24,10 +24,10 @@ path = "../delegation/interactor"
 path = "../governance/interactor"
 
 [dependencies.multiversx-sc-snippets]
-version = "0.59.1"
+version = "0.60.0"
 
 [dependencies.multiversx-sc]
-version = "0.59.1"
+version = "0.60.0"
 
 [dependencies.clap]
 version = "4.4.7"

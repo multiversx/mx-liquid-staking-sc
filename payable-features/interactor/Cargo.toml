@@ -12,18 +12,28 @@ path = "src/payable_interactor_main.rs"
 [lib]
 path = "src/payable_interactor.rs"
 
+[dependencies]
+toml = "0.8"
+
 [dependencies.payable-features]
 path = ".."
 
 [dependencies.multiversx-sc-snippets]
-version = "0.59.1"
+version = "0.60.0"
 
-[dependencies]
-clap = { version = "4.4.7", features = ["derive"] }
-serde = { version = "1.0", features = ["derive"] }
-toml = "0.8"
-tokio = { version = "1.24" }
-serial_test = { version = "3.2.0" }
+[dependencies.clap]
+version = "4.4.7"
+features = ["derive"]
+
+[dependencies.serde]
+version = "1.0"
+features = ["derive"]
+
+[dependencies.tokio]
+version = "1.24"
+
+[dependencies.serial_test]
+version = "3.2.0"
 
 [features]
 chain-simulator-tests = []

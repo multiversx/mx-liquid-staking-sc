@@ -13,7 +13,9 @@ edition = "2021"
 
 [dependencies]
 toml = "0.8"
-tokio = { version = "1.24" }
+
+[dependencies.tokio]
+version = "1.24"
 
 [dependencies.clap]
 version = "4.4.7"
@@ -24,11 +26,10 @@ version = "1.0"
 features = ["derive"]
 
 [dependencies.multiversx-sc-snippets]
-version = "0.59.1"
+version = "0.60.0"
 
 [dependencies.delegation-sc-interact]
 path = "../../delegation/interactor"
-
 
 [dependencies.payable-interactor]
 path = "../../payable-features/interactor"

@@ -12,7 +12,7 @@ path = "src/payable_features.rs"
 barnard = ["multiversx-sc/barnard"]
 
 [dependencies.multiversx-sc]
-version = "0.59.1"
+version = "0.60.0"
 
 [dev-dependencies.multiversx-sc-scenario]
-version = "0.59.1"
+version = "0.60.0"
