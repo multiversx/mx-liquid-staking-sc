@@ -3,8 +3,8 @@ multiversx_sc::imports!();
 use crate::basics::{
     constants::{GasLimit, MIN_GAS_FINISH_EXEC, MIN_GAS_FOR_ASYNC_CALL},
     errors::{
-        ERROR_ALREADY_VOTED, ERROR_INSUFFICIENT_GAS_FOR_ASYNC, ERROR_INVALID_CALLER,
-        ERROR_INVALID_SC_ADDRESS, ERROR_VOTE_SC_NOT_SET,
+        ERROR_INSUFFICIENT_GAS_FOR_ASYNC, ERROR_INVALID_CALLER, ERROR_INVALID_SC_ADDRESS,
+        ERROR_VOTE_SC_NOT_SET,
     },
 };
 #[multiversx_sc::module]
@@ -29,13 +29,8 @@ pub trait VoteModule:
         let caller = self.blockchain().get_caller();
 
         self.check_caller_is_vote_contract(&caller);
-        require!(
-            !self.voted_proposals(&caller).contains(&proposal),
-            ERROR_ALREADY_VOTED
-        );
 
         self.call_delegate_vote(proposal, vote_type, &delegate_to, &voting_power);
-        self.voted_proposals(&delegate_to).insert(proposal);
     }
 
     fn check_caller_is_vote_contract(&self, caller: &ManagedAddress) {
@@ -81,7 +76,4 @@ pub trait VoteModule:
     #[view(getVoteContract)]
     #[storage_mapper("voteContract")]
     fn vote_contract(&self) -> SingleValueMapper<ManagedAddress>;
-
-    #[storage_mapper("votedProposals")]
-    fn voted_proposals(&self, address: &ManagedAddress) -> UnorderedSetMapper<u32>;
 }

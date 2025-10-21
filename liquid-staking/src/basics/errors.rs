@@ -38,7 +38,6 @@ pub static ERROR_ONLY_DELEGATION_ADMIN: &[u8] =
 
 pub static ERROR_INVALID_CALLER: &[u8] = b"Invalid caller";
 pub static ERROR_VOTE_SC_NOT_SET: &[u8] = b"Vote contract is not set";
-pub static ERROR_ALREADY_VOTED: &[u8] = b"already voted for this proposal";
 pub static ERROR_MISSING_VOTING_POWER: &[u8] = b"invalid payment or missing voting power";
 
 pub static ERROR_CLEAR_WHITELIST: &[u8] = b"Whitelist operation cannot be cleared now";
