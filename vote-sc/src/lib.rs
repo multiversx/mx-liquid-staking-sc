@@ -71,9 +71,12 @@ pub trait VoteSC:
         let wrapped_root_hash = self.get_root_hash(proposal_id);
 
         if let OptionalValue::Some(root_hash) = wrapped_root_hash {
-            self.verify_merkle_proof(caller, voting_power, proof, root_hash);
+            require!(
+                self.verify_merkle_proof(caller, voting_power, proof, root_hash),
+                INVALID_MERKLE_PROOF
+            );
         } else {
-            sc_panic!(INVALID_MERKLE_PROOF);
+            sc_panic!(INVALID_ROOT_HASH);
         }
     }
 
