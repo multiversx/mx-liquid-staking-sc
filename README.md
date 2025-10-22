@@ -247,7 +247,38 @@ A setup endpoint, that updates the state of the contract to __Active__.
 
 A setup endpoint, that updates the state of the contract to __Inactive__.
 
+## Vote SC integration
 
+This project includes a lightweight integration between the Liquid Staking contract and a separate Vote SC. The purpose is to let a dedicated vote contract delegate voting power on behalf of addresses that hold voting power managed by the Liquid Staking SC.
+
+Key points:
+
+- The Liquid Staking contract exposes an owner-only endpoint to register the vote contract:
+  - [`setup::vote::VoteModule::set_vote_contract`](liquid-staking/src/setup/vote.rs) — owner-only, accepts a smart-contract address and saves it as the allowed vote contract.
+  - The Vote SC contract is implemented as [`VoteSC`](vote-sc/src/lib.rs).
+
+- The Vote SC (only the registered vote contract) may call
+  - [`setup::vote::VoteModule::delegate_vote`](liquid-staking/src/setup/vote.rs) — signature:
+    - delegate_vote(proposal: u32, vote_type: ManagedBuffer, delegate_to: ManagedAddress, voting_power: BigUint)
+  - Only calls from the registered vote contract are accepted; the call checks the caller and also prevents duplicate votes per proposal.
+
+- Implementation notes
+  - When the Liquid Staking contract forwards a vote to the Governance contract it uses an async call and reserves gas for the callback:
+    - The gas selection is handled by `get_gas_for_async_call()` in the vote module; it ensures a minimum amount of gas is left for finishing the async call.
+  - Proxy bindings and helpers are available in:
+    - [vote-sc/src/liquid_staking_proxy.rs](vote-sc/src/liquid_staking_proxy.rs) (vote-sc side)
+    - [interactor/src/contract_proxies/liquid_staking_proxy.rs](interactor/src/contract_proxies/liquid_staking_proxy.rs) (testing / interactor helpers)
+
+- Testing & interaction
+  - The interactor includes helpers to deploy and wire up the vote contract in:
+    - [interactor/src/contract_interactions/vote_interactions.rs](interactor/src/contract_interactions/vote_interactions.rs)
+  - Register the vote contract and set the liquid staking address from the interactor scripts to test end-to-end flows.
+
+This section documents the runtime contract linkage between the Liquid Staking SC and the Vote SC; for implementation details see the source:
+- [liquid-staking/src/setup/vote.rs](liquid-staking/src/setup/vote.rs)
+- [vote-sc/src/lib.rs](vote-sc/src/lib.rs)
+- [vote-sc/src/liquid_staking_proxy.rs](vote-sc/src/liquid_staking_proxy.rs)
+  
 ## Testing
 
 The contract has been tested through both unit and system tests. Local tests have been done using Rust Testing Framework, which can be found in the _tests_ folder. Here, the testing setup is organized in two folders, _setup_ and _interactions_. The actual testing logic is defined in the _test.rs_ file. In order to replicate the entire workflow of the contract, a __delegation-mock__ contract has been created, that has a basic custom logic that replicates the delegation rewarding system from the protocol level.
